@@ -93,12 +93,26 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #ff6b00;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Status do Servidor - Nando Denon</h1>
         <p>Esta página mostra o status atual do servidor e dos componentes do sistema.</p>
+        
+        <div id="apiStatus" class="status-card" style="display:none; background-color: #5a1111; border: 1px solid #ff6b00;">
+            <div class="card-content">
+                <p style="color: #ff6b00; font-weight: bold;">⚠️ Atenção: O servidor da API não parece estar rodando! ⚠️</p>
+                <p>Se o servidor da API não estiver em execução, você verá erros "Unexpected token" ou mensagens sobre JSON inválido.</p>
+                <p>O site continuará funcionando com dados locais (localStorage), mas não será possível compartilhar dados entre usuários.</p>
+            </div>
+        </div>
         
         <div id="statusContainer">
             <div class="status-loading">
@@ -142,10 +156,18 @@
         viewDataBtn.addEventListener('click', async function() {
             try {
                 const response = await fetch(`${API_BASE_URL}/public`);
-                const data = await response.json();
+                let data = {};
+                
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Resposta não é JSON válido:', jsonError);
+                    const rawText = await response.text();
+                    alert(`Erro ao processar JSON: ${jsonError.message}\n\nResposta bruta do servidor: ${rawText.substring(0, 100)}...`);
+                    return;
+                }
                 
                 const dataString = JSON.stringify(data, null, 2);
-                const encodedData = encodeURIComponent(dataString);
                 
                 const dataWindow = window.open('', '_blank');
                 dataWindow.document.write(`
@@ -164,6 +186,7 @@
                     </html>
                 `);
             } catch (error) {
+                console.error('Erro ao carregar dados:', error);
                 alert('Erro ao carregar dados: ' + error.message);
             }
         });
@@ -178,15 +201,25 @@
             `;
             
             let statusHTML = '';
+            let apiOffline = true;  // Assume API is offline until proven otherwise
             
             // Verificar API pública
             try {
                 console.log('Verificando API pública...');
                 const startTime = Date.now();
                 const response = await fetch(`${API_BASE_URL}/public`);
-                const data = await response.json();
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
+                
+                // Check if the response is JSON
+                let data = {};
+                try {
+                    data = await response.json();
+                    apiOffline = false;  // API is online if we got valid JSON
+                } catch (jsonError) {
+                    console.error('Resposta da API pública não é JSON válido:', jsonError);
+                    throw new Error('Resposta inválida da API pública');
+                }
                 
                 statusHTML += `
                     <div class="status-card">
@@ -206,6 +239,7 @@
                         <div class="status-title">API Pública: <span class="offline">OFFLINE</span></div>
                         <div class="card-content">
                             <p>Erro: ${error.message}</p>
+                            <p>O servidor pode estar iniciando ou a API ainda não está disponível.</p>
                         </div>
                     </div>
                 `;
@@ -216,17 +250,25 @@
                 console.log('Verificando saúde do servidor...');
                 const startTime = Date.now();
                 const response = await fetch(`${API_BASE_URL}/health`);
-                const data = await response.json();
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
+                
+                // Check if the response is JSON
+                let statusData = {};
+                try {
+                    statusData = await response.json();
+                } catch (jsonError) {
+                    console.error('Resposta não é JSON válido:', jsonError);
+                    throw new Error('Resposta inválida do servidor');
+                }
                 
                 statusHTML += `
                     <div class="status-card">
                         <div class="status-title">Status do Servidor: <span class="online">ONLINE</span></div>
                         <div class="card-content">
                             <p>Tempo de resposta: ${responseTime}ms</p>
-                            <p>Uptime: ${Math.floor(data.uptime / 60)} minutos</p>
-                            <p>Timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
+                            <p>Uptime: ${Math.floor(statusData.uptime / 60)} minutos</p>
+                            <p>Timestamp: ${new Date(statusData.timestamp).toLocaleString()}</p>
                         </div>
                     </div>
                 `;
@@ -237,6 +279,7 @@
                         <div class="status-title">Status do Servidor: <span class="offline">OFFLINE</span></div>
                         <div class="card-content">
                             <p>Erro: ${error.message}</p>
+                            <p>Possível causa: O servidor pode estar iniciando ou a API ainda não está respondendo corretamente.</p>
                         </div>
                     </div>
                 `;
@@ -246,9 +289,21 @@
             try {
                 console.log('Verificando endpoint de mensagens...');
                 const startTime = Date.now();
-                const response = await fetch(`${API_BASE_URL}/messages`, {
-                    method: 'OPTIONS'
-                });
+                let response;
+                
+                try {
+                    // Try a proper OPTIONS request first
+                    response = await fetch(`${API_BASE_URL}/messages`, {
+                        method: 'OPTIONS'
+                    });
+                } catch (fetchError) {
+                    // If OPTIONS fails, try a simple HEAD request
+                    console.log('OPTIONS falhou, tentando HEAD...');
+                    response = await fetch(`${API_BASE_URL}/messages`, {
+                        method: 'HEAD'
+                    });
+                }
+                
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
                 
@@ -258,6 +313,7 @@
                         <div class="card-content">
                             <p>Tempo de resposta: ${responseTime}ms</p>
                             <p>Status: ${response.status}</p>
+                            <p>Método: ${response.method || 'OPTIONS/HEAD'}</p>
                         </div>
                     </div>
                 `;
@@ -268,6 +324,7 @@
                         <div class="status-title">Envio de Mensagens: <span class="offline">OFFLINE</span></div>
                         <div class="card-content">
                             <p>Erro: ${error.message}</p>
+                            <p>Endpoint de mensagens parece estar indisponível.</p>
                         </div>
                     </div>
                 `;
@@ -277,9 +334,21 @@
             try {
                 console.log('Verificando autenticação...');
                 const startTime = Date.now();
-                const response = await fetch(`${API_BASE_URL}/login`, {
-                    method: 'OPTIONS'
-                });
+                let response;
+                
+                try {
+                    // Try a proper OPTIONS request first
+                    response = await fetch(`${API_BASE_URL}/login`, {
+                        method: 'OPTIONS'
+                    });
+                } catch (fetchError) {
+                    // If OPTIONS fails, try a simple HEAD request
+                    console.log('OPTIONS falhou, tentando HEAD...');
+                    response = await fetch(`${API_BASE_URL}/login`, {
+                        method: 'HEAD'
+                    });
+                }
+                
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
                 
@@ -289,6 +358,7 @@
                         <div class="card-content">
                             <p>Tempo de resposta: ${responseTime}ms</p>
                             <p>Status: ${response.status}</p>
+                            <p>Método: ${response.method || 'OPTIONS/HEAD'}</p>
                         </div>
                     </div>
                 `;
@@ -299,6 +369,7 @@
                         <div class="status-title">Sistema de Login: <span class="offline">OFFLINE</span></div>
                         <div class="card-content">
                             <p>Erro: ${error.message}</p>
+                            <p>Sistema de login parece estar indisponível.</p>
                             <p><a href="direct-login.html" style="color: #ff6b00;">Usar login direto!</a></p>
                         </div>
                     </div>
@@ -309,9 +380,21 @@
             try {
                 console.log('Verificando endpoint de eventos...');
                 const startTime = Date.now();
-                const response = await fetch(`${API_BASE_URL}/events`, {
-                    method: 'OPTIONS'
-                });
+                let response;
+                
+                try {
+                    // Try a proper OPTIONS request first
+                    response = await fetch(`${API_BASE_URL}/events`, {
+                        method: 'OPTIONS'
+                    });
+                } catch (fetchError) {
+                    // If OPTIONS fails, try a simple HEAD request
+                    console.log('OPTIONS falhou, tentando HEAD...');
+                    response = await fetch(`${API_BASE_URL}/events`, {
+                        method: 'HEAD'
+                    });
+                }
+                
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
                 
@@ -321,6 +404,7 @@
                         <div class="card-content">
                             <p>Tempo de resposta: ${responseTime}ms</p>
                             <p>Status: ${response.status}</p>
+                            <p>Método: ${response.method || 'OPTIONS/HEAD'}</p>
                         </div>
                     </div>
                 `;
@@ -331,6 +415,7 @@
                         <div class="status-title">Gerenciamento de Eventos: <span class="offline">OFFLINE</span></div>
                         <div class="card-content">
                             <p>Erro: ${error.message}</p>
+                            <p>Endpoint de eventos parece estar indisponível.</p>
                         </div>
                     </div>
                 `;
@@ -359,6 +444,9 @@
                     </div>
                 </div>
             `;
+            
+            // Display API offline warning if all checks fail
+            document.getElementById('apiStatus').style.display = apiOffline ? 'block' : 'none';
             
             statusContainer.innerHTML = statusHTML;
         }

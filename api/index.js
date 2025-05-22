@@ -47,7 +47,14 @@ if (!fs.existsSync(DATA_FILE)) {
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Handle OPTIONS requests explicitly
+app.options('*', cors());
 
 // Helper to read the data file
 function readData() {
@@ -522,11 +529,22 @@ app.delete('/api/events/:id', (req, res) => {
 
 // Servidor status e monitoramento
 app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString()
-    });
+    try {
+        res.json({
+            status: 'ok',
+            uptime: process.uptime(),
+            timestamp: new Date().toISOString(),
+            version: '1.0.0',
+            memory: process.memoryUsage()
+        });
+    } catch (error) {
+        console.error('Erro no health check:', error);
+        res.status(500).json({
+            status: 'error',
+            message: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // Servir arquivos estáticos na API
