@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status do Servidor - Nando Denon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            background-color: #111;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+        }
+        h1 {
+            color: #ff6b00;
+            text-align: center;
+        }
+        button {
+            background-color: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #ff8533;
+        }
+        .status-card {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #222;
+            margin-bottom: 10px;
+        }
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .online {
+            color: #4CAF50;
+        }
+        .offline {
+            color: #f44336;
+        }
+        .status-details {
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 3px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .card-content {
+            padding: 10px;
+        }
+        .status-loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 107, 0, 0.1);
+            border-left-color: #ff6b00;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Status do Servidor - Nando Denon</h1>
+        <p>Esta página mostra o status atual do servidor e dos componentes do sistema.</p>
+        
+        <div id="statusContainer">
+            <div class="status-loading">
+                <div class="spinner"></div>
+                <p>Verificando status do servidor...</p>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button id="checkStatusBtn">Verificar Status</button>
+            <button id="homeBtn">Voltar para o Site</button>
+            <button id="viewDataBtn">Ver Dados Atuais</button>
+        </div>
+    </div>
+
+    <script>
+        // Elementos da interface
+        const statusContainer = document.getElementById('statusContainer');
+        const checkStatusBtn = document.getElementById('checkStatusBtn');
+        const homeBtn = document.getElementById('homeBtn');
+        const viewDataBtn = document.getElementById('viewDataBtn');
+        
+        // URLs base
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : '/api';
+            
+        // Voltar para a página inicial
+        homeBtn.addEventListener('click', function() {
+            window.location.href = '../index.html';
+        });
+        
+        // Mostrar dados atuais
+        viewDataBtn.addEventListener('click', async function() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/public`);
+                const data = await response.json();
+                
+                const dataString = JSON.stringify(data, null, 2);
+                const encodedData = encodeURIComponent(dataString);
+                
+                const dataWindow = window.open('', '_blank');
+                dataWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Dados Atuais - Nando Denon</title>
+                            <style>
+                                body { font-family: monospace; background: #000; color: #fff; padding: 20px; }
+                                pre { background: #222; padding: 15px; border-radius: 5px; white-space: pre-wrap; }
+                            </style>
+                        </head>
+                        <body>
+                            <h2>Dados Públicos Atuais</h2>
+                            <pre>${dataString}</pre>
+                        </body>
+                    </html>
+                `);
+            } catch (error) {
+                alert('Erro ao carregar dados: ' + error.message);
+            }
+        });
+        
+        // Verificar o status do servidor
+        async function checkStatus() {
+            statusContainer.innerHTML = `
+                <div class="status-loading">
+                    <div class="spinner"></div>
+                    <p>Verificando status do servidor...</p>
+                </div>
+            `;
+            
+            let statusHTML = '';
+            
+            // Verificar API pública
+            try {
+                console.log('Verificando API pública...');
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE_URL}/public`);
+                const data = await response.json();
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">API Pública: <span class="online">ONLINE</span></div>
+                        <div class="card-content">
+                            <p>Tempo de resposta: ${responseTime}ms</p>
+                            <p>Eventos: ${data.events ? data.events.length : 0}</p>
+                            <p>Categorias: ${data.eventCategories ? data.eventCategories.length : 0}</p>
+                            <p>Galeria: ${data.gallery ? data.gallery.length : 0}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro na API pública:', error);
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">API Pública: <span class="offline">OFFLINE</span></div>
+                        <div class="card-content">
+                            <p>Erro: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Verificar envio de mensagens
+            try {
+                console.log('Verificando endpoint de mensagens...');
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE_URL}/messages`, {
+                    method: 'OPTIONS'
+                });
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Envio de Mensagens: <span class="online">ONLINE</span></div>
+                        <div class="card-content">
+                            <p>Tempo de resposta: ${responseTime}ms</p>
+                            <p>Status: ${response.status}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro no endpoint de mensagens:', error);
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Envio de Mensagens: <span class="offline">OFFLINE</span></div>
+                        <div class="card-content">
+                            <p>Erro: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Verificar autenticação
+            try {
+                console.log('Verificando autenticação...');
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'OPTIONS'
+                });
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Sistema de Login: <span class="online">ONLINE</span></div>
+                        <div class="card-content">
+                            <p>Tempo de resposta: ${responseTime}ms</p>
+                            <p>Status: ${response.status}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro no sistema de login:', error);
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Sistema de Login: <span class="offline">OFFLINE</span></div>
+                        <div class="card-content">
+                            <p>Erro: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Verificar eventos
+            try {
+                console.log('Verificando endpoint de eventos...');
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE_URL}/events`, {
+                    method: 'OPTIONS'
+                });
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Gerenciamento de Eventos: <span class="online">ONLINE</span></div>
+                        <div class="card-content">
+                            <p>Tempo de resposta: ${responseTime}ms</p>
+                            <p>Status: ${response.status}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro no endpoint de eventos:', error);
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Gerenciamento de Eventos: <span class="offline">OFFLINE</span></div>
+                        <div class="card-content">
+                            <p>Erro: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Adicionar informações do navegador
+            statusHTML += `
+                <div class="status-card">
+                    <div class="status-title">Informações do Cliente</div>
+                    <div class="card-content">
+                        <p>Navegador: ${navigator.userAgent}</p>
+                        <p>Data/Hora: ${new Date().toLocaleString()}</p>
+                        <p>URL Base da API: ${API_BASE_URL}</p>
+                    </div>
+                </div>
+            `;
+            
+            statusContainer.innerHTML = statusHTML;
+        }
+        
+        // Iniciar verificação ao carregar a página
+        checkStatus();
+        
+        // Configurar botão de verificação
+        checkStatusBtn.addEventListener('click', checkStatus);
+    </script>
+</body>
+</html> 

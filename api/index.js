@@ -109,26 +109,61 @@ app.post('/api/login', (req, res) => {
 
 // Message submission endpoint (public)
 app.post('/api/messages', (req, res) => {
-    const message = req.body;
-    const data = readData();
-    
-    // Add the new message
-    message.id = Date.now().toString();
-    message.date = new Date().toISOString();
-    message.read = false;
-    
-    data.messages.push(message);
-    
-    // Update stats
-    data.stats.messages = data.messages.filter(msg => !msg.read).length;
-    data.lastSync = new Date().toISOString();
-    
-    writeData(data);
-    
-    res.json({ 
-        success: true, 
-        message: 'Message sent successfully' 
-    });
+    try {
+        console.log('Recebendo nova mensagem:', req.body);
+        const message = req.body;
+        const data = readData();
+        
+        // Validar campos mínimos
+        if (!message.nome || !message.email) {
+            console.error('Mensagem com campos obrigatórios faltando');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Nome e email são obrigatórios' 
+            });
+        }
+        
+        // Add the new message
+        message.id = Date.now().toString();
+        message.date = new Date().toISOString();
+        message.read = false;
+        
+        // Adicionar a mensagem
+        if (!data.messages) {
+            data.messages = [];
+        }
+        data.messages.push(message);
+        
+        // Update stats
+        if (!data.stats) {
+            data.stats = DEFAULT_DATA.stats;
+        }
+        data.stats.messages = data.messages.filter(msg => !msg.read).length;
+        data.lastSync = new Date().toISOString();
+        
+        // Salvar no arquivo
+        const saveSuccess = writeData(data);
+        console.log('Mensagem salva com sucesso:', message.id, saveSuccess);
+        
+        if (saveSuccess) {
+            res.json({ 
+                success: true, 
+                message: 'Mensagem enviada com sucesso',
+                messageId: message.id
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao salvar mensagem'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao processar mensagem:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno ao processar mensagem'
+        });
+    }
 });
 
 // Get public data (events, gallery, contact info)
@@ -151,6 +186,201 @@ app.get('/api/public', (req, res) => {
     };
     
     res.json(publicData);
+});
+
+// Endpoint para adicionar evento
+app.post('/api/events', (req, res) => {
+    try {
+        console.log('Adicionando novo evento:', req.body);
+        const event = req.body;
+        const data = readData();
+        
+        // Validar campos mínimos
+        if (!event.title || !event.date) {
+            console.error('Evento com campos obrigatórios faltando');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Título e data são obrigatórios' 
+            });
+        }
+        
+        // Adicionar ID se não existir
+        if (!event.id) {
+            event.id = Date.now().toString();
+        }
+        
+        // Garantir que a lista de eventos existe
+        if (!data.events) {
+            data.events = [];
+        }
+        
+        // Adicionar o evento
+        data.events.push(event);
+        
+        // Atualizar estatísticas
+        if (!data.stats) {
+            data.stats = DEFAULT_DATA.stats;
+        }
+        
+        // Calcular eventos futuros
+        const now = new Date();
+        data.stats.upcomingEvents = data.events.filter(
+            e => new Date(e.date) >= now
+        ).length;
+        
+        data.lastSync = new Date().toISOString();
+        
+        // Salvar no arquivo
+        const saveSuccess = writeData(data);
+        console.log('Evento salvo com sucesso:', event.id, saveSuccess);
+        
+        if (saveSuccess) {
+            res.json({ 
+                success: true, 
+                message: 'Evento adicionado com sucesso',
+                eventId: event.id
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao salvar evento'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao processar evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno ao processar evento'
+        });
+    }
+});
+
+// Endpoint para atualizar evento
+app.put('/api/events/:id', (req, res) => {
+    try {
+        const eventId = req.params.id;
+        const updatedEvent = req.body;
+        console.log(`Atualizando evento ${eventId}:`, updatedEvent);
+        
+        const data = readData();
+        
+        // Verificar se a lista de eventos existe
+        if (!data.events) {
+            data.events = [];
+        }
+        
+        // Encontrar o evento
+        const index = data.events.findIndex(e => e.id === eventId);
+        
+        if (index === -1) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento não encontrado'
+            });
+        }
+        
+        // Atualizar o evento
+        data.events[index] = { ...data.events[index], ...updatedEvent };
+        
+        // Atualizar estatísticas
+        if (!data.stats) {
+            data.stats = DEFAULT_DATA.stats;
+        }
+        
+        // Calcular eventos futuros
+        const now = new Date();
+        data.stats.upcomingEvents = data.events.filter(
+            e => new Date(e.date) >= now
+        ).length;
+        
+        data.lastSync = new Date().toISOString();
+        
+        // Salvar no arquivo
+        const saveSuccess = writeData(data);
+        console.log('Evento atualizado com sucesso:', eventId, saveSuccess);
+        
+        if (saveSuccess) {
+            res.json({ 
+                success: true, 
+                message: 'Evento atualizado com sucesso',
+                event: data.events[index]
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao atualizar evento'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno ao atualizar evento'
+        });
+    }
+});
+
+// Endpoint para remover evento
+app.delete('/api/events/:id', (req, res) => {
+    try {
+        const eventId = req.params.id;
+        console.log(`Removendo evento ${eventId}`);
+        
+        const data = readData();
+        
+        // Verificar se a lista de eventos existe
+        if (!data.events) {
+            data.events = [];
+        }
+        
+        // Verificar se o evento existe
+        const eventExists = data.events.some(e => e.id === eventId);
+        
+        if (!eventExists) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento não encontrado'
+            });
+        }
+        
+        // Remover o evento
+        data.events = data.events.filter(e => e.id !== eventId);
+        
+        // Atualizar estatísticas
+        if (!data.stats) {
+            data.stats = DEFAULT_DATA.stats;
+        }
+        
+        // Calcular eventos futuros
+        const now = new Date();
+        data.stats.upcomingEvents = data.events.filter(
+            e => new Date(e.date) >= now
+        ).length;
+        
+        data.lastSync = new Date().toISOString();
+        
+        // Salvar no arquivo
+        const saveSuccess = writeData(data);
+        console.log('Evento removido com sucesso:', eventId, saveSuccess);
+        
+        if (saveSuccess) {
+            res.json({ 
+                success: true, 
+                message: 'Evento removido com sucesso'
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao remover evento'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao remover evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno ao remover evento'
+        });
+    }
 });
 
 // Export for Vercel serverless functions

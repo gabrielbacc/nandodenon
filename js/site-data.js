@@ -207,40 +207,162 @@ const SiteManager = {
             }
         }
         
-        siteData.events.push(event);
-        this.updateStats();
-        await this.saveData();
-        return event;
+        console.log('Adicionando evento ao servidor:', event);
+        
+        try {
+            // Enviar para o servidor
+            const response = await fetch(`${API_BASE_URL}/events`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(event)
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Evento adicionado com sucesso:', result);
+                
+                // Atualizar dados locais
+                if (!siteData.events) {
+                    siteData.events = [];
+                }
+                siteData.events.push(event);
+                this.updateStats();
+                
+                // Recarregar dados para garantir sincronismo
+                isInitialized = false;
+                await initializeData();
+                
+                return event;
+            } else {
+                console.error('Erro ao adicionar evento:', response.status);
+                const errorText = await response.text();
+                console.error('Detalhes do erro:', errorText);
+                return null;
+            }
+        } catch (error) {
+            console.error('Exceção ao adicionar evento:', error);
+            
+            // Fallback para operação local
+            console.log('Fallback: adicionando evento localmente');
+            if (!siteData.events) {
+                siteData.events = [];
+            }
+            siteData.events.push(event);
+            this.updateStats();
+            await this.saveData();
+            return event;
+        }
     },
     
     updateEvent: async function(eventId, updatedEvent) {
         await initializeData();
         
-        const index = siteData.events.findIndex(event => event.id === eventId);
-        if (index !== -1) {
-            // Garantir que a data está no formato correto YYYY-MM-DD sem alteração de fuso horário
-            if (updatedEvent.date && updatedEvent.date.includes('-')) {
-                const dateParts = updatedEvent.date.split('-');
-                if (dateParts.length === 3) {
-                    // Manter exatamente o formato que veio
-                    updatedEvent.date = updatedEvent.date;
-                }
+        // Garantir que a data está no formato correto YYYY-MM-DD sem alteração de fuso horário
+        if (updatedEvent.date && updatedEvent.date.includes('-')) {
+            const dateParts = updatedEvent.date.split('-');
+            if (dateParts.length === 3) {
+                // Manter exatamente o formato que veio
+                updatedEvent.date = updatedEvent.date;
             }
-            
-            siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
-            this.updateStats();
-            await this.saveData();
-            return siteData.events[index];
         }
-        return null;
+        
+        console.log(`Atualizando evento ${eventId}:`, updatedEvent);
+        
+        try {
+            // Enviar para o servidor
+            const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(updatedEvent)
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Evento atualizado com sucesso:', result);
+                
+                // Atualizar dados locais
+                const index = siteData.events.findIndex(event => event.id === eventId);
+                if (index !== -1) {
+                    siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
+                    this.updateStats();
+                }
+                
+                // Recarregar dados para garantir sincronismo
+                isInitialized = false;
+                await initializeData();
+                
+                return siteData.events.find(event => event.id === eventId);
+            } else {
+                console.error('Erro ao atualizar evento:', response.status);
+                const errorText = await response.text();
+                console.error('Detalhes do erro:', errorText);
+                return null;
+            }
+        } catch (error) {
+            console.error('Exceção ao atualizar evento:', error);
+            
+            // Fallback para operação local
+            console.log('Fallback: atualizando evento localmente');
+            const index = siteData.events.findIndex(event => event.id === eventId);
+            if (index !== -1) {
+                siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
+                this.updateStats();
+                await this.saveData();
+                return siteData.events[index];
+            }
+            return null;
+        }
     },
     
     removeEvent: async function(eventId) {
         await initializeData();
         
-        siteData.events = siteData.events.filter(event => event.id !== eventId);
-        this.updateStats();
-        await this.saveData();
+        console.log(`Removendo evento ${eventId}`);
+        
+        try {
+            // Enviar para o servidor
+            const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Evento removido com sucesso:', result);
+                
+                // Atualizar dados locais
+                siteData.events = siteData.events.filter(event => event.id !== eventId);
+                this.updateStats();
+                
+                // Recarregar dados para garantir sincronismo
+                isInitialized = false;
+                await initializeData();
+                
+                return true;
+            } else {
+                console.error('Erro ao remover evento:', response.status);
+                const errorText = await response.text();
+                console.error('Detalhes do erro:', errorText);
+                return false;
+            }
+        } catch (error) {
+            console.error('Exceção ao remover evento:', error);
+            
+            // Fallback para operação local
+            console.log('Fallback: removendo evento localmente');
+            siteData.events = siteData.events.filter(event => event.id !== eventId);
+            this.updateStats();
+            await this.saveData();
+            return true;
+        }
     },
     
     getEventById: async function(eventId) {
@@ -278,13 +400,15 @@ const SiteManager = {
     getMessages: async function() {
         await initializeData();
         
-        return siteData.messages;
+        return siteData.messages || [];
     },
     
     addMessage: async function(message) {
         // Para mensagens públicas, usar a API diretamente
         try {
             console.log('Enviando mensagem para a API:', message);
+            
+            // Tentativa de envio para o servidor
             const response = await fetch(`${API_BASE_URL}/messages`, {
                 method: 'POST',
                 headers: {
@@ -294,19 +418,83 @@ const SiteManager = {
             });
             
             if (response.ok) {
-                console.log('Mensagem enviada com sucesso');
+                const result = await response.json();
+                console.log('Mensagem enviada com sucesso:', result);
+                
                 // Se estamos logados, recarregar os dados
                 if (this.isLoggedIn()) {
+                    console.log('Usuário logado, recarregando dados após envio da mensagem');
                     isInitialized = false;
                     await initializeData();
                 }
+                
+                // Mostrar alerta de confirmação
+                try {
+                    alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+                } catch (e) {
+                    // Alguns navegadores podem bloquear alertas
+                    console.log('Não foi possível mostrar o alerta de confirmação');
+                }
+                
                 return true;
+            } else {
+                console.error('Erro ao enviar mensagem:', response.status);
+                let errorMessage = 'Erro ao enviar mensagem. Por favor, tente novamente.';
+                
+                try {
+                    const errorData = await response.json();
+                    console.error('Detalhes do erro:', errorData);
+                    if (errorData && errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (e) {
+                    console.error('Não foi possível processar a resposta de erro:', e);
+                }
+                
+                // Mostrar mensagem de erro
+                try {
+                    alert(errorMessage);
+                } catch (e) {
+                    // Alguns navegadores podem bloquear alertas
+                    console.log('Não foi possível mostrar o alerta de erro');
+                }
+                
+                return false;
             }
-            console.warn('Falha ao enviar mensagem');
-            return false;
         } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            return false;
+            console.error('Exceção ao enviar mensagem:', error);
+            
+            // Tentar salvar localmente como fallback
+            try {
+                console.log('Tentando salvar mensagem localmente como fallback');
+                
+                // Preparar a mensagem no formato correto
+                const localMessage = {
+                    ...message,
+                    id: Date.now().toString(),
+                    date: new Date().toISOString(),
+                    read: false
+                };
+                
+                // Inicializar o array de mensagens se não existir
+                if (!siteData.messages) {
+                    siteData.messages = [];
+                }
+                
+                // Adicionar a mensagem
+                siteData.messages.push(localMessage);
+                this.updateStats();
+                await this.saveData();
+                
+                // Alertar o usuário
+                alert('Mensagem armazenada localmente. Tente novamente quando a conexão for restaurada.');
+                
+                return true;
+            } catch (fallbackError) {
+                console.error('Falha no fallback de mensagem:', fallbackError);
+                alert('Não foi possível enviar sua mensagem. Por favor, tente novamente mais tarde.');
+                return false;
+            }
         }
     },
     
