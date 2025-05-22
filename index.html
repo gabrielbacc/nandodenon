@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nando Denon</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+</head>
+<body>
+    <style>
+        /* Estilos do Header e Navegação */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .nav-links li {
+            position: relative;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-links a:hover {
+            color: #ff6b00;
+        }
+
+        .nav-links a.active {
+            color: #ff6b00;
+        }
+
+        #adminSection {
+            position: relative;
+            margin-left: auto;
+        }
+
+        .admin-links {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 5px;
+            padding: 10px;
+            min-width: 150px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .admin-links a {
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .admin-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Ajuste do layout do header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            flex-shrink: 0;
+        }
+
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+
+        nav {
+            flex-grow: 1;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Menu mobile */
+        .menu-toggle {
+            display: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            nav {
+                position: fixed;
+                top: 80px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 80px);
+                background: rgba(0, 0, 0, 0.95);
+                transition: left 0.3s ease;
+            }
+
+            nav.active {
+                left: 0;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            #adminSection {
+                margin-left: 0;
+            }
+
+            .admin-links {
+                position: static;
+                background: none;
+                box-shadow: none;
+                padding: 0;
+                margin-top: 0;
+            }
+
+            .admin-links a {
+                padding: 10px 0;
+            }
+        }
+    </style>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <a href="index.html">
+                <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
+            </a>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#inicio" class="active">Início</a></li>
+                <li><a href="#sobre">Sobre</a></li>
+                <li><a href="#shows">Shows</a></li>
+                <li><a href="#agenda">Agenda</a></li>
+                <li><a href="#contato">Contato</a></li>
+                <li><a href="login.html" class="login-link" id="loginLink"><i class="fas fa-user"></i> Login</a></li>
+                <li><a href="dashboard.html" class="admin-link" style="display: none;" id="adminLink"><i class="fas fa-user-shield"></i> Admin</a></li>
+                <li><a href="#" class="logout-link" style="display: none;" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+            </ul>
+        </nav>
+        <div class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Seção Inicial -->
+    <section id="inicio" class="hero-section">
+        <div id="particles-js"></div>
+        <div class="neon-gradient"></div>
+        <div class="neon-lines">
+            <div class="line line-1"></div>
+            <div class="line line-2"></div>
+            <div class="line line-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-text" data-aos="fade-up" data-aos-delay="300">
+                <div class="neon-box">
+                    <h1 class="neon-text">NANDO DENON</h1>
+                    <div class="neon-underline"></div>
+                </div>
+                <div class="symbol-container">
+                    <img src="assets/Logos/Simbolo.png" alt="Símbolo Nando Denon" class="neon-symbol">
+                </div>
+                <div class="hero-description">
+                    <p class="neon-description">Mais que um show, criando momentos únicos e inesquecíveis</p>
+                </div>
+                <div class="hero-buttons">
+                    <a href="#shows" class="btn btn-primary neon-btn">Ver Shows</a>
+                    <a href="#contato" class="btn btn-secondary neon-btn-alt">Contato</a>
+                </div>
+            </div>
+        </div>
+        <div class="social-bar">
+            <a href="#" target="_blank" class="neon-icon"><i class="fab fa-instagram"></i></a>
+            <a href="#" target="_blank" class="neon-icon"><i class="fab fa-youtube"></i></a>
+            <a href="#" target="_blank" class="neon-icon"><i class="fab fa-spotify"></i></a>
+            <a href="#" target="_blank" class="neon-icon"><i class="fab fa-tiktok"></i></a>
+        </div>
+        <div class="scroll-indicator">
+            <span class="neon-text-subtle">Rolar</span>
+            <i class="fas fa-chevron-down neon-icon-subtle"></i>
+        </div>
+    </section>
+
+    <!-- Seção Sobre -->
+    <section id="sobre" class="sobre-section">
+        <div class="subtle-bg-image"></div>
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>SOBRE</h2>
+                <div class="separator"></div>
+            </div>
+            <div class="sobre-content">
+                <div class="sobre-text" data-aos="fade-right" data-aos-delay="300">
+                    <div class="text-block">
+                        <h3>NANDO DENON</h3>
+                        <div class="orange-divider"></div>
+                        <p>Com mais de 10 anos de experiência, especializado em eventos de todos os tipos. Com uma seleção musical única e habilidades excepcionais, Nando Denon garante que todos os eventos se transformem em momentos inesquecíveis.</p>
+                    </div>
+                    
+                    <div class="text-block">
+                        <div class="black-divider"></div>
+                        <p>Sua paixão pela música e dedicação ao público fazem de cada apresentação uma experiência única, criando atmosferas envolventes e energéticas que conectam pessoas através da música.</p>
+                    </div>
+
+                    <div class="stats-container">
+                        <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+                            <div class="stat-circle">
+                                <span class="counter">100</span><span>+</span>
+                            </div>
+                            <p>Eventos</p>
+                            <span class="stat-detail">Realizados</span>
+                        </div>
+                        <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+                            <div class="stat-circle">
+                                <span class="counter">50</span><span>+</span>
+                            </div>
+                            <p>Cidades</p>
+                            <span class="stat-detail">Diferentes</span>
+                        </div>
+                        <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+                            <div class="stat-circle">
+                                <span class="counter">10</span><span>+</span>
+                            </div>
+                            <p>Anos</p>
+                            <span class="stat-detail">De Experiência</span>
+                        </div>
+                        <div class="stat-item" data-aos="fade-up" data-aos-delay="400">
+                            <div class="stat-circle">
+                                <span class="counter">500</span><span>+</span>
+                            </div>
+                            <p>Músicas</p>
+                            <span class="stat-detail">No Repertório</span>
+                        </div>
+                    </div>
+
+                    <div class="achievements-grid">
+                        <div class="achievement-item" data-aos="fade-up" data-aos-delay="100">
+                            <i class="fas fa-music"></i>
+                            <h4>Versatilidade Musical</h4>
+                            <p>Todos os estilos e ritmos</p>
+                        </div>
+                        <div class="achievement-item" data-aos="fade-up" data-aos-delay="200">
+                            <i class="fas fa-star"></i>
+                            <h4>Equipamentos Premium</h4>
+                            <p>Alta qualidade de som</p>
+                        </div>
+                        <div class="achievement-item" data-aos="fade-up" data-aos-delay="300">
+                            <i class="fas fa-heart"></i>
+                            <h4>Público Satisfeito</h4>
+                            <p>Eventos memoráveis</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="sobre-image" data-aos="fade-left" data-aos-delay="400">
+                    <div class="image-container">
+                        <img src="assets/Fotos de Trabalho/Nando-02.png" alt="Nando Denon">
+                        <div class="image-overlay"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Shows -->
+    <section id="shows" class="shows-section">
+        <div class="shows-bg-effect"></div>
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>SHOWS</h2>
+                <div class="separator"></div>
+            </div>
+
+            <div class="shows-intro" data-aos="fade-up">
+                <h3>Experiências Únicas</h3>
+                <p>Confira alguns dos momentos mais marcantes em diferentes tipos de eventos</p>
+                <div class="shows-filter">
+                    <button class="shows-filter-btn active" data-filter="all">Todos</button>
+                    <button class="shows-filter-btn" data-filter="casamento">Casamentos</button>
+                    <button class="shows-filter-btn" data-filter="aniversario">Aniversários</button>
+                    <button class="shows-filter-btn" data-filter="corporativo">Corporativo</button>
+                </div>
+            </div>
+
+            <div class="videos-grid">
+                <div class="video-card" data-aos="fade-up">
+                    <div class="video-wrapper">
+                        <video class="preview-video" autoplay loop muted playsinline>
+                            <source src="assets/Videos Shows/Diretoria Final.mp4" type="video/mp4">
+                        </video>
+                        <div class="video-overlay">
+                            <div class="video-content">
+                                <div class="event-type">Corporativo</div>
+                                <h3>Diretoria</h3>
+                                <div class="event-date">
+                                    <div class="date-circle">
+                                        <span class="month">JAN</span>
+                                        <span class="day">15</span>
+                                        <span class="year">2024</span>
+                                    </div>
+                                </div>
+                                <p>São Paulo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-card" data-aos="fade-up">
+                    <div class="video-wrapper">
+                        <video class="preview-video" autoplay loop muted playsinline>
+                            <source src="assets/Videos Shows/Veve - Niver Julião Final.mp4" type="video/mp4">
+                        </video>
+                        <div class="video-overlay">
+                            <div class="video-content">
+                                <div class="event-type">Aniversário</div>
+                                <h3>Niver Julião</h3>
+                                <div class="event-date">
+                                    <div class="date-circle">
+                                        <span class="month">FEV</span>
+                                        <span class="day">20</span>
+                                        <span class="year">2024</span>
+                                    </div>
+                                </div>
+                                <p>Rio de Janeiro</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-card" data-aos="fade-up">
+                    <div class="video-wrapper">
+                        <video class="preview-video" autoplay loop muted playsinline>
+                            <source src="assets/Videos Shows/Casamento Gabi e Felipe Corte Final.mp4" type="video/mp4">
+                        </video>
+                        <div class="video-overlay">
+                            <div class="video-content">
+                                <div class="event-type">Casamento</div>
+                                <h3>Gabi e Felipe</h3>
+                                <div class="event-date">
+                                    <div class="date-circle">
+                                        <span class="month">MAR</span>
+                                        <span class="day">15</span>
+                                        <span class="year">2024</span>
+                                    </div>
+                                </div>
+                                <p>Belo Horizonte</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-card" data-aos="fade-up">
+                    <div class="video-wrapper">
+                        <video class="preview-video" autoplay loop muted playsinline>
+                            <source src="assets/Videos Shows/Niver Vitinho Video.mp4" type="video/mp4">
+                        </video>
+                        <div class="video-overlay">
+                            <div class="video-content">
+                                <div class="event-type">Aniversário</div>
+                                <h3>Niver Vitinho</h3>
+                                <div class="event-date">
+                                    <div class="date-circle">
+                                        <span class="month">ABR</span>
+                                        <span class="day">10</span>
+                                        <span class="year">2024</span>
+                                    </div>
+                                </div>
+                                <p>Florianópolis</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="shows-cta" data-aos="fade-up">
+                <div class="cta-content">
+                    <div class="cta-text">
+                        <h3>Quer um show inesquecível no seu evento?</h3>
+                        <p>Entre em contato e vamos criar momentos únicos juntos!</p>
+                    </div>
+                    <a href="#contato" class="btn btn-primary neon-btn">
+                        <span class="btn-content">
+                            <i class="fas fa-music"></i>
+                            <span>Solicitar Orçamento</span>
+                        </span>
+                        <span class="btn-reflection"></span>
+                    </a>
+                </div>
+                <div class="cta-particles" id="cta-particles"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Agenda -->
+    <section id="agenda" class="agenda-section">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>AGENDA</h2>
+                <div class="separator"></div>
+            </div>
+            
+            <div class="agenda-container">
+                <div class="calendar-wrapper" data-aos="fade-right">
+                    <div class="calendar-header">
+                        <button id="prevMonth" class="month-nav"><i class="fas fa-chevron-left"></i></button>
+                        <h3 id="currentMonth"></h3>
+                        <button id="nextMonth" class="month-nav"><i class="fas fa-chevron-right"></i></button>
+                        <button id="refreshCalendar" class="refresh-btn" title="Atualizar Agenda">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="weekdays">
+                        <span>Dom</span>
+                        <span>Seg</span>
+                        <span>Ter</span>
+                        <span>Qua</span>
+                        <span>Qui</span>
+                        <span>Sex</span>
+                        <span>Sáb</span>
+                    </div>
+                    <div id="calendarDays" class="calendar-days">
+                        <!-- Calendar days will be dynamically loaded here -->
+                    </div>
+                </div>
+                
+                <div class="events-list" data-aos="fade-left">
+                    <div class="events-header">
+                        <h3>Próximos Eventos</h3>
+                        <div class="events-filter">
+                            <button class="filter-btn active" data-filter="all">
+                                <i class="fas fa-calendar-alt"></i>
+                                Todos
+                            </button>
+                            <div id="categoryFilters" class="category-filters">
+                                <!-- Category filters will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <style>
+                        .events-filter {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 10px;
+                            margin-top: 20px;
+                        }
+
+                        .filter-btn {
+                            background: rgba(255, 255, 255, 0.1);
+                            border: none;
+                            color: white;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+
+                        .filter-btn i {
+                            color: #ff6b00;
+                        }
+
+                        .filter-btn:hover {
+                            background: rgba(255, 255, 255, 0.2);
+                        }
+
+                        .filter-btn.active {
+                            background: #ff6b00;
+                        }
+
+                        .filter-btn.active i {
+                            color: white;
+                        }
+
+                        .category-filters {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 10px;
+                        }
+                    </style>
+
+                    <div class="events-timeline">
+                        <!-- Events will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="agenda-cta" data-aos="fade-up">
+                <h3>Quer garantir sua data?</h3>
+                <p>Entre em contato agora mesmo e reserve Nando Denon para seu evento!</p>
+                <a href="#contato" class="btn btn-primary neon-btn">
+                    <span class="btn-content">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Reservar Data</span>
+                    </span>
+                    <span class="btn-reflection"></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Contato -->
+    <section id="contato" class="contato-section">
+        <div class="subtle-bg-image"></div>
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>CONTATO</h2>
+                <div class="separator"></div>
+            </div>
+            <div class="contato-container">
+                <div class="contato-info" data-aos="fade-right" data-aos-delay="200">
+                    <h3>VAMOS TRABALHAR JUNTOS</h3>
+                    <p>Entre em contato para contratar Nando Denon para seu próximo evento.</p>
+                    <div class="contato-item">
+                        <i class="fas fa-phone"></i>
+                        <span>+55 (XX) XXXXX-XXXX</span>
+                    </div>
+                    <div class="contato-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>contato@nandodenon.com.br</span>
+                    </div>
+                    <div class="contato-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>São Paulo, SP - Brasil</span>
+                    </div>
+                    <div class="contato-social">
+                        <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+                        <a href="#" target="_blank"><i class="fab fa-youtube"></i></a>
+                        <a href="#" target="_blank"><i class="fab fa-spotify"></i></a>
+                        <a href="#" target="_blank"><i class="fab fa-tiktok"></i></a>
+                        <a href="#" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="contato-form" data-aos="fade-left" data-aos-delay="300">
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <input type="text" id="nome" name="nome" placeholder="Nome" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" name="email" placeholder="Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" id="telefone" name="telefone" placeholder="Telefone" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="mensagem" name="mensagem" placeholder="Mensagem" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Enviar Mensagem</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rodapé -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="assets/Logos/Logo Branco.png" alt="Nando Denon Logo">
+                </div>
+                <div class="footer-links">
+                    <ul>
+                        <li><a href="#inicio">Início</a></li>
+                        <li><a href="#sobre">Sobre</a></li>
+                        <li><a href="#shows">Shows</a></li>
+                        <li><a href="#agenda">Agenda</a></li>
+                        <li><a href="#contato">Contato</a></li>
+                    </ul>
+                </div>
+                <div class="footer-social">
+                    <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-youtube"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-spotify"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 Nando Denon. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botão Voltar ao Topo -->
+    <a href="#inicio" class="back-to-top">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <script src="js/site-data.js"></script>
+    <script src="js/main.js" defer></script>
+    <script>
+        // Menu mobile toggle
+        const menuToggle = document.querySelector('.menu-toggle');
+        const nav = document.querySelector('nav');
+        
+        menuToggle.addEventListener('click', () => {
+            nav.classList.toggle('active');
+            menuToggle.querySelector('i').classList.toggle('fa-bars');
+            menuToggle.querySelector('i').classList.toggle('fa-times');
+        });
+
+        // Fechar menu ao clicar em um link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                nav.classList.remove('active');
+                menuToggle.querySelector('i').classList.add('fa-bars');
+                menuToggle.querySelector('i').classList.remove('fa-times');
+            });
+        });
+
+        // Check login status and update header
+        function updateLoginStatus() {
+            const loginLink = document.getElementById('loginLink');
+            const adminLink = document.getElementById('adminLink');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            if (SiteManager.isLoggedIn()) {
+                loginLink.style.display = 'none';
+                adminLink.style.display = 'flex';
+                logoutBtn.style.display = 'flex';
+            } else {
+                loginLink.style.display = 'flex';
+                adminLink.style.display = 'none';
+                logoutBtn.style.display = 'none';
+            }
+        }
+
+        // Atualizar status do login quando a janela for redimensionada
+        window.addEventListener('resize', updateLoginStatus);
+
+        // Update social media links
+        function updateSocialLinks() {
+            const links = SiteManager.getSettings().socialLinks;
+            const socialLinks = document.querySelectorAll('.social-bar a');
+            
+            if (socialLinks.length > 0) {
+                const linkTypes = ['instagram', 'youtube', 'spotify', 'tiktok'];
+                
+                for (let i = 0; i < Math.min(socialLinks.length, linkTypes.length); i++) {
+                    if (links[linkTypes[i]] && links[linkTypes[i]] !== '#') {
+                        socialLinks[i].href = links[linkTypes[i]];
+                    }
+                }
+            }
+            
+            // Update footer social links too
+            const footerLinks = document.querySelectorAll('.footer-social a');
+            if (footerLinks.length > 0) {
+                const linkTypes = ['instagram', 'youtube', 'spotify', 'tiktok'];
+                
+                for (let i = 0; i < Math.min(footerLinks.length, linkTypes.length); i++) {
+                    if (links[linkTypes[i]] && links[linkTypes[i]] !== '#') {
+                        footerLinks[i].href = links[linkTypes[i]];
+                    }
+                }
+            }
+        }
+
+        // Update contact information
+        function updateContactInfo() {
+            const contact = SiteManager.getSettings().contact;
+            const contactItems = document.querySelectorAll('.contato-item span');
+            
+            if (contactItems.length >= 3) {
+                contactItems[0].textContent = contact.phone;
+                contactItems[1].textContent = contact.email;
+                contactItems[2].textContent = contact.address;
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            SiteManager.logout();
+            updateLoginStatus();
+            window.location.reload();
+        });
+
+        // Refresh calendar functionality
+        document.getElementById('refreshCalendar').addEventListener('click', function() {
+            loadEventsTimeline();
+            updateCalendar();
+            this.classList.add('rotating');
+            setTimeout(() => this.classList.remove('rotating'), 1000);
+        });
+
+        // Form submission to add message
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const message = {
+                    nome: document.getElementById('nome').value,
+                    email: document.getElementById('email').value,
+                    telefone: document.getElementById('telefone').value,
+                    mensagem: document.getElementById('mensagem').value
+                };
+                
+                SiteManager.addMessage(message);
+                this.reset();
+                
+                // Show success message
+                alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+            });
+        }
+
+        // Load events into the timeline
+        function loadEventsTimeline() {
+            const events = SiteManager.getEvents();
+            const eventsTimeline = document.querySelector('.events-timeline');
+            
+            if (!eventsTimeline) return;
+            
+            if (events.length === 0) {
+                eventsTimeline.innerHTML = '<p style="color: rgba(255, 255, 255, 0.7); text-align: center; padding: 20px;">Nenhum evento agendado</p>';
+                return;
+            }
+
+            // Obter a data atual no formato YYYY-MM-DD
+            const today = new Date();
+            const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            const upcomingEvents = events
+                .filter(event => event.date >= todayFormatted)
+                .sort((a, b) => a.date.localeCompare(b.date));
+
+            if (upcomingEvents.length === 0) {
+                eventsTimeline.innerHTML = '<p style="color: rgba(255, 255, 255, 0.7); text-align: center; padding: 20px;">Nenhum evento agendado</p>';
+                return;
+            }
+
+            eventsTimeline.innerHTML = upcomingEvents
+                .map(event => {
+                    const dateParts = event.date.split('-');
+                    const eventMonth = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'][parseInt(dateParts[1], 10) - 1];
+                    const eventDay = parseInt(dateParts[2], 10);
+                    const eventYear = dateParts[0];
+                    
+                    return `
+                    <div class="event-item" data-type="${event.type}">
+                        <div class="event-date">
+                            <div class="date-circle">
+                                <span class="month">${eventMonth}</span>
+                                <span class="day">${eventDay}</span>
+                                <span class="year">${eventYear}</span>
+                            </div>
+                        </div>
+                        <div class="event-content">
+                            <h3>${event.title}</h3>
+                            <p><i class="fas fa-clock"></i> ${event.time}</p>
+                            <p><i class="fas fa-map-marker-alt"></i> ${event.location}</p>
+                            ${event.description ? `<p class="event-description">${event.description}</p>` : ''}
+                        </div>
+                    </div>
+                `}).join('');
+        }
+
+        // Event filtering
+        const filterButtons = document.querySelectorAll('.events-filter .filter-btn');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filter = button.getAttribute('data-filter');
+                
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const eventItems = document.querySelectorAll('.event-item');
+                eventItems.forEach(item => {
+                    if (filter === 'all' || item.getAttribute('data-type') === filter) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Update calendar with events
+        function updateCalendar() {
+            const events = SiteManager.getEvents();
+            const calendarDays = document.querySelectorAll('.calendar-days .calendar-day');
+            
+            if (!calendarDays.length) return;
+            
+            // Clear existing event markers
+            calendarDays.forEach(day => {
+                day.classList.remove('has-event');
+                day.classList.remove('multiple-events');
+                day.removeAttribute('title');
+            });
+
+            // Add event markers
+            events.forEach(event => {
+                // Usar diretamente a string da data sem criar um objeto Date
+                const dayElement = document.querySelector(`.calendar-days .calendar-day[data-date="${event.date}"]`);
+                if (dayElement) {
+                    dayElement.classList.add('has-event');
+                    
+                    // Se já existe um título, adicionar o novo título com quebra de linha
+                    if (dayElement.title) {
+                        dayElement.title += `\n${event.title}`;
+                        dayElement.classList.add('multiple-events');
+                    } else {
+                        dayElement.title = event.title;
+                    }
+                }
+            });
+        }
+
+        // Update event filters with categories
+        function updateEventFilters() {
+            const categories = SiteManager.getEventCategories();
+            const categoryFilters = document.getElementById('categoryFilters');
+            
+            if (categoryFilters) {
+                categoryFilters.innerHTML = categories.map(category => `
+                    <button class="filter-btn" data-filter="${category.id}">
+                        <i class="fas ${category.icon}"></i>
+                        ${category.name}
+                    </button>
+                `).join('');
+                
+                // Reattach event listeners
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        calendar.filterEvents(e);
+                    });
+                });
+            }
+        }
+
+        // Update filters when data changes
+        document.addEventListener('site-data-updated', updateEventFilters);
+        
+        // Initial load of filters
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEventFilters();
+            updateLoginStatus();
+            updateSocialLinks();
+            updateContactInfo();
+            loadEventsTimeline();
+            updateCalendar();
+            
+            // Listen for data updates
+            document.addEventListener('site-data-updated', function() {
+                updateSocialLinks();
+                updateContactInfo();
+                loadEventsTimeline();
+                updateCalendar();
+            });
+        });
+    </script>
+</body>
+</html> 

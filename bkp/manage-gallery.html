@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Galeria - Nando Denon</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gallery-manager {
+            padding: 80px 20px 20px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .gallery-header {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .gallery-header h1 {
+            color: #ff6b00;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .add-gallery-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .add-gallery-btn:hover {
+            background: #ff8533;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gallery-item img,
+        .gallery-item video {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-item-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-item-overlay {
+            opacity: 1;
+        }
+
+        .gallery-item-title {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .gallery-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .gallery-item-actions button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .gallery-item-actions button:hover {
+            color: #ff6b00;
+        }
+
+        .empty-gallery {
+            text-align: center;
+            padding: 50px;
+            color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #ff6b00;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #ff6b00;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-preview {
+            text-align: center;
+            padding: 10px;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-preview img {
+            max-width: 100%;
+            max-height: 200px;
+        }
+
+        .file-preview p {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .upload-progress {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background: #ff6b00;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <a href="dashboard.html">
+                <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
+            </a>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Voltar ao Dashboard</a></li>
+                <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+        <div class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <div class="gallery-manager">
+        <div class="container">
+            <div class="gallery-header">
+                <h1>Gerenciar Galeria</h1>
+                <button class="add-gallery-btn" id="openAddGalleryModal">
+                    <i class="fas fa-plus"></i>
+                    Adicionar Item
+                </button>
+            </div>
+
+            <div class="gallery-grid" id="galleryGrid">
+                <!-- Gallery items will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Gallery Modal -->
+    <div class="modal" id="galleryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Adicionar Item à Galeria</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <form id="galleryForm">
+                <input type="hidden" id="galleryItemId">
+                <div class="form-group">
+                    <label for="galleryTitle">Título</label>
+                    <input type="text" id="galleryTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="galleryType">Tipo</label>
+                    <select id="galleryType" required>
+                        <option value="image">Imagem</option>
+                        <option value="video">Vídeo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="galleryUrl">URL do Recurso</label>
+                    <input type="text" id="galleryUrl" required>
+                </div>
+                <div class="form-group file-upload">
+                    <label>Pré-visualização</label>
+                    <div class="file-preview" id="filePreview">
+                        <p>A pré-visualização aparecerá aqui</p>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelGallery">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/site-data.js"></script>
+    <script>
+        // Check if user is logged in
+        if (!SiteManager.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        // DOM Elements
+        const galleryGrid = document.getElementById('galleryGrid');
+        const galleryModal = document.getElementById('galleryModal');
+        const galleryForm = document.getElementById('galleryForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const filePreview = document.getElementById('filePreview');
+
+        // Event Listeners
+        document.getElementById('openAddGalleryModal').addEventListener('click', () => {
+            modalTitle.textContent = 'Adicionar Item à Galeria';
+            galleryForm.reset();
+            filePreview.innerHTML = '<p>A pré-visualização aparecerá aqui</p>';
+            galleryModal.style.display = 'flex';
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            galleryModal.style.display = 'none';
+        });
+
+        document.getElementById('cancelGallery').addEventListener('click', () => {
+            galleryModal.style.display = 'none';
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            SiteManager.logout();
+            window.location.href = 'index.html';
+        });
+
+        // URL Preview
+        document.getElementById('galleryUrl').addEventListener('input', updatePreview);
+        document.getElementById('galleryType').addEventListener('change', updatePreview);
+
+        function updatePreview() {
+            const url = document.getElementById('galleryUrl').value;
+            const type = document.getElementById('galleryType').value;
+            
+            if (!url) {
+                filePreview.innerHTML = '<p>A pré-visualização aparecerá aqui</p>';
+                return;
+            }
+            
+            if (type === 'image') {
+                filePreview.innerHTML = `<img src="${url}" alt="Pré-visualização" onerror="this.onerror=null;this.src='assets/placeholder-image.jpg';this.alt='Erro ao carregar imagem';">`;
+            } else {
+                filePreview.innerHTML = `<p>Pré-visualização de vídeo não disponível</p>`;
+            }
+        }
+
+        // Form submission
+        galleryForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const itemId = document.getElementById('galleryItemId').value;
+            const newItem = {
+                id: itemId || Date.now().toString(),
+                title: document.getElementById('galleryTitle').value,
+                type: document.getElementById('galleryType').value,
+                url: document.getElementById('galleryUrl').value,
+                date: new Date().toISOString()
+            };
+
+            if (itemId) {
+                // Update existing item
+                const index = SiteManager.getGallery().findIndex(item => item.id === itemId);
+                if (index !== -1) {
+                    const updatedGallery = [...SiteManager.getGallery()];
+                    updatedGallery[index] = { ...updatedGallery[index], ...newItem };
+                    SiteManager.updateSettings({ gallery: updatedGallery });
+                }
+            } else {
+                // Add new item
+                const updatedGallery = [...SiteManager.getGallery(), newItem];
+                SiteManager.updateSettings({ gallery: updatedGallery });
+            }
+
+            galleryModal.style.display = 'none';
+            loadGallery();
+        });
+
+        // Load and display gallery
+        function loadGallery() {
+            const gallery = SiteManager.getGallery();
+            
+            if (gallery.length === 0) {
+                galleryGrid.innerHTML = '<div class="empty-gallery">Nenhum item na galeria. Clique em "Adicionar Item" para começar.</div>';
+                return;
+            }
+
+            galleryGrid.innerHTML = gallery.map(item => `
+                <div class="gallery-item" data-id="${item.id}">
+                    ${item.type === 'image' 
+                        ? `<img src="${item.url}" alt="${item.title}" onerror="this.onerror=null;this.src='assets/placeholder-image.jpg';">`
+                        : `<video src="${item.url}" muted loop></video>`
+                    }
+                    <div class="gallery-item-overlay">
+                        <h3 class="gallery-item-title">${item.title}</h3>
+                        <div class="gallery-item-actions">
+                            <button onclick="editGalleryItem('${item.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteGalleryItem('${item.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Initialize video previews
+            document.querySelectorAll('.gallery-item video').forEach(video => {
+                video.addEventListener('mouseenter', () => video.play());
+                video.addEventListener('mouseleave', () => video.pause());
+            });
+        }
+
+        // Edit gallery item
+        function editGalleryItem(itemId) {
+            const gallery = SiteManager.getGallery();
+            const item = gallery.find(item => item.id === itemId);
+            
+            if (item) {
+                document.getElementById('galleryItemId').value = item.id;
+                document.getElementById('galleryTitle').value = item.title;
+                document.getElementById('galleryType').value = item.type;
+                document.getElementById('galleryUrl').value = item.url;
+                
+                updatePreview();
+                
+                modalTitle.textContent = 'Editar Item da Galeria';
+                galleryModal.style.display = 'flex';
+            }
+        }
+
+        // Delete gallery item
+        function deleteGalleryItem(itemId) {
+            if (confirm('Tem certeza que deseja excluir este item da galeria?')) {
+                const updatedGallery = SiteManager.getGallery().filter(item => item.id !== itemId);
+                SiteManager.updateSettings({ gallery: updatedGallery });
+                loadGallery();
+            }
+        }
+
+        // Initial load
+        loadGallery();
+
+        // Make functions available globally
+        window.editGalleryItem = editGalleryItem;
+        window.deleteGalleryItem = deleteGalleryItem;
+    </script>
+</body>
+</html> 
