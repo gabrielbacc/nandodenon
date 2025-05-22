@@ -196,12 +196,84 @@ app.post('/api/events', (req, res) => {
         const data = readData();
         
         // Validar campos mínimos
-        if (!event.title || !event.date) {
-            console.error('Evento com campos obrigatórios faltando');
+        if (!event.title) {
+            console.error('Evento sem título');
             return res.status(400).json({ 
                 success: false, 
-                message: 'Título e data são obrigatórios' 
+                message: 'Título é obrigatório' 
             });
+        }
+        
+        // Garantir que temos uma data válida
+        if (!event.date) {
+            console.error('Evento sem data');
+            // Definir data para hoje se não for fornecida
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            event.date = `${year}-${month}-${day}`;
+            console.log('Data definida para hoje:', event.date);
+        } else {
+            // Garantir que a data está no formato correto YYYY-MM-DD
+            if (!event.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                console.warn('Formato de data inválido, tentando converter:', event.date);
+                
+                // Tentar converter outras possibilidades de formato
+                let dateObj;
+                try {
+                    // Tentar converter várias possibilidades de formato
+                    if (event.date.includes('/')) {
+                        // Formato dd/mm/yyyy ou mm/dd/yyyy
+                        const parts = event.date.split('/');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) {
+                                // yyyy/mm/dd
+                                dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                            } else if (parts[2].length === 4) {
+                                // dd/mm/yyyy ou mm/dd/yyyy, assumindo dd/mm/yyyy
+                                dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                            }
+                        }
+                    } else if (event.date.includes('-')) {
+                        // Formato diferente com traços
+                        const parts = event.date.split('-');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) {
+                                // yyyy-mm-dd (já correto)
+                                dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                            } else if (parts[2].length === 4) {
+                                // dd-mm-yyyy
+                                dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                            }
+                        }
+                    } else {
+                        // Tentar como timestamp ou outro formato reconhecido por Date()
+                        dateObj = new Date(event.date);
+                    }
+                    
+                    if (dateObj && !isNaN(dateObj.getTime())) {
+                        // Converter para formato YYYY-MM-DD
+                        const year = dateObj.getFullYear();
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        event.date = `${year}-${month}-${day}`;
+                        console.log('Data convertida com sucesso:', event.date);
+                    } else {
+                        console.error('Não foi possível converter a data:', event.date);
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Formato de data inválido'
+                        });
+                    }
+                } catch (dateError) {
+                    console.error('Erro ao processar data:', dateError);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Formato de data inválido'
+                    });
+                }
+            }
         }
         
         // Adicionar ID se não existir
@@ -238,7 +310,8 @@ app.post('/api/events', (req, res) => {
             res.json({ 
                 success: true, 
                 message: 'Evento adicionado com sucesso',
-                eventId: event.id
+                eventId: event.id,
+                event: event
             });
         } else {
             res.status(500).json({
@@ -269,18 +342,81 @@ app.put('/api/events/:id', (req, res) => {
             data.events = [];
         }
         
+        // Garantir que temos uma data válida
+        if (updatedEvent.date) {
+            // Garantir que a data está no formato correto YYYY-MM-DD
+            if (!updatedEvent.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                console.warn('Formato de data inválido na atualização, tentando converter:', updatedEvent.date);
+                
+                // Tentar converter outras possibilidades de formato
+                let dateObj;
+                try {
+                    // Tentar converter várias possibilidades de formato
+                    if (updatedEvent.date.includes('/')) {
+                        // Formato dd/mm/yyyy ou mm/dd/yyyy
+                        const parts = updatedEvent.date.split('/');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) {
+                                // yyyy/mm/dd
+                                dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                            } else if (parts[2].length === 4) {
+                                // dd/mm/yyyy ou mm/dd/yyyy, assumindo dd/mm/yyyy
+                                dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                            }
+                        }
+                    } else if (updatedEvent.date.includes('-')) {
+                        // Formato diferente com traços
+                        const parts = updatedEvent.date.split('-');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) {
+                                // yyyy-mm-dd (já correto)
+                                dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                            } else if (parts[2].length === 4) {
+                                // dd-mm-yyyy
+                                dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                            }
+                        }
+                    } else {
+                        // Tentar como timestamp ou outro formato reconhecido por Date()
+                        dateObj = new Date(updatedEvent.date);
+                    }
+                    
+                    if (dateObj && !isNaN(dateObj.getTime())) {
+                        // Converter para formato YYYY-MM-DD
+                        const year = dateObj.getFullYear();
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        updatedEvent.date = `${year}-${month}-${day}`;
+                        console.log('Data convertida com sucesso:', updatedEvent.date);
+                    } else {
+                        console.error('Não foi possível converter a data na atualização:', updatedEvent.date);
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Formato de data inválido'
+                        });
+                    }
+                } catch (dateError) {
+                    console.error('Erro ao processar data na atualização:', dateError);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Formato de data inválido'
+                    });
+                }
+            }
+        }
+        
         // Encontrar o evento
         const index = data.events.findIndex(e => e.id === eventId);
         
         if (index === -1) {
-            return res.status(404).json({
-                success: false,
-                message: 'Evento não encontrado'
-            });
+            // Se o evento não existe, criar um novo com o ID especificado
+            console.log(`Evento ${eventId} não encontrado, criando novo`);
+            updatedEvent.id = eventId;
+            data.events.push(updatedEvent);
+        } else {
+            // Atualizar o evento existente
+            data.events[index] = { ...data.events[index], ...updatedEvent };
         }
-        
-        // Atualizar o evento
-        data.events[index] = { ...data.events[index], ...updatedEvent };
         
         // Atualizar estatísticas
         if (!data.stats) {
@@ -300,10 +436,11 @@ app.put('/api/events/:id', (req, res) => {
         console.log('Evento atualizado com sucesso:', eventId, saveSuccess);
         
         if (saveSuccess) {
+            const updatedEventData = index === -1 ? updatedEvent : data.events[index];
             res.json({ 
                 success: true, 
                 message: 'Evento atualizado com sucesso',
-                event: data.events[index]
+                event: updatedEventData
             });
         } else {
             res.status(500).json({

@@ -457,6 +457,7 @@
         document.getElementById('openAddEventModal').addEventListener('click', () => {
             modalTitle.textContent = 'Adicionar Evento';
             eventForm.reset();
+            document.getElementById('eventId').value = '';
             eventModal.style.display = 'flex';
         });
 
@@ -476,7 +477,7 @@
         });
 
         // Form submission
-        eventForm.addEventListener('submit', (e) => {
+        eventForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const eventId = document.getElementById('eventId').value;
@@ -492,92 +493,116 @@
                 description: document.getElementById('eventDescription').value
             };
 
-            // Verificar se já existe evento nesta data
-            const existingEvents = SiteManager.getEvents().filter(event => 
-                event.date === newEvent.date && event.id !== newEvent.id
-            );
-
-            if (existingEvents.length > 0) {
-                const confirmAdd = confirm(`Já existe(m) ${existingEvents.length} evento(s) nesta data. Deseja adicionar mais um evento?`);
-                if (!confirmAdd) {
-                    return;
-                }
-            }
-
-            if (eventId) {
-                SiteManager.updateEvent(eventId, newEvent);
-            } else {
-                SiteManager.addEvent(newEvent);
-            }
-
             eventModal.style.display = 'none';
-            loadEvents();
+            
+            // Exibir mensagem de loading
+            eventsList.innerHTML = '<div class="loading">Salvando evento...</div>';
+
+            try {
+                if (eventId) {
+                    // Atualizar evento existente
+                    await SiteManager.updateEvent(eventId, newEvent);
+                    console.log('Evento atualizado com sucesso:', newEvent);
+                } else {
+                    // Adicionar novo evento
+                    const addedEvent = await SiteManager.addEvent(newEvent);
+                    console.log('Novo evento adicionado:', addedEvent);
+                }
+                
+                // Carregar eventos atualizados
+                await loadEvents();
+            } catch (error) {
+                console.error('Erro ao salvar evento:', error);
+                alert('Erro ao salvar o evento. Verifique o console para mais detalhes.');
+                await loadEvents();
+            }
         });
 
         // Load and display events
-        function loadEvents() {
-            const events = SiteManager.getEvents();
-            
-            if (events.length === 0) {
-                eventsList.innerHTML = '<div class="no-events">Nenhum evento cadastrado</div>';
-                return;
+        async function loadEvents() {
+            try {
+                // Mostrar indicador de carregamento
+                eventsList.innerHTML = '<div class="no-events">Carregando eventos...</div>';
+                
+                // Buscar eventos de forma assíncrona
+                const events = await SiteManager.getData().then(data => data.events || []);
+                
+                if (!events || events.length === 0) {
+                    eventsList.innerHTML = '<div class="no-events">Nenhum evento cadastrado</div>';
+                    return;
+                }
+
+                eventsList.innerHTML = events
+                    .sort((a, b) => {
+                        // Ordenar por data sem criar objetos Date
+                        return a.date.localeCompare(b.date);
+                    })
+                    .map(event => {
+                        // Formatação da data no formato brasileiro sem criar objeto Date
+                        const dateParts = event.date ? event.date.split('-') : ['', '', ''];
+                        const formattedDate = dateParts.length === 3 ? 
+                            `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : 
+                            'Data inválida';
+
+                        return `
+                        <div class="event-card">
+                            <div class="event-info">
+                                <h3>${event.title || 'Sem título'}</h3>
+                                <p>
+                                    <i class="far fa-calendar"></i> ${formattedDate} 
+                                    <i class="far fa-clock"></i> ${event.time || 'Horário não definido'}
+                                </p>
+                                <p><i class="fas fa-map-marker-alt"></i> ${event.location || 'Local não definido'}</p>
+                            </div>
+                            <div class="event-actions">
+                                <button onclick="editEvent('${event.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteEvent('${event.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    }).join('');
+            } catch (error) {
+                console.error('Erro ao carregar eventos:', error);
+                eventsList.innerHTML = '<div class="no-events">Erro ao carregar eventos. Tente novamente mais tarde.</div>';
             }
-
-            eventsList.innerHTML = events
-                .sort((a, b) => {
-                    // Ordenar por data sem criar objetos Date
-                    return a.date.localeCompare(b.date);
-                })
-                .map(event => {
-                    // Formatação da data no formato brasileiro sem criar objeto Date
-                    const dateParts = event.date.split('-');
-                    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-
-                    return `
-                    <div class="event-card">
-                        <div class="event-info">
-                            <h3>${event.title}</h3>
-                            <p>
-                                <i class="far fa-calendar"></i> ${formattedDate} 
-                                <i class="far fa-clock"></i> ${event.time}
-                            </p>
-                            <p><i class="fas fa-map-marker-alt"></i> ${event.location}</p>
-                        </div>
-                        <div class="event-actions">
-                            <button onclick="editEvent('${event.id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="deleteEvent('${event.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                }).join('');
         }
 
         // Edit event
-        function editEvent(eventId) {
-            const event = SiteManager.getEventById(eventId);
-            if (event) {
-                document.getElementById('eventId').value = event.id;
-                document.getElementById('eventTitle').value = event.title;
-                document.getElementById('eventDate').value = event.date;
-                document.getElementById('eventTime').value = event.time;
-                document.getElementById('eventType').value = event.type;
-                document.getElementById('eventLocation').value = event.location;
-                document.getElementById('eventDescription').value = event.description;
+        async function editEvent(eventId) {
+            try {
+                const event = await SiteManager.getEventById(eventId);
+                if (event) {
+                    document.getElementById('eventId').value = event.id;
+                    document.getElementById('eventTitle').value = event.title || '';
+                    document.getElementById('eventDate').value = event.date || '';
+                    document.getElementById('eventTime').value = event.time || '';
+                    document.getElementById('eventType').value = event.type || 'outro';
+                    document.getElementById('eventLocation').value = event.location || '';
+                    document.getElementById('eventDescription').value = event.description || '';
 
-                modalTitle.textContent = 'Editar Evento';
-                eventModal.style.display = 'flex';
+                    modalTitle.textContent = 'Editar Evento';
+                    eventModal.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Erro ao editar evento:', error);
+                alert('Erro ao carregar dados do evento para edição.');
             }
         }
 
         // Delete event
-        function deleteEvent(eventId) {
+        async function deleteEvent(eventId) {
             if (confirm('Tem certeza que deseja excluir este evento?')) {
-                SiteManager.removeEvent(eventId);
-                loadEvents();
+                try {
+                    await SiteManager.removeEvent(eventId);
+                    await loadEvents();
+                } catch (error) {
+                    console.error('Erro ao excluir evento:', error);
+                    alert('Erro ao excluir evento. Tente novamente.');
+                }
             }
         }
 
@@ -617,52 +642,77 @@
             categoryForm.style.display = 'none';
         });
 
-        function loadCategories() {
-            const categories = SiteManager.getEventCategories();
-            categoriesList.innerHTML = categories.map(category => `
-                <div class="category-item">
-                    <div class="category-info">
-                        <i class="fas ${category.icon}"></i>
-                        <span>${category.name}</span>
-                    </div>
-                    <div class="category-actions">
-                        <button onclick="editCategory('${category.id}')" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteCategory('${category.id}')" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
+        async function loadCategories() {
+            try {
+                categoriesList.innerHTML = '<div class="no-events">Carregando categorias...</div>';
+                
+                // Buscar categorias de forma assíncrona
+                const categories = await SiteManager.getData().then(data => data.eventCategories || []);
+                
+                if (!categories || categories.length === 0) {
+                    categoriesList.innerHTML = '<div class="no-events">Nenhuma categoria cadastrada</div>';
+                    return;
+                }
 
-        function editCategory(categoryId) {
-            const categories = SiteManager.getEventCategories();
-            const category = categories.find(cat => cat.id === categoryId);
-            
-            if (category) {
-                document.getElementById('categoryId').value = category.id;
-                document.getElementById('categoryName').value = category.name;
-                document.getElementById('categoryIcon').value = category.icon;
-                iconPreview.className = 'fas ' + category.icon + ' icon-preview';
-                categoryForm.style.display = 'block';
+                categoriesList.innerHTML = categories.map(category => `
+                    <div class="category-item">
+                        <div class="category-info">
+                            <i class="fas ${category.icon}"></i>
+                            <span>${category.name}</span>
+                        </div>
+                        <div class="category-actions">
+                            <button onclick="editCategory('${category.id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteCategory('${category.id}')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+                categoriesList.innerHTML = '<div class="no-events">Erro ao carregar categorias. Tente novamente mais tarde.</div>';
             }
         }
 
-        function deleteCategory(categoryId) {
+        async function editCategory(categoryId) {
+            try {
+                const data = await SiteManager.getData();
+                const categories = data.eventCategories || [];
+                const category = categories.find(cat => cat.id === categoryId);
+                
+                if (category) {
+                    document.getElementById('categoryId').value = category.id;
+                    document.getElementById('categoryName').value = category.name;
+                    document.getElementById('categoryIcon').value = category.icon;
+                    iconPreview.className = 'fas ' + category.icon + ' icon-preview';
+                    categoryForm.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao editar categoria:', error);
+                alert('Erro ao carregar dados da categoria para edição.');
+            }
+        }
+
+        async function deleteCategory(categoryId) {
             if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-                const success = SiteManager.removeEventCategory(categoryId);
-                if (!success) {
-                    alert('Não é possível excluir esta categoria pois existem eventos vinculados a ela.');
-                } else {
-                    loadCategories();
-                    updateEventTypeSelect();
+                try {
+                    const success = await SiteManager.removeEventCategory(categoryId);
+                    if (!success) {
+                        alert('Não é possível excluir esta categoria pois existem eventos vinculados a ela.');
+                    } else {
+                        await loadCategories();
+                        await updateEventTypeSelect();
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir categoria:', error);
+                    alert('Erro ao excluir categoria. Tente novamente.');
                 }
             }
         }
 
-        categoryForm.addEventListener('submit', (e) => {
+        categoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const categoryId = document.getElementById('categoryId').value;
@@ -671,24 +721,34 @@
                 icon: document.getElementById('categoryIcon').value
             };
 
-            if (categoryId) {
-                SiteManager.updateEventCategory(categoryId, newCategory);
-            } else {
-                SiteManager.addEventCategory(newCategory);
-            }
+            try {
+                if (categoryId) {
+                    await SiteManager.updateEventCategory(categoryId, newCategory);
+                } else {
+                    await SiteManager.addEventCategory(newCategory);
+                }
 
-            categoryForm.style.display = 'none';
-            loadCategories();
-            updateEventTypeSelect();
+                categoryForm.style.display = 'none';
+                await loadCategories();
+                await updateEventTypeSelect();
+            } catch (error) {
+                console.error('Erro ao salvar categoria:', error);
+                alert('Erro ao salvar categoria. Tente novamente.');
+            }
         });
 
-        function updateEventTypeSelect() {
-            const categories = SiteManager.getEventCategories();
-            const eventTypeSelect = document.getElementById('eventType');
-            
-            eventTypeSelect.innerHTML = categories.map(category => 
-                `<option value="${category.id}">${category.name}</option>`
-            ).join('');
+        async function updateEventTypeSelect() {
+            try {
+                const data = await SiteManager.getData();
+                const categories = data.eventCategories || [];
+                const eventTypeSelect = document.getElementById('eventType');
+                
+                eventTypeSelect.innerHTML = categories.map(category => 
+                    `<option value="${category.id}">${category.name}</option>`
+                ).join('');
+            } catch (error) {
+                console.error('Erro ao atualizar seletor de categorias:', error);
+            }
         }
 
         // Update initial event type select options

@@ -95,40 +95,12 @@ async function fetchData() {
     }
 }
 
+// Função de compatibilidade (removida, agora incorporada no método saveData)
 async function saveDataToAPI(data) {
-    try {
-        // Só salvar dados no servidor se estiver logado
-        if (SiteManager.isLoggedIn()) {
-            console.log('Salvando dados na API...');
-            const response = await fetch(`${API_BASE_URL}/data`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-                // Atualizar cache local
-                localStorage.setItem('siteDataCache', JSON.stringify(data));
-                console.log('Dados salvos com sucesso na API');
-                return true;
-            }
-            console.warn('Falha ao salvar dados na API');
-            return false;
-        }
-        
-        // Mesmo sem login, atualizar cache local
-        localStorage.setItem('siteDataCache', JSON.stringify(data));
-        console.log('Dados salvos apenas localmente (sem login)');
-        return false;
-    } catch (error) {
-        console.error('Erro ao salvar dados:', error);
-        // Atualizar cache local mesmo em caso de erro
-        localStorage.setItem('siteDataCache', JSON.stringify(data));
-        return false;
-    }
+    console.warn('Função saveDataToAPI está obsoleta, use SiteManager.saveData() diretamente');
+    // Salvar localmente para compatibilidade
+    localStorage.setItem('siteDataCache', JSON.stringify(data));
+    return SiteManager.saveData();
 }
 
 // Inicializar dados
@@ -169,13 +141,58 @@ const SiteManager = {
     
     saveData: async function() {
         this.updateLastSync();
-        const success = await saveDataToAPI(siteData);
         
-        // Disparar evento de atualização para quem estiver escutando
-        const event = new CustomEvent('site-data-updated');
-        document.dispatchEvent(event);
+        // Sempre salvar localmente primeiro
+        localStorage.setItem('siteDataCache', JSON.stringify(siteData));
+        console.log('Dados salvos em localStorage');
         
-        return success;
+        try {
+            // Só salvar dados no servidor se estiver logado
+            if (SiteManager.isLoggedIn()) {
+                console.log('Enviando dados para a API...');
+                const response = await fetch(`${API_BASE_URL}/data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(siteData)
+                });
+                
+                if (response.ok) {
+                    console.log('Dados salvos com sucesso na API');
+                    
+                    // Disparar evento de atualização para quem estiver escutando
+                    const event = new CustomEvent('site-data-updated');
+                    document.dispatchEvent(event);
+                    
+                    return true;
+                }
+                console.warn('Falha ao salvar dados na API, mas salvos localmente');
+                
+                // Disparar evento mesmo quando a API falha
+                const event = new CustomEvent('site-data-updated');
+                document.dispatchEvent(event);
+                
+                return false;
+            }
+            
+            console.log('Dados salvos apenas localmente (usuário não logado)');
+            
+            // Disparar evento mesmo sem salvar na API
+            const event = new CustomEvent('site-data-updated');
+            document.dispatchEvent(event);
+            
+            return false;
+        } catch (error) {
+            console.error('Erro ao salvar dados na API:', error);
+            
+            // Disparar evento mesmo quando ocorre erro
+            const event = new CustomEvent('site-data-updated');
+            document.dispatchEvent(event);
+            
+            return false;
+        }
     },
     
     updateLastSync: function() {
@@ -209,8 +226,25 @@ const SiteManager = {
         
         console.log('Adicionando evento ao servidor:', event);
         
+        // Verificar se já existe a propriedade events em siteData
+        if (!siteData.events) {
+            console.log('Array de eventos não existe, criando...');
+            siteData.events = [];
+        }
+        
+        // Adicionar evento ao array local primeiro para garantir que é salvo
+        console.log('Adicionando evento localmente:', event);
+        siteData.events.push(event);
+        this.updateStats();
+        
+        // Salvar localmente
+        console.log('Salvando dados localmente...');
+        await this.saveData();
+        
+        // Agora tentar enviar para o servidor
         try {
             // Enviar para o servidor
+            console.log('Enviando evento para o servidor:', event);
             const response = await fetch(`${API_BASE_URL}/events`, {
                 method: 'POST',
                 headers: {
@@ -222,47 +256,28 @@ const SiteManager = {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('Evento adicionado com sucesso:', result);
-                
-                // Atualizar dados locais
-                if (!siteData.events) {
-                    siteData.events = [];
-                }
-                siteData.events.push(event);
-                this.updateStats();
+                console.log('Evento adicionado com sucesso no servidor:', result);
                 
                 // Recarregar dados para garantir sincronismo
+                console.log('Recarregando dados após sucesso na API...');
                 isInitialized = false;
                 await initializeData();
                 
                 return event;
             } else {
-                console.error('Erro ao adicionar evento:', response.status);
+                console.error('Erro ao adicionar evento ao servidor:', response.status);
                 const errorText = await response.text();
                 console.error('Detalhes do erro:', errorText);
                 
-                // Salvar localmente mesmo em caso de erro na API
-                if (!siteData.events) {
-                    siteData.events = [];
-                }
-                siteData.events.push(event);
-                this.updateStats();
-                await this.saveData();
-                console.log('Evento salvo localmente após falha na API');
-                
-                return event; // Retornar o evento mesmo em caso de erro na API
+                // Já salvamos localmente, então retornamos o evento
+                console.log('Usando evento salvo localmente após falha na API');
+                return event;
             }
         } catch (error) {
-            console.error('Exceção ao adicionar evento:', error);
+            console.error('Exceção ao adicionar evento ao servidor:', error);
             
-            // Fallback para operação local
-            console.log('Fallback: adicionando evento localmente');
-            if (!siteData.events) {
-                siteData.events = [];
-            }
-            siteData.events.push(event);
-            this.updateStats();
-            await this.saveData();
+            // Já salvamos localmente no início da função
+            console.log('Usando evento salvo localmente após exceção na API');
             return event;
         }
     },
@@ -281,20 +296,39 @@ const SiteManager = {
         
         console.log(`Atualizando evento ${eventId}:`, updatedEvent);
         
-        // Atualizar localmente para garantir que os dados são salvos
+        // Verificar se temos o array de eventos
+        if (!siteData.events) {
+            console.log('Array de eventos não existe, criando...');
+            siteData.events = [];
+        }
+        
+        // Atualizar localmente primeiro para garantir que os dados são salvos
         const index = siteData.events.findIndex(event => event.id === eventId);
+        
         if (index !== -1) {
+            console.log('Evento encontrado localmente, atualizando...');
             siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
             this.updateStats();
-            // Salva localmente primeiro para garantir que temos os dados
+            
+            // Salvar localmente primeiro para garantir que temos os dados
+            console.log('Salvando dados localmente...');
             await this.saveData();
         } else {
-            console.warn(`Evento ${eventId} não encontrado localmente`);
-            return null;
+            console.warn(`Evento ${eventId} não encontrado localmente, adicionando como novo`);
+            
+            // Se o evento não existe, adicionar como novo
+            const newEvent = { ...updatedEvent, id: eventId };
+            siteData.events.push(newEvent);
+            this.updateStats();
+            
+            // Salvar localmente
+            console.log('Salvando dados localmente...');
+            await this.saveData();
         }
         
         try {
             // Enviar para o servidor
+            console.log(`Enviando atualização para o servidor:`, updatedEvent);
             const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
                 method: 'PUT',
                 headers: {
@@ -306,26 +340,28 @@ const SiteManager = {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('Evento atualizado com sucesso na API:', result);
+                console.log('Evento atualizado com sucesso no servidor:', result);
                 
                 // Recarregar dados para garantir sincronismo
+                console.log('Recarregando dados após sucesso na API...');
                 isInitialized = false;
                 await initializeData();
                 
                 return siteData.events.find(event => event.id === eventId);
             } else {
-                console.error('Erro ao atualizar evento na API:', response.status);
+                console.error('Erro ao atualizar evento no servidor:', response.status);
                 const errorText = await response.text();
                 console.error('Detalhes do erro:', errorText);
                 
                 // Retornar o evento da cache local já que atualizamos localmente
+                console.log('Usando dados locais após falha na API');
                 return siteData.events.find(event => event.id === eventId);
             }
         } catch (error) {
-            console.error('Exceção ao atualizar evento na API:', error);
+            console.error('Exceção ao atualizar evento no servidor:', error);
             
             // Já atualizamos localmente, então retornamos o evento
-            console.log('Usando dados locais já atualizados');
+            console.log('Usando dados locais já atualizados após exceção na API');
             return siteData.events.find(event => event.id === eventId);
         }
     },
