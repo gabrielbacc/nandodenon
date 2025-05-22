@@ -51,8 +51,10 @@ let isInitialized = false;
 // Funções de API
 async function fetchData() {
     try {
+        console.log('Tentando buscar dados...');
         // Verificar se estamos logados e devemos obter dados completos
         if (SiteManager.isLoggedIn()) {
+            console.log('Usuário está logado, buscando dados completos...');
             const response = await fetch(`${API_BASE_URL}/data`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -60,18 +62,32 @@ async function fetchData() {
             });
             
             if (response.ok) {
-                return await response.json();
+                const data = await response.json();
+                console.log('Dados completos recebidos com sucesso');
+                return data;
+            } else {
+                console.warn('Falha ao buscar dados completos, código:', response.status);
             }
         } 
         
         // Se não estamos logados ou a requisição falhou, buscar dados públicos
+        console.log('Buscando dados públicos...');
         const publicResponse = await fetch(`${API_BASE_URL}/public`);
         if (publicResponse.ok) {
-            return await publicResponse.json();
+            const publicData = await publicResponse.json();
+            console.log('Dados públicos recebidos com sucesso', publicData);
+            return { 
+                ...defaultData, 
+                ...publicData 
+            };
+        } else {
+            console.warn('Falha ao buscar dados públicos, código:', publicResponse.status);
         }
         
         // Se todos falharem, retornar dados padrão ou cache
-        return JSON.parse(localStorage.getItem('siteDataCache')) || defaultData;
+        console.log('Usando dados do cache ou padrão');
+        const cachedData = JSON.parse(localStorage.getItem('siteDataCache')) || null;
+        return cachedData || defaultData;
     } catch (error) {
         console.error('Erro ao buscar dados:', error);
         // Em caso de erro, usar cache local
@@ -83,6 +99,7 @@ async function saveDataToAPI(data) {
     try {
         // Só salvar dados no servidor se estiver logado
         if (SiteManager.isLoggedIn()) {
+            console.log('Salvando dados na API...');
             const response = await fetch(`${API_BASE_URL}/data`, {
                 method: 'POST',
                 headers: {
@@ -95,13 +112,16 @@ async function saveDataToAPI(data) {
             if (response.ok) {
                 // Atualizar cache local
                 localStorage.setItem('siteDataCache', JSON.stringify(data));
+                console.log('Dados salvos com sucesso na API');
                 return true;
             }
+            console.warn('Falha ao salvar dados na API');
             return false;
         }
         
         // Mesmo sem login, atualizar cache local
         localStorage.setItem('siteDataCache', JSON.stringify(data));
+        console.log('Dados salvos apenas localmente (sem login)');
         return false;
     } catch (error) {
         console.error('Erro ao salvar dados:', error);
@@ -114,12 +134,19 @@ async function saveDataToAPI(data) {
 // Inicializar dados
 async function initializeData() {
     if (!isInitialized) {
-        siteData = await fetchData();
-        isInitialized = true;
-        
-        // Disparar evento de inicialização
-        const event = new CustomEvent('site-data-initialized');
-        document.dispatchEvent(event);
+        console.log('Inicializando dados...');
+        try {
+            siteData = await fetchData();
+            isInitialized = true;
+            
+            // Disparar evento de inicialização
+            const event = new CustomEvent('site-data-initialized');
+            document.dispatchEvent(event);
+            console.log('Dados inicializados com sucesso');
+        } catch (error) {
+            console.error('Erro durante a inicialização dos dados:', error);
+            siteData = { ...defaultData };
+        }
     }
     return siteData;
 }
@@ -156,9 +183,12 @@ const SiteManager = {
     },
     
     // Métodos de Eventos (Agenda)
-    getEvents: async function() {
-        await initializeData();
-        return siteData.events;
+    getEvents: function() {
+        // Retornar eventos sincronamente para compatibilidade com páginas que não utilizam async/await
+        if (!isInitialized) {
+            console.warn('Dados não inicializados ao requisitar eventos');
+        }
+        return siteData.events || [];
     },
     
     addEvent: async function(event) {
@@ -254,6 +284,7 @@ const SiteManager = {
     addMessage: async function(message) {
         // Para mensagens públicas, usar a API diretamente
         try {
+            console.log('Enviando mensagem para a API:', message);
             const response = await fetch(`${API_BASE_URL}/messages`, {
                 method: 'POST',
                 headers: {
@@ -263,12 +294,15 @@ const SiteManager = {
             });
             
             if (response.ok) {
+                console.log('Mensagem enviada com sucesso');
                 // Se estamos logados, recarregar os dados
                 if (this.isLoggedIn()) {
+                    isInitialized = false;
                     await initializeData();
                 }
                 return true;
             }
+            console.warn('Falha ao enviar mensagem');
             return false;
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
@@ -296,10 +330,12 @@ const SiteManager = {
     },
     
     // Métodos de Configurações
-    getSettings: async function() {
-        await initializeData();
-        
-        return siteData.settings;
+    getSettings: function() {
+        // Retornar configurações sincronamente para compatibilidade com páginas que não utilizam async/await
+        if (!isInitialized) {
+            console.warn('Dados não inicializados ao requisitar configurações');
+        }
+        return siteData.settings || defaultData.settings;
     },
     
     updateSettings: async function(newSettings) {
@@ -358,6 +394,7 @@ const SiteManager = {
     
     login: async function(username, password) {
         try {
+            console.log('Tentando fazer login:', username);
             const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: {
@@ -369,6 +406,7 @@ const SiteManager = {
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
+                    console.log('Login realizado com sucesso');
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('authToken', data.token);
@@ -381,6 +419,7 @@ const SiteManager = {
                     return true;
                 }
             }
+            console.warn('Falha no login');
             return false;
         } catch (error) {
             console.error('Erro ao fazer login:', error);
@@ -400,10 +439,12 @@ const SiteManager = {
     },
     
     // Métodos de Categorias de Eventos
-    getEventCategories: async function() {
-        await initializeData();
-        
-        return siteData.eventCategories;
+    getEventCategories: function() {
+        // Retornar categorias sincronamente para compatibilidade com páginas que não utilizam async/await
+        if (!isInitialized) {
+            console.warn('Dados não inicializados ao requisitar categorias de eventos');
+        }
+        return siteData.eventCategories || defaultData.eventCategories;
     },
     
     addEventCategory: async function(category) {
@@ -447,12 +488,17 @@ const SiteManager = {
 };
 
 // Inicializar dados
-initializeData();
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar automaticamente os dados quando o DOM estiver pronto
+    initializeData().catch(error => {
+        console.error('Falha na inicialização automática:', error);
+    });
+});
 
 // Para compatibilidade com o código existente, criamos um alias do EventManager
 const EventManager = {
-    getEvents: async function() {
-        return await SiteManager.getEvents();
+    getEvents: function() {
+        return SiteManager.getEvents();
     },
     addEvent: async function(event) {
         return await SiteManager.addEvent(event);

@@ -318,14 +318,32 @@
         // Loading overlay management
         const loadingOverlay = document.getElementById('loadingOverlay');
         
+        // Verificar login de forma simples e direta
+        function checkLoginStatus() {
+            console.log('Verificando status de login...');
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const hasToken = !!localStorage.getItem('authToken');
+            console.log(`isLoggedIn: ${isLoggedIn}, hasToken: ${hasToken}`);
+            
+            if (!isLoggedIn || !hasToken) {
+                console.warn('Usuário não está logado, redirecionando para login');
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            console.log('Usuário está autenticado');
+            return true;
+        }
+        
         // Inicializar o sistema
         async function initDashboard() {
             try {
-                // Check if user is logged in
-                if (!SiteManager.isLoggedIn()) {
-                    window.location.href = 'login.html';
+                // Verificar login primeiro, antes de qualquer operação
+                if (!checkLoginStatus()) {
                     return;
                 }
+                
+                console.log('Inicializando dashboard...');
                 
                 // Initialize SiteManager
                 await SiteManager.init();
@@ -340,7 +358,9 @@
                 });
                 
                 // Set admin name
-                document.getElementById('adminName').textContent = SiteManager.getUsername();
+                const username = localStorage.getItem('username') || 'Admin';
+                document.getElementById('adminName').textContent = username;
+                console.log(`Nome do administrador: ${username}`);
                 
                 // Update stats
                 await updateDashboardStats();
@@ -350,13 +370,20 @@
             } catch (error) {
                 console.error('Erro ao inicializar dashboard:', error);
                 alert('Erro ao carregar dados. Por favor, tente novamente.');
+                // Esconder loading overlay mesmo em caso de erro
+                loadingOverlay.style.display = 'none';
             }
         }
 
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', function(e) {
             e.preventDefault();
-            SiteManager.logout();
+            console.log('Realizando logout...');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('username');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('loginTime');
+            console.log('Logout realizado, redirecionando para index');
             window.location.href = 'index.html';
         });
 

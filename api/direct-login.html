@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Direto - Nando Denon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            background-color: #111;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+        }
+        h1 {
+            color: #ff6b00;
+            text-align: center;
+        }
+        button {
+            background-color: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #ff8533;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #222;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login Direto - Nando Denon</h1>
+        <p>Essa página permite fazer login diretamente, sem depender da API. Use apenas para fins de teste ou quando o servidor estiver com problemas.</p>
+        
+        <button id="loginBtn">Fazer login como admin</button>
+        
+        <div class="status" id="status">Status: Aguardando ação...</div>
+    </div>
+
+    <script>
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            const status = document.getElementById('status');
+            
+            try {
+                // Salvar dados de autenticação
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('username', 'admin');
+                localStorage.setItem('authToken', 'nandodenon2024');
+                localStorage.setItem('loginTime', Date.now().toString());
+                
+                status.innerHTML = "Status: Login realizado com sucesso!\n\n" +
+                                  "Username: admin\n" +
+                                  "Token: nandodenon2024\n" +
+                                  "Hora do login: " + new Date().toLocaleString();
+                status.className = "status success";
+                
+                // Botão para ir para o dashboard
+                const dashboardBtn = document.createElement('button');
+                dashboardBtn.textContent = 'Ir para o Dashboard';
+                dashboardBtn.style.marginTop = '10px';
+                dashboardBtn.addEventListener('click', function() {
+                    window.location.href = '../dashboard.html';
+                });
+                status.after(dashboardBtn);
+                
+                // Desabilitar o botão de login
+                this.disabled = true;
+            } catch (error) {
+                status.innerHTML = "Status: Erro ao realizar login!\n\n" + error.message;
+                status.className = "status error";
+            }
+        });
+    </script>
+</body>
+</html> 

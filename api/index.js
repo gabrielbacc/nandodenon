@@ -51,12 +51,27 @@ app.use(cors());
 
 // Helper to read the data file
 function readData() {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    if (!fs.existsSync(DATA_FILE)) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(DEFAULT_DATA, null, 2));
+        return DEFAULT_DATA;
+    }
+    try {
+        return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    } catch (error) {
+        console.error('Erro ao ler arquivo de dados:', error);
+        return DEFAULT_DATA;
+    }
 }
 
 // Helper to write to the data file
 function writeData(data) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Erro ao escrever arquivo de dados:', error);
+        return false;
+    }
 }
 
 // API Routes
@@ -77,7 +92,7 @@ const API_KEY = process.env.API_KEY || 'nandodenon2024';
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     
-    // Simple authentication for demo
+    // Simple authentication for demo - usando credenciais fixas para facilitar o acesso
     if (username === 'admin' && password === 'admin') {
         res.json({ 
             success: true, 
@@ -122,13 +137,17 @@ app.get('/api/public', (req, res) => {
     
     // Only send public data
     const publicData = {
-        events: data.events,
-        gallery: data.gallery,
-        settings: {
-            socialLinks: data.settings.socialLinks,
-            contact: data.settings.contact
+        events: data.events || [],
+        gallery: data.gallery || [],
+        eventCategories: data.eventCategories || [],
+        stats: {
+            shows: data.stats ? data.stats.shows : 0,
+            upcomingEvents: data.stats ? data.stats.upcomingEvents : 0,
         },
-        eventCategories: data.eventCategories
+        settings: {
+            socialLinks: data.settings ? data.settings.socialLinks : {},
+            contact: data.settings ? data.settings.contact : {}
+        }
     };
     
     res.json(publicData);
