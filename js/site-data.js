@@ -240,7 +240,17 @@ const SiteManager = {
                 console.error('Erro ao adicionar evento:', response.status);
                 const errorText = await response.text();
                 console.error('Detalhes do erro:', errorText);
-                return null;
+                
+                // Salvar localmente mesmo em caso de erro na API
+                if (!siteData.events) {
+                    siteData.events = [];
+                }
+                siteData.events.push(event);
+                this.updateStats();
+                await this.saveData();
+                console.log('Evento salvo localmente após falha na API');
+                
+                return event; // Retornar o evento mesmo em caso de erro na API
             }
         } catch (error) {
             console.error('Exceção ao adicionar evento:', error);
@@ -271,6 +281,18 @@ const SiteManager = {
         
         console.log(`Atualizando evento ${eventId}:`, updatedEvent);
         
+        // Atualizar localmente para garantir que os dados são salvos
+        const index = siteData.events.findIndex(event => event.id === eventId);
+        if (index !== -1) {
+            siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
+            this.updateStats();
+            // Salva localmente primeiro para garantir que temos os dados
+            await this.saveData();
+        } else {
+            console.warn(`Evento ${eventId} não encontrado localmente`);
+            return null;
+        }
+        
         try {
             // Enviar para o servidor
             const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
@@ -284,14 +306,7 @@ const SiteManager = {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('Evento atualizado com sucesso:', result);
-                
-                // Atualizar dados locais
-                const index = siteData.events.findIndex(event => event.id === eventId);
-                if (index !== -1) {
-                    siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
-                    this.updateStats();
-                }
+                console.log('Evento atualizado com sucesso na API:', result);
                 
                 // Recarregar dados para garantir sincronismo
                 isInitialized = false;
@@ -299,24 +314,19 @@ const SiteManager = {
                 
                 return siteData.events.find(event => event.id === eventId);
             } else {
-                console.error('Erro ao atualizar evento:', response.status);
+                console.error('Erro ao atualizar evento na API:', response.status);
                 const errorText = await response.text();
                 console.error('Detalhes do erro:', errorText);
-                return null;
+                
+                // Retornar o evento da cache local já que atualizamos localmente
+                return siteData.events.find(event => event.id === eventId);
             }
         } catch (error) {
-            console.error('Exceção ao atualizar evento:', error);
+            console.error('Exceção ao atualizar evento na API:', error);
             
-            // Fallback para operação local
-            console.log('Fallback: atualizando evento localmente');
-            const index = siteData.events.findIndex(event => event.id === eventId);
-            if (index !== -1) {
-                siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
-                this.updateStats();
-                await this.saveData();
-                return siteData.events[index];
-            }
-            return null;
+            // Já atualizamos localmente, então retornamos o evento
+            console.log('Usando dados locais já atualizados');
+            return siteData.events.find(event => event.id === eventId);
         }
     },
     
@@ -324,6 +334,20 @@ const SiteManager = {
         await initializeData();
         
         console.log(`Removendo evento ${eventId}`);
+        
+        // Remover localmente primeiro para garantir que funciona
+        const hadEvent = siteData.events.some(event => event.id === eventId);
+        if (hadEvent) {
+            // Remover do array local
+            siteData.events = siteData.events.filter(event => event.id !== eventId);
+            this.updateStats();
+            
+            // Salvar localmente primeiro
+            await this.saveData();
+            console.log(`Evento ${eventId} removido localmente`);
+        } else {
+            console.warn(`Evento ${eventId} não encontrado localmente para remoção`);
+        }
         
         try {
             // Enviar para o servidor
@@ -336,11 +360,7 @@ const SiteManager = {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('Evento removido com sucesso:', result);
-                
-                // Atualizar dados locais
-                siteData.events = siteData.events.filter(event => event.id !== eventId);
-                this.updateStats();
+                console.log('Evento removido com sucesso da API:', result);
                 
                 // Recarregar dados para garantir sincronismo
                 isInitialized = false;
@@ -348,20 +368,19 @@ const SiteManager = {
                 
                 return true;
             } else {
-                console.error('Erro ao remover evento:', response.status);
+                console.error('Erro ao remover evento da API:', response.status);
                 const errorText = await response.text();
                 console.error('Detalhes do erro:', errorText);
-                return false;
+                
+                // Já removemos localmente, então retornamos sucesso
+                return hadEvent;
             }
         } catch (error) {
-            console.error('Exceção ao remover evento:', error);
+            console.error('Exceção ao remover evento da API:', error);
             
-            // Fallback para operação local
-            console.log('Fallback: removendo evento localmente');
-            siteData.events = siteData.events.filter(event => event.id !== eventId);
-            this.updateStats();
-            await this.saveData();
-            return true;
+            // Já removemos localmente se o evento existia
+            console.log('Usando remoção local apenas, API indisponível');
+            return hadEvent;
         }
     },
     
@@ -404,7 +423,26 @@ const SiteManager = {
     },
     
     addMessage: async function(message) {
-        // Para mensagens públicas, usar a API diretamente
+        // Preparar a mensagem no formato correto
+        const formattedMessage = {
+            ...message,
+            id: Date.now().toString(),
+            date: new Date().toISOString(),
+            read: false
+        };
+        
+        // Inicializar o array de mensagens se não existir
+        if (!siteData.messages) {
+            siteData.messages = [];
+        }
+        
+        // Salvar localmente primeiro (estratégia offline-first)
+        siteData.messages.push(formattedMessage);
+        this.updateStats();
+        await this.saveData();
+        console.log('Mensagem salva localmente antes da tentativa online:', formattedMessage);
+        
+        // Para mensagens públicas, tentar enviar para o servidor
         try {
             console.log('Enviando mensagem para a API:', message);
             
@@ -419,7 +457,7 @@ const SiteManager = {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('Mensagem enviada com sucesso:', result);
+                console.log('Mensagem enviada com sucesso para a API:', result);
                 
                 // Se estamos logados, recarregar os dados
                 if (this.isLoggedIn()) {
@@ -438,63 +476,43 @@ const SiteManager = {
                 
                 return true;
             } else {
-                console.error('Erro ao enviar mensagem:', response.status);
-                let errorMessage = 'Erro ao enviar mensagem. Por favor, tente novamente.';
+                console.error('Erro ao enviar mensagem para API:', response.status);
+                let errorMessage = 'Mensagem foi salva localmente. Tentaremos enviar posteriormente.';
                 
                 try {
                     const errorData = await response.json();
                     console.error('Detalhes do erro:', errorData);
                     if (errorData && errorData.message) {
-                        errorMessage = errorData.message;
+                        errorMessage += ' Erro: ' + errorData.message;
                     }
                 } catch (e) {
                     console.error('Não foi possível processar a resposta de erro:', e);
                 }
                 
-                // Mostrar mensagem de erro
+                // Mostrar mensagem de erro/informação
                 try {
                     alert(errorMessage);
                 } catch (e) {
                     // Alguns navegadores podem bloquear alertas
-                    console.log('Não foi possível mostrar o alerta de erro');
+                    console.log('Não foi possível mostrar o alerta de erro/informação');
                 }
                 
-                return false;
+                // Retornar true já que salvamos localmente
+                return true;
             }
         } catch (error) {
-            console.error('Exceção ao enviar mensagem:', error);
+            console.error('Exceção ao enviar mensagem para API:', error);
             
-            // Tentar salvar localmente como fallback
+            // Alertar o usuário que a mensagem foi salva localmente
             try {
-                console.log('Tentando salvar mensagem localmente como fallback');
-                
-                // Preparar a mensagem no formato correto
-                const localMessage = {
-                    ...message,
-                    id: Date.now().toString(),
-                    date: new Date().toISOString(),
-                    read: false
-                };
-                
-                // Inicializar o array de mensagens se não existir
-                if (!siteData.messages) {
-                    siteData.messages = [];
-                }
-                
-                // Adicionar a mensagem
-                siteData.messages.push(localMessage);
-                this.updateStats();
-                await this.saveData();
-                
-                // Alertar o usuário
-                alert('Mensagem armazenada localmente. Tente novamente quando a conexão for restaurada.');
-                
-                return true;
-            } catch (fallbackError) {
-                console.error('Falha no fallback de mensagem:', fallbackError);
-                alert('Não foi possível enviar sua mensagem. Por favor, tente novamente mais tarde.');
-                return false;
+                alert('Mensagem armazenada localmente. Será sincronizada automaticamente quando houver conexão.');
+            } catch (e) {
+                // Alguns navegadores podem bloquear alertas
+                console.log('Não foi possível mostrar o alerta de fallback');
             }
+            
+            // Retornar true já que salvamos localmente
+            return true;
         }
     },
     

@@ -111,6 +111,7 @@
             <button id="checkStatusBtn">Verificar Status</button>
             <button id="homeBtn">Voltar para o Site</button>
             <button id="viewDataBtn">Ver Dados Atuais</button>
+            <button id="directLoginBtn">Login Direto</button>
         </div>
     </div>
 
@@ -120,6 +121,7 @@
         const checkStatusBtn = document.getElementById('checkStatusBtn');
         const homeBtn = document.getElementById('homeBtn');
         const viewDataBtn = document.getElementById('viewDataBtn');
+        const directLoginBtn = document.getElementById('directLoginBtn');
         
         // URLs base
         const API_BASE_URL = window.location.hostname === 'localhost' 
@@ -129,6 +131,11 @@
         // Voltar para a página inicial
         homeBtn.addEventListener('click', function() {
             window.location.href = '../index.html';
+        });
+        
+        // Login direto
+        directLoginBtn.addEventListener('click', function() {
+            window.location.href = 'direct-login.html';
         });
         
         // Mostrar dados atuais
@@ -204,6 +211,37 @@
                 `;
             }
             
+            // Verificar health check
+            try {
+                console.log('Verificando saúde do servidor...');
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Status do Servidor: <span class="online">ONLINE</span></div>
+                        <div class="card-content">
+                            <p>Tempo de resposta: ${responseTime}ms</p>
+                            <p>Uptime: ${Math.floor(data.uptime / 60)} minutos</p>
+                            <p>Timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro no health check:', error);
+                statusHTML += `
+                    <div class="status-card">
+                        <div class="status-title">Status do Servidor: <span class="offline">OFFLINE</span></div>
+                        <div class="card-content">
+                            <p>Erro: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
             // Verificar envio de mensagens
             try {
                 console.log('Verificando endpoint de mensagens...');
@@ -261,6 +299,7 @@
                         <div class="status-title">Sistema de Login: <span class="offline">OFFLINE</span></div>
                         <div class="card-content">
                             <p>Erro: ${error.message}</p>
+                            <p><a href="direct-login.html" style="color: #ff6b00;">Usar login direto!</a></p>
                         </div>
                     </div>
                 `;
@@ -296,6 +335,18 @@
                     </div>
                 `;
             }
+            
+            // Status do cliente
+            statusHTML += `
+                <div class="status-card">
+                    <div class="status-title">Status do Cliente</div>
+                    <div class="card-content">
+                        <p>LocalStorage disponível: <span class="${typeof localStorage !== 'undefined' ? 'online' : 'offline'}">${typeof localStorage !== 'undefined' ? 'Sim' : 'Não'}</span></p>
+                        <p>Modo offline ativo: <span class="${!navigator.onLine ? 'online' : 'offline'}">${!navigator.onLine ? 'Sim' : 'Não'}</span></p>
+                        <p>Login local: <span class="${localStorage.getItem('isLoggedIn') === 'true' ? 'online' : 'offline'}">${localStorage.getItem('isLoggedIn') === 'true' ? 'Logado como ' + localStorage.getItem('username') : 'Não logado'}</span></p>
+                    </div>
+                </div>
+            `;
             
             // Adicionar informações do navegador
             statusHTML += `

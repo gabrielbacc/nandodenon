@@ -383,6 +383,18 @@ app.delete('/api/events/:id', (req, res) => {
     }
 });
 
+// Servidor status e monitoramento
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Servir arquivos estáticos na API
+app.use('/api', express.static(path.join(__dirname)));
+
 // Export for Vercel serverless functions
 module.exports = app;
 
