@@ -1,9 +1,15 @@
 /**
  * Sistema centralizado de dados do site Nando Denon
  * Gerencia todas as interações de dados entre o dashboard e o site principal
+ * Versão online com API
  */
 
-// Estrutura inicial de dados
+// Configuração da API
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api' 
+    : '/api';
+
+// Estrutura de dados padrão (usado como fallback)
 const defaultData = {
     events: [],
     gallery: [],
@@ -17,7 +23,7 @@ const defaultData = {
     stats: {
         shows: 48,
         upcomingEvents: 0,
-        messages: 25,
+        messages: 0,
         views: 1200
     },
     settings: {
@@ -38,31 +44,111 @@ const defaultData = {
     lastSync: new Date().toISOString()
 };
 
-// Carregar dados do localStorage ou usar os padrões
-let siteData = JSON.parse(localStorage.getItem('siteData')) || defaultData;
+// Dados atuais
+let siteData = { ...defaultData };
+let isInitialized = false;
 
-// Garantir que as categorias padrão existam
-if (!siteData.eventCategories) {
-    siteData.eventCategories = defaultData.eventCategories;
-    localStorage.setItem('siteData', JSON.stringify(siteData));
+// Funções de API
+async function fetchData() {
+    try {
+        // Verificar se estamos logados e devemos obter dados completos
+        if (SiteManager.isLoggedIn()) {
+            const response = await fetch(`${API_BASE_URL}/data`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                return await response.json();
+            }
+        } 
+        
+        // Se não estamos logados ou a requisição falhou, buscar dados públicos
+        const publicResponse = await fetch(`${API_BASE_URL}/public`);
+        if (publicResponse.ok) {
+            return await publicResponse.json();
+        }
+        
+        // Se todos falharem, retornar dados padrão ou cache
+        return JSON.parse(localStorage.getItem('siteDataCache')) || defaultData;
+    } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+        // Em caso de erro, usar cache local
+        return JSON.parse(localStorage.getItem('siteDataCache')) || defaultData;
+    }
+}
+
+async function saveDataToAPI(data) {
+    try {
+        // Só salvar dados no servidor se estiver logado
+        if (SiteManager.isLoggedIn()) {
+            const response = await fetch(`${API_BASE_URL}/data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                // Atualizar cache local
+                localStorage.setItem('siteDataCache', JSON.stringify(data));
+                return true;
+            }
+            return false;
+        }
+        
+        // Mesmo sem login, atualizar cache local
+        localStorage.setItem('siteDataCache', JSON.stringify(data));
+        return false;
+    } catch (error) {
+        console.error('Erro ao salvar dados:', error);
+        // Atualizar cache local mesmo em caso de erro
+        localStorage.setItem('siteDataCache', JSON.stringify(data));
+        return false;
+    }
+}
+
+// Inicializar dados
+async function initializeData() {
+    if (!isInitialized) {
+        siteData = await fetchData();
+        isInitialized = true;
+        
+        // Disparar evento de inicialização
+        const event = new CustomEvent('site-data-initialized');
+        document.dispatchEvent(event);
+    }
+    return siteData;
 }
 
 /**
  * API de gerenciamento de dados do site
  */
 const SiteManager = {
+    // Inicialização
+    init: async function() {
+        await initializeData();
+        return this;
+    },
+    
     // Métodos gerais
-    getData: function() {
+    getData: async function() {
+        await initializeData();
         return siteData;
     },
     
-    saveData: function() {
-        localStorage.setItem('siteData', JSON.stringify(siteData));
+    saveData: async function() {
         this.updateLastSync();
+        const success = await saveDataToAPI(siteData);
         
         // Disparar evento de atualização para quem estiver escutando
         const event = new CustomEvent('site-data-updated');
         document.dispatchEvent(event);
+        
+        return success;
     },
     
     updateLastSync: function() {
@@ -70,17 +156,19 @@ const SiteManager = {
     },
     
     // Métodos de Eventos (Agenda)
-    getEvents: function() {
+    getEvents: async function() {
+        await initializeData();
         return siteData.events;
     },
     
-    addEvent: function(event) {
+    addEvent: async function(event) {
+        await initializeData();
+        
         if (!event.id) {
             event.id = Date.now().toString();
         }
         
         // Garantir que a data está no formato correto YYYY-MM-DD sem alteração de fuso horário
-        // Usar uma abordagem mais direta para evitar qualquer manipulação de fuso horário
         if (event.date && event.date.includes('-')) {
             const dateParts = event.date.split('-');
             if (dateParts.length === 3) {
@@ -91,11 +179,13 @@ const SiteManager = {
         
         siteData.events.push(event);
         this.updateStats();
-        this.saveData();
+        await this.saveData();
         return event;
     },
     
-    updateEvent: function(eventId, updatedEvent) {
+    updateEvent: async function(eventId, updatedEvent) {
+        await initializeData();
+        
         const index = siteData.events.findIndex(event => event.id === eventId);
         if (index !== -1) {
             // Garantir que a data está no formato correto YYYY-MM-DD sem alteração de fuso horário
@@ -109,99 +199,140 @@ const SiteManager = {
             
             siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
             this.updateStats();
-            this.saveData();
+            await this.saveData();
             return siteData.events[index];
         }
         return null;
     },
     
-    removeEvent: function(eventId) {
+    removeEvent: async function(eventId) {
+        await initializeData();
+        
         siteData.events = siteData.events.filter(event => event.id !== eventId);
         this.updateStats();
-        this.saveData();
+        await this.saveData();
     },
     
-    getEventById: function(eventId) {
+    getEventById: async function(eventId) {
+        await initializeData();
+        
         return siteData.events.find(event => event.id === eventId);
     },
     
     // Métodos de Galeria
-    getGallery: function() {
+    getGallery: async function() {
+        await initializeData();
+        
         return siteData.gallery;
     },
     
-    addGalleryItem: function(item) {
+    addGalleryItem: async function(item) {
+        await initializeData();
+        
         if (!item.id) {
             item.id = Date.now().toString();
         }
         siteData.gallery.push(item);
-        this.saveData();
+        await this.saveData();
         return item;
     },
     
-    removeGalleryItem: function(itemId) {
+    removeGalleryItem: async function(itemId) {
+        await initializeData();
+        
         siteData.gallery = siteData.gallery.filter(item => item.id !== itemId);
-        this.saveData();
+        await this.saveData();
     },
     
     // Métodos de Mensagens (Contato)
-    getMessages: function() {
+    getMessages: async function() {
+        await initializeData();
+        
         return siteData.messages;
     },
     
-    addMessage: function(message) {
-        message.id = Date.now().toString();
-        message.date = new Date().toISOString();
-        message.read = false;
-        siteData.messages.push(message);
-        this.updateStats();
-        this.saveData();
-        return message;
+    addMessage: async function(message) {
+        // Para mensagens públicas, usar a API diretamente
+        try {
+            const response = await fetch(`${API_BASE_URL}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(message)
+            });
+            
+            if (response.ok) {
+                // Se estamos logados, recarregar os dados
+                if (this.isLoggedIn()) {
+                    await initializeData();
+                }
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            return false;
+        }
     },
     
-    markMessageAsRead: function(messageId) {
+    markMessageAsRead: async function(messageId) {
+        await initializeData();
+        
         const index = siteData.messages.findIndex(msg => msg.id === messageId);
         if (index !== -1) {
             siteData.messages[index].read = true;
             this.updateStats();
-            this.saveData();
+            await this.saveData();
         }
     },
     
-    removeMessage: function(messageId) {
+    removeMessage: async function(messageId) {
+        await initializeData();
+        
         siteData.messages = siteData.messages.filter(msg => msg.id !== messageId);
         this.updateStats();
-        this.saveData();
+        await this.saveData();
     },
     
     // Métodos de Configurações
-    getSettings: function() {
+    getSettings: async function() {
+        await initializeData();
+        
         return siteData.settings;
     },
     
-    updateSettings: function(newSettings) {
+    updateSettings: async function(newSettings) {
+        await initializeData();
+        
         siteData.settings = { ...siteData.settings, ...newSettings };
         siteData.settings.lastUpdate = new Date().toISOString();
-        this.saveData();
+        await this.saveData();
         return siteData.settings;
     },
     
-    updateSocialLinks: function(links) {
+    updateSocialLinks: async function(links) {
+        await initializeData();
+        
         siteData.settings.socialLinks = { ...siteData.settings.socialLinks, ...links };
         siteData.settings.lastUpdate = new Date().toISOString();
-        this.saveData();
+        await this.saveData();
         return siteData.settings.socialLinks;
     },
     
-    updateContactInfo: function(contact) {
+    updateContactInfo: async function(contact) {
+        await initializeData();
+        
         siteData.settings.contact = { ...siteData.settings.contact, ...contact };
         siteData.settings.lastUpdate = new Date().toISOString();
-        this.saveData();
+        await this.saveData();
         return siteData.settings.contact;
     },
     
     // Métodos de Estatísticas
-    getStats: function() {
+    getStats: async function() {
+        await initializeData();
+        
         return siteData.stats;
     },
     
@@ -218,30 +349,49 @@ const SiteManager = {
         siteData.stats.messages = siteData.messages.filter(
             msg => !msg.read
         ).length;
-        
-        this.saveData();
-        return siteData.stats;
     },
     
     // Autenticação e sessão
     isLoggedIn: function() {
-        return localStorage.getItem('isLoggedIn') === 'true';
+        return localStorage.getItem('isLoggedIn') === 'true' && localStorage.getItem('authToken');
     },
     
-    login: function(username, password) {
-        // Simulação simples de autenticação - em produção seria com backend
-        if (username === 'admin' && password === 'admin') {
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('username', username);
-            localStorage.setItem('loginTime', Date.now().toString());
-            return true;
+    login: async function(username, password) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('loginTime', Date.now().toString());
+                    
+                    // Recarregar dados
+                    isInitialized = false;
+                    await initializeData();
+                    
+                    return true;
+                }
+            }
+            return false;
+        } catch (error) {
+            console.error('Erro ao fazer login:', error);
+            return false;
         }
-        return false;
     },
     
     logout: function() {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
+        localStorage.removeItem('authToken');
         localStorage.removeItem('loginTime');
     },
     
@@ -250,11 +400,15 @@ const SiteManager = {
     },
     
     // Métodos de Categorias de Eventos
-    getEventCategories: function() {
+    getEventCategories: async function() {
+        await initializeData();
+        
         return siteData.eventCategories;
     },
     
-    addEventCategory: function(category) {
+    addEventCategory: async function(category) {
+        await initializeData();
+        
         if (!category.id) {
             category.id = category.name.toLowerCase().replace(/\s+/g, '-');
         }
@@ -262,41 +416,57 @@ const SiteManager = {
             category.icon = 'fa-calendar';
         }
         siteData.eventCategories.push(category);
-        this.saveData();
+        await this.saveData();
         return category;
     },
     
-    updateEventCategory: function(categoryId, updatedCategory) {
+    updateEventCategory: async function(categoryId, updatedCategory) {
+        await initializeData();
+        
         const index = siteData.eventCategories.findIndex(cat => cat.id === categoryId);
         if (index !== -1) {
             siteData.eventCategories[index] = { ...siteData.eventCategories[index], ...updatedCategory };
-            this.saveData();
+            await this.saveData();
             return siteData.eventCategories[index];
         }
         return null;
     },
     
-    removeEventCategory: function(categoryId) {
+    removeEventCategory: async function(categoryId) {
+        await initializeData();
+        
         // Don't remove if there are events using this category
         const hasEvents = siteData.events.some(event => event.type === categoryId);
         if (hasEvents) {
             return false;
         }
         siteData.eventCategories = siteData.eventCategories.filter(cat => cat.id !== categoryId);
-        this.saveData();
+        await this.saveData();
         return true;
     },
 };
 
+// Inicializar dados
+initializeData();
+
 // Para compatibilidade com o código existente, criamos um alias do EventManager
 const EventManager = {
-    getEvents: SiteManager.getEvents.bind(SiteManager),
-    addEvent: SiteManager.addEvent.bind(SiteManager),
-    updateEvent: SiteManager.updateEvent.bind(SiteManager),
-    removeEvent: SiteManager.removeEvent.bind(SiteManager),
-    getEventById: SiteManager.getEventById.bind(SiteManager),
-    saveEvents: SiteManager.saveData.bind(SiteManager)
-};
-
-// Inicialização - garantir que as estatísticas estejam atualizadas
-SiteManager.updateStats(); 
+    getEvents: async function() {
+        return await SiteManager.getEvents();
+    },
+    addEvent: async function(event) {
+        return await SiteManager.addEvent(event);
+    },
+    updateEvent: async function(eventId, updatedEvent) {
+        return await SiteManager.updateEvent(eventId, updatedEvent);
+    },
+    removeEvent: async function(eventId) {
+        return await SiteManager.removeEvent(eventId);
+    },
+    getEventById: async function(eventId) {
+        return await SiteManager.getEventById(eventId);
+    },
+    saveEvents: async function() {
+        return await SiteManager.saveData();
+    }
+}; 

@@ -75,6 +75,23 @@
             text-align: center;
             display: none;
         }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .loading-spinner i {
+            color: #ff6b00;
+            font-size: 24px;
+            animation: spin 1s infinite linear;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -101,35 +118,68 @@
             <div class="login-logo">
                 <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
             </div>
+            <div class="loading-spinner" id="loadingSpinner">
+                <i class="fas fa-spinner"></i>
+            </div>
             <form class="login-form" id="loginForm">
                 <input type="text" id="username" placeholder="Usuário" required>
                 <input type="password" id="password" placeholder="Senha" required>
                 <p class="error-message" id="errorMessage">Usuário ou senha incorretos</p>
-                <button type="submit">Entrar</button>
+                <button type="submit" id="loginButton">Entrar</button>
             </form>
         </div>
     </section>
 
     <script src="js/site-data.js"></script>
     <script>
-        // Check if already logged in
-        if (SiteManager.isLoggedIn()) {
-            window.location.href = 'dashboard.html';
-        }
+        // Inicializar o SiteManager para garantir que tudo está carregado
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await SiteManager.init();
+            } catch (error) {
+                console.error('Erro ao inicializar:', error);
+            }
+            
+            // Check if already logged in
+            if (SiteManager.isLoggedIn()) {
+                window.location.href = 'dashboard.html';
+            }
+        });
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
-
-            if (SiteManager.login(username, password)) {
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
-            } else {
-                // Show error message
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const loginButton = document.getElementById('loginButton');
+            
+            // Reset error message
+            errorMessage.style.display = 'none';
+            
+            // Show loading spinner
+            loadingSpinner.style.display = 'block';
+            loginButton.disabled = true;
+            
+            try {
+                const success = await SiteManager.login(username, password);
+                
+                if (success) {
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // Show error message
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao fazer login:', error);
+                errorMessage.textContent = 'Erro ao conectar ao servidor. Tente novamente.';
                 errorMessage.style.display = 'block';
+            } finally {
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+                loginButton.disabled = false;
             }
         });
     </script>

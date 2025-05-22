@@ -199,9 +199,38 @@
                 gap: 20px;
             }
         }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .loading-spinner {
+            color: #ff6b00;
+            font-size: 48px;
+            animation: spin 1s infinite linear;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <i class="fas fa-spinner loading-spinner"></i>
+    </div>
+
     <!-- Header -->
     <header>
         <div class="logo">
@@ -239,7 +268,7 @@
             <div class="stats-row">
                 <div class="stat-card">
                     <h4>Total de Shows</h4>
-                    <div class="number" id="statsShows">48</div>
+                    <div class="number" id="statsShows">0</div>
                     <p>Últimos 30 dias</p>
                 </div>
                 <div class="stat-card">
@@ -286,9 +315,42 @@
 
     <script src="js/site-data.js"></script>
     <script>
-        // Check if user is logged in
-        if (!SiteManager.isLoggedIn()) {
-            window.location.href = 'login.html';
+        // Loading overlay management
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // Inicializar o sistema
+        async function initDashboard() {
+            try {
+                // Check if user is logged in
+                if (!SiteManager.isLoggedIn()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Initialize SiteManager
+                await SiteManager.init();
+                
+                // Set current date
+                const currentDate = new Date();
+                document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('pt-BR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // Set admin name
+                document.getElementById('adminName').textContent = SiteManager.getUsername();
+                
+                // Update stats
+                await updateDashboardStats();
+                
+                // Hide loading overlay
+                loadingOverlay.style.display = 'none';
+            } catch (error) {
+                console.error('Erro ao inicializar dashboard:', error);
+                alert('Erro ao carregar dados. Por favor, tente novamente.');
+            }
         }
 
         // Logout functionality
@@ -298,44 +360,33 @@
             window.location.href = 'index.html';
         });
 
-        // Set current date
-        const currentDate = new Date();
-        document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('pt-BR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        // Set admin name
-        document.getElementById('adminName').textContent = SiteManager.getUsername();
-
         // Update stats
-        function updateDashboardStats() {
-            const stats = SiteManager.getStats();
-            document.getElementById('statsShows').textContent = stats.shows;
-            document.getElementById('statsEvents').textContent = stats.upcomingEvents;
-            document.getElementById('statsMessages').textContent = stats.messages;
-            
-            // Get financial data if FinanceManager exists
+        async function updateDashboardStats() {
             try {
-                if (typeof FinanceManager !== 'undefined') {
-                    const financeManager = FinanceManager.init();
-                    document.getElementById('statsRevenue').textContent = 
-                        new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                        }).format(financeManager.getMonthlyIncome());
-                } else {
+                const stats = await SiteManager.getStats();
+                document.getElementById('statsShows').textContent = stats.shows;
+                document.getElementById('statsEvents').textContent = stats.upcomingEvents;
+                document.getElementById('statsMessages').textContent = stats.messages;
+                
+                // Get financial data if FinanceManager exists
+                try {
+                    if (typeof FinanceManager !== 'undefined') {
+                        const financeManager = await FinanceManager.init();
+                        document.getElementById('statsRevenue').textContent = 
+                            new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            }).format(await financeManager.getMonthlyIncome());
+                    } else {
+                        document.getElementById('statsRevenue').textContent = 'R$ 0';
+                    }
+                } catch (e) {
                     document.getElementById('statsRevenue').textContent = 'R$ 0';
                 }
-            } catch (e) {
-                document.getElementById('statsRevenue').textContent = 'R$ 0';
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
             }
         }
-
-        // Initial stats update
-        updateDashboardStats();
 
         // Listen for data updates
         document.addEventListener('site-data-updated', updateDashboardStats);
@@ -358,6 +409,9 @@
                 menuToggle.querySelector('i').classList.remove('fa-times');
             });
         });
+        
+        // Iniciar o dashboard quando a página carregar
+        document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
 </html> 
