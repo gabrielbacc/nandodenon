@@ -501,13 +501,11 @@
                     Copiar HTML
                 </button>
                 <div class="help-text">
-                    <p><strong>Instruções:</strong></p>
+                    <p><strong>Informações:</strong></p>
                     <ol>
-                        <li>Clique no botão "Copiar HTML" acima</li>
-                        <li>Abra o arquivo <strong>index.html</strong> no editor</li>
-                        <li>Localize a seção da agenda (busque por <code>&lt;!-- INÍCIO DO CONTEÚDO DA AGENDA - SUBSTITUA TUDO ENTRE ESTAS TAGS QUANDO GERAR NOVO HTML --&gt;</code>)</li>
-                        <li>Substitua todo o conteúdo entre <code>&lt;!-- INÍCIO DO CONTEÚDO DA AGENDA - SUBSTITUA TUDO ENTRE ESTAS TAGS QUANDO GERAR NOVO HTML --&gt;</code> e <code>&lt;!-- FIM DO CONTEÚDO DA AGENDA --&gt;</code></li>
-                        <li>Salve o arquivo</li>
+                        <li>A agenda na página inicial é atualizada <strong>automaticamente</strong> quando você adiciona, edita ou remove eventos.</li>
+                        <li>O HTML acima está disponível caso você precise fazer uma edição manual no arquivo index.html.</li>
+                        <li>Para copiar o código, clique no botão "Copiar HTML" acima.</li>
                     </ol>
                 </div>
             </div>
@@ -552,6 +550,19 @@
             const agendaHtml = generateAgendaHtml();
             agendaHtmlCode.textContent = agendaHtml;
             htmlModal.style.display = 'flex';
+            
+            // Atualizar o texto da ajuda para explicar que a atualização é automática
+            const helpText = htmlModal.querySelector('.help-text');
+            if (helpText) {
+                helpText.innerHTML = `
+                    <p><strong>Informações:</strong></p>
+                    <ol>
+                        <li>A agenda na página inicial é atualizada <strong>automaticamente</strong> quando você adiciona, edita ou remove eventos.</li>
+                        <li>O HTML acima está disponível caso você precise fazer uma edição manual no arquivo index.html.</li>
+                        <li>Para copiar o código, clique no botão "Copiar HTML" acima.</li>
+                    </ol>
+                `;
+            }
         });
         
         document.getElementById('closeHtmlModal').addEventListener('click', () => {
@@ -613,8 +624,8 @@
                 // Carregar eventos atualizados
                 await loadEvents();
                 
-                // Notificar o usuário que deve gerar o HTML atualizado
-                alert('Evento salvo com sucesso! Clique em "Gerar HTML da Agenda" para obter o código HTML atualizado para o site.');
+                // Notificar o usuário que a agenda foi atualizada automaticamente
+                alert('Evento salvo com sucesso! A agenda na página inicial foi atualizada automaticamente.');
                 
                 // Disparar evento para atualizar outras páginas abertas
                 const updateEvent = new CustomEvent('site-data-updated');
@@ -708,8 +719,8 @@
                     await SiteManager.removeEvent(eventId);
                     await loadEvents();
                     
-                    // Notificar o usuário que deve gerar o HTML atualizado
-                    alert('Evento excluído com sucesso! Clique em "Gerar HTML da Agenda" para obter o código HTML atualizado para o site.');
+                    // Notificar o usuário que a agenda foi atualizada automaticamente
+                    alert('Evento excluído com sucesso! A agenda na página inicial foi atualizada automaticamente.');
                     
                     // Disparar evento para atualizar outras páginas abertas
                     const updateEvent = new CustomEvent('site-data-updated');

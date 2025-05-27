@@ -79,8 +79,42 @@ function generateAgendaHtml() {
     return agendaHtml;
 }
 
-// Exportar a função para uso global
+// Função para atualizar dinamicamente a agenda na página atual
+function updateAgendaInPage() {
+    // Atualizar a agenda diretamente no DOM, se estivermos na página index
+    const agendaSection = document.querySelector('#agenda .container');
+    if (agendaSection) {
+        const agendaContainer = agendaSection.querySelector('.text-agenda-container');
+        
+        // Se o container da agenda existir, substituí-lo
+        if (agendaContainer) {
+            const newAgendaHtml = generateAgendaHtml();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newAgendaHtml;
+            agendaSection.replaceChild(tempDiv.firstElementChild, agendaContainer);
+        } 
+        // Se não existir, inserir após o cabeçalho da seção
+        else {
+            const sectionHeader = agendaSection.querySelector('.section-header');
+            if (sectionHeader) {
+                const newAgendaHtml = generateAgendaHtml();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newAgendaHtml;
+                sectionHeader.insertAdjacentElement('afterend', tempDiv.firstElementChild);
+            }
+        }
+    }
+}
+
+// Exportar as funções para uso global
 window.generateAgendaHtml = generateAgendaHtml;
+window.updateAgendaInPage = updateAgendaInPage;
+
+// Quando o SiteManager emitir o evento de dados atualizados, atualizar a agenda
+document.addEventListener('site-data-updated', function() {
+    console.log('Evento site-data-updated detectado, atualizando agenda na página...');
+    updateAgendaInPage();
+});
 
 // Gerar o HTML quando o script for carregado
 document.addEventListener('DOMContentLoaded', function() {
@@ -91,9 +125,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mostrar instruções
     console.log('------------------------------------------------------');
     console.log('INSTRUÇÕES:');
-    console.log('1. Copie o HTML acima');
-    console.log('2. Abra o arquivo index.html');
-    console.log('3. Substitua o conteúdo entre as tags <!-- INÍCIO DO CONTEÚDO DA AGENDA - SUBSTITUA TUDO ENTRE ESTAS TAGS QUANDO GERAR NOVO HTML --> e <!-- FIM DO CONTEÚDO DA AGENDA -->');
-    console.log('4. Salve o arquivo');
+    console.log('1. A agenda será atualizada automaticamente na página atual.');
+    console.log('2. Para exportar o HTML para edição manual do arquivo index.html, utilize o botão "Gerar HTML da Agenda" no painel de administração.');
     console.log('------------------------------------------------------');
+    
+    // Atualizar a agenda na página atual, se estivermos na página index
+    updateAgendaInPage();
 }); 

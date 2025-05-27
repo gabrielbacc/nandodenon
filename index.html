@@ -838,23 +838,40 @@
             updateSocialLinks();
             updateContactInfo();
             
-            // Carregar a agenda simples
-            console.log('Carregando agenda simples...');
-            loadSimpleAgenda();
+            // Verificar se temos a função de atualização automática disponível
+            if (typeof updateAgendaInPage === 'function') {
+                console.log('Usando updateAgendaInPage para atualizar a agenda...');
+                updateAgendaInPage();
+            } else {
+                // Fallback para o método antigo
+                console.log('Função updateAgendaInPage não encontrada, usando loadSimpleAgenda...');
+                loadSimpleAgenda();
+            }
             
             // Listen for data updates
             document.addEventListener('site-data-updated', function() {
                 console.log('Evento site-data-updated detectado, atualizando interface...');
                 updateSocialLinks();
                 updateContactInfo();
-                loadSimpleAgenda();
+                
+                // Usar o método de atualização automática se disponível
+                if (typeof updateAgendaInPage === 'function') {
+                    updateAgendaInPage();
+                } else {
+                    loadSimpleAgenda();
+                }
             });
 
             // Também atualizar quando a página receber foco
             window.addEventListener('focus', function() {
                 console.log('Página recebeu foco, verificando por atualizações...');
                 SiteManager.init().then(() => {
-                    loadSimpleAgenda();
+                    // Usar o método de atualização automática se disponível
+                    if (typeof updateAgendaInPage === 'function') {
+                        updateAgendaInPage();
+                    } else {
+                        loadSimpleAgenda();
+                    }
                 });
             });
         });
