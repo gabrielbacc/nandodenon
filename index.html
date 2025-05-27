@@ -42,18 +42,35 @@
             color: white;
             text-decoration: none;
             font-size: 16px;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
         }
 
         .nav-links a:hover {
             color: #ff6b00;
+            background: rgba(255, 107, 0, 0.1);
         }
 
         .nav-links a.active {
             color: #ff6b00;
+            background: rgba(255, 107, 0, 0.1);
+            position: relative;
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background: #ff6b00;
+            border-radius: 2px;
         }
 
         #adminSection {
@@ -436,26 +453,200 @@
                 <div class="separator"></div>
             </div>
             
+            <style>
+                /* Estilos aprimorados para a agenda em formato de texto */
+                .text-agenda-container {
+                    max-width: 900px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                }
+                
+                .simple-agenda {
+                    color: #fff;
+                }
+                
+                .agenda-month {
+                    margin-bottom: 30px;
+                }
+                
+                .month-title {
+                    color: #ff6b00;
+                    font-size: 24px;
+                    margin-bottom: 15px;
+                    border-bottom: 1px solid rgba(255, 107, 0, 0.3);
+                    padding-bottom: 10px;
+                    position: relative;
+                }
+                
+                .month-title:after {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    bottom: -1px;
+                    width: 60px;
+                    height: 3px;
+                    background: #ff6b00;
+                }
+                
+                .agenda-events-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                }
+                
+                .agenda-event-item {
+                    display: flex;
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 10px;
+                    padding: 15px;
+                    align-items: center;
+                    transition: all 0.3s ease;
+                    border-left: 3px solid #ff6b00;
+                }
+                
+                .agenda-event-item:hover {
+                    background: rgba(255, 107, 0, 0.1);
+                    transform: translateY(-3px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                }
+                
+                .agenda-day {
+                    background: #ff6b00;
+                    color: #fff;
+                    font-weight: bold;
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    min-width: 80px;
+                    text-align: center;
+                    box-shadow: 0 3px 10px rgba(255, 107, 0, 0.3);
+                    margin-right: 20px;
+                }
+                
+                .agenda-details {
+                    flex: 1;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .agenda-location {
+                    font-weight: 500;
+                    color: #e0e0e0;
+                }
+                
+                .agenda-separator {
+                    color: rgba(255, 255, 255, 0.3);
+                }
+                
+                .agenda-time {
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 5px 10px;
+                    border-radius: 20px;
+                    font-weight: bold;
+                    color: #ff6b00;
+                    border: 1px solid rgba(255, 107, 0, 0.3);
+                }
+                
+                .agenda-title {
+                    font-weight: bold;
+                    font-size: 1.1em;
+                }
+                
+                .no-events {
+                    text-align: center;
+                    padding: 30px;
+                    color: rgba(255, 255, 255, 0.5);
+                    font-style: italic;
+                }
+                
+                @media (max-width: 768px) {
+                    .agenda-event-item {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 15px;
+                    }
+                    
+                    .agenda-day {
+                        margin-right: 0;
+                    }
+                    
+                    .agenda-details {
+                        width: 100%;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 5px;
+                    }
+                    
+                    .agenda-separator {
+                        display: none;
+                    }
+                }
+            </style>
+            
             <!-- INÍCIO DO CONTEÚDO DA AGENDA - SUBSTITUA TUDO ENTRE ESTAS TAGS QUANDO GERAR NOVO HTML -->
-                <div class="text-agenda-container" data-aos="fade-up">
-                    <div class="simple-agenda" id="simpleAgendaList">
-                        <div class="agenda-month">
-                            <h3 class="month-title">Maio 2025</h3>
-                            <div class="agenda-events-list">
-                                <div class="agenda-event-item">
-                                    <div class="agenda-day">Dia 26</div>
-                                    <div class="agenda-details">
-                                        <span class="agenda-location">Leme - SP</span>
-                                        <span class="agenda-separator">|</span>
-                                        <span class="agenda-time">19:00</span>
-                                        <span class="agenda-separator">|</span>
-                                        <span class="agenda-title">Aniversário Carol</span>
-                                    </div>
+            <div class="text-agenda-container" data-aos="fade-up">
+                <div class="simple-agenda" id="simpleAgendaList">
+                    <div class="agenda-month">
+                        <h3 class="month-title">Maio 2025</h3>
+                        <div class="agenda-events-list">
+                            <div class="agenda-event-item">
+                                <div class="agenda-day">Dia 23</div>
+                                <div class="agenda-details">
+                                    <span class="agenda-location">Leme - SP</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-time">19:00</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-title">Aniversario Enrico</span>
+                                </div>
+                            </div>
+                            <div class="agenda-event-item">
+                                <div class="agenda-day">Dia 25</div>
+                                <div class="agenda-details">
+                                    <span class="agenda-location">Leme - SP</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-time">13:00</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-title">Casamento Bruno</span>
+                                </div>
+                            </div>
+                            <div class="agenda-event-item">
+                                <div class="agenda-day">Dia 27</div>
+                                <div class="agenda-details">
+                                    <span class="agenda-location">SBC</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-time">19:00</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-title">Aniversario Thiago</span>
+                                </div>
+                            </div>
+                            <div class="agenda-event-item">
+                                <div class="agenda-day">Dia 27</div>
+                                <div class="agenda-details">
+                                    <span class="agenda-location">Leme - SP</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-time">23:30</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-title">Aniversário Carol</span>
+                                </div>
+                            </div>
+                            <div class="agenda-event-item">
+                                <div class="agenda-day">Dia 31</div>
+                                <div class="agenda-details">
+                                    <span class="agenda-location">Pirassununga - SP</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-time">13:00</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-title">Evento Beneficente </span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
             <!-- FIM DO CONTEÚDO DA AGENDA -->
 
             <div class="agenda-cta" data-aos="fade-up">
@@ -505,7 +696,7 @@
                     </div>
                 </div>
                 <div class="contato-form" data-aos="fade-left" data-aos-delay="300">
-                    <form id="contactForm">
+                    <form id="contactForm" action="https://formspree.io/f/xwpoddlk" method="POST">
                         <div class="form-group">
                             <input type="text" id="nome" name="nome" placeholder="Nome" required>
                         </div>
@@ -578,6 +769,51 @@
             menuToggle.querySelector('i').classList.toggle('fa-bars');
             menuToggle.querySelector('i').classList.toggle('fa-times');
         });
+
+        // Atualizar menu ativo baseado na seção visível
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+
+        function updateActiveMenu() {
+            const scrollY = window.scrollY;
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+
+                if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${sectionId}`) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Adicionar smooth scroll aos links do menu
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                
+                // Fechar menu mobile ao clicar
+                nav.classList.remove('active');
+                menuToggle.querySelector('i').classList.add('fa-bars');
+                menuToggle.querySelector('i').classList.remove('fa-times');
+            });
+        });
+
+        // Atualizar menu ao rolar a página
+        window.addEventListener('scroll', updateActiveMenu);
+        window.addEventListener('load', updateActiveMenu);
 
         // Fechar menu ao clicar em um link
         document.querySelectorAll('.nav-links a').forEach(link => {
@@ -660,116 +896,17 @@
         const contactForm = document.getElementById('contactForm');
         if (contactForm) {
             contactForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+                // Form submission is now handled by Formspree
+                // No need to prevent default or use SiteManager
+                // The form will be submitted directly to Formspree
                 
-                const message = {
-                    nome: document.getElementById('nome').value,
-                    email: document.getElementById('email').value,
-                    telefone: document.getElementById('telefone').value,
-                    mensagem: document.getElementById('mensagem').value
-                };
-                
-                SiteManager.addMessage(message);
-                this.reset();
-                
-                // Show success message
-                alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
-            });
-        }
-
-        // Função para carregar e exibir a agenda de texto simples
-        function loadSimpleAgenda() {
-            console.log('Executando loadSimpleAgenda...');
-            const simpleAgendaList = document.getElementById('simpleAgendaList');
-            
-            if (!simpleAgendaList) {
-                console.error('Elemento simpleAgendaList não encontrado');
-                return;
-            }
-            
-            // Obter eventos atualizados
-            const events = SiteManager.getEvents();
-            console.log('Eventos obtidos:', events);
-            
-            if (!events || events.length === 0) {
-                console.log('Nenhum evento encontrado');
-                simpleAgendaList.innerHTML = '<p class="no-events">Nenhum evento agendado</p>';
-                return;
-            }
-
-            // Obter a data atual
-            const today = new Date();
-            const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            console.log('Data atual:', todayFormatted);
-
-            // Filtrar apenas eventos futuros e ordenar por data
-            const upcomingEvents = events
-                .filter(event => event.date >= todayFormatted)
-                .sort((a, b) => a.date.localeCompare(b.date));
-            
-            console.log('Eventos futuros:', upcomingEvents);
-
-            if (upcomingEvents.length === 0) {
-                console.log('Nenhum evento futuro encontrado');
-                simpleAgendaList.innerHTML = '<p class="no-events">Nenhum evento agendado</p>';
-                return;
-            }
-
-            // Agrupar eventos por mês
-            const eventsByMonth = {};
-            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-            
-            upcomingEvents.forEach(event => {
-                const dateParts = event.date.split('-');
-                const monthIndex = parseInt(dateParts[1], 10) - 1;
-                const monthYear = `${monthNames[monthIndex]} ${dateParts[0]}`;
-                
-                if (!eventsByMonth[monthYear]) {
-                    eventsByMonth[monthYear] = [];
-                }
-                
-                eventsByMonth[monthYear].push(event);
-            });
-
-            console.log('Eventos agrupados por mês:', eventsByMonth);
-
-            // Gerar HTML
-            let html = '';
-            
-            for (const monthYear in eventsByMonth) {
-                html += `<div class="agenda-month">
-                    <h3 class="month-title">${monthYear}</h3>
-                    <div class="agenda-events-list">`;
-                
-                eventsByMonth[monthYear].forEach(event => {
-                    const dateParts = event.date.split('-');
-                    const day = parseInt(dateParts[2], 10);
-                    const formattedTime = event.time || '';
-                    
-                    html += `<div class="agenda-event-item">
-                        <div class="agenda-day">Dia ${day}</div>
-                        <div class="agenda-details">
-                            <span class="agenda-location">${event.location}</span>
-                            <span class="agenda-separator">|</span>
-                            <span class="agenda-time">${formattedTime}</span>
-                            <span class="agenda-separator">|</span>
-                            <span class="agenda-title">${event.title}</span>
-                        </div>
-                    </div>`;
+                // Optional: Show a thank you message
+                contactForm.addEventListener('submit', function(e) {
+                    setTimeout(function() {
+                        alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+                    }, 1000);
                 });
-                
-                html += `</div></div>`;
-            }
-            
-            console.log('Atualizando HTML da agenda');
-            simpleAgendaList.innerHTML = html;
-        }
-
-        // Update event filters with categories - função mantida para compatibilidade
-        function updateEventFilters() {
-            // Esta função não faz mais nada com a exibição de calendário removida,
-            // mas mantemos ela para compatibilidade com o código existente
-            console.log("updateEventFilters chamado - função mantida para compatibilidade");
+            });
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
@@ -828,41 +965,11 @@
             updateSocialLinks();
             updateContactInfo();
             
-            // Verificar se temos a função de atualização automática disponível
-            if (typeof updateAgendaInPage === 'function') {
-                console.log('Usando updateAgendaInPage para atualizar a agenda...');
-                updateAgendaInPage();
-            } else {
-                // Fallback para o método antigo
-                console.log('Função updateAgendaInPage não encontrada, usando loadSimpleAgenda...');
-                loadSimpleAgenda();
-            }
-            
             // Listen for data updates
             document.addEventListener('site-data-updated', function() {
                 console.log('Evento site-data-updated detectado, atualizando interface...');
                 updateSocialLinks();
                 updateContactInfo();
-                
-                // Usar o método de atualização automática se disponível
-                if (typeof updateAgendaInPage === 'function') {
-                    updateAgendaInPage();
-                } else {
-                    loadSimpleAgenda();
-                }
-            });
-
-            // Também atualizar quando a página receber foco
-            window.addEventListener('focus', function() {
-                console.log('Página recebeu foco, verificando por atualizações...');
-                SiteManager.init().then(() => {
-                    // Usar o método de atualização automática se disponível
-                    if (typeof updateAgendaInPage === 'function') {
-                        updateAgendaInPage();
-                    } else {
-                        loadSimpleAgenda();
-                    }
-                });
             });
         });
     </script>

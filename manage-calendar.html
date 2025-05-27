@@ -381,8 +381,19 @@
 
             <div class="calendar-grid">
                 <div class="events-info" style="background: rgba(255, 103, 0, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(255, 103, 0, 0.3);">
-                    <p style="color: white; margin: 0;"><i class="fas fa-info-circle" style="color: #ff6b00; margin-right: 8px;"></i> Os eventos adicionados aqui serão exibidos automaticamente na página inicial do site em formato de texto simples, organizados por mês.</p>
-                    <p style="color: white; margin-top: 10px;"><i class="fas fa-code" style="color: #ff6b00; margin-right: 8px;"></i> Após adicionar ou remover eventos, clique em <strong>"Gerar HTML da Agenda"</strong> para obter o código HTML atualizado e substituir na página inicial.</p>
+                    <p style="color: white; margin: 0;"><i class="fas fa-info-circle" style="color: #ff6b00; margin-right: 8px;"></i> Os eventos gerenciados aqui podem ser exibidos na página inicial do site em formato de texto simples, organizados por mês.</p>
+                    <p style="color: white; margin-top: 10px;"><i class="fas fa-code" style="color: #ff6b00; margin-right: 8px;"></i> Após adicionar, editar ou remover eventos, clique em <strong>"Gerar HTML da Agenda"</strong>, copie o código gerado e cole-o manualmente no arquivo index.html para atualizar a agenda no site.</p>
+                </div>
+                
+                <div class="events-filter" style="margin-bottom: 20px; background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px;">
+                    <h3 style="color: #ff6b00; margin-top: 0; font-size: 18px; margin-bottom: 15px;">Filtrar Eventos</h3>
+                    <div class="filter-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <button class="filter-btn active" data-filter="all" style="background: #ff6b00; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Todos</button>
+                        <button class="filter-btn" data-filter="casamento" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Casamentos</button>
+                        <button class="filter-btn" data-filter="aniversario" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Aniversários</button>
+                        <button class="filter-btn" data-filter="corporativo" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Corporativo</button>
+                        <button class="filter-btn" data-filter="outro" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Outros</button>
+                    </div>
                 </div>
                 
                 <div class="events-list" id="eventsList">
@@ -501,11 +512,13 @@
                     Copiar HTML
                 </button>
                 <div class="help-text">
-                    <p><strong>Informações:</strong></p>
+                    <p><strong>Instruções:</strong></p>
                     <ol>
-                        <li>A agenda na página inicial é atualizada <strong>automaticamente</strong> quando você adiciona, edita ou remove eventos.</li>
-                        <li>O HTML acima está disponível caso você precise fazer uma edição manual no arquivo index.html.</li>
-                        <li>Para copiar o código, clique no botão "Copiar HTML" acima.</li>
+                        <li><strong>Importante:</strong> A agenda na página inicial <strong>NÃO</strong> é atualizada automaticamente.</li>
+                        <li>Depois de adicionar, editar ou remover eventos, gere o novo HTML clicando em "Gerar HTML da Agenda".</li>
+                        <li>Copie o código HTML gerado clicando no botão "Copiar HTML".</li>
+                        <li>Abra o arquivo <strong>index.html</strong> e substitua o conteúdo entre os comentários "INÍCIO DO CONTEÚDO DA AGENDA" e "FIM DO CONTEÚDO DA AGENDA".</li>
+                        <li>Salve o arquivo index.html para que as alterações apareçam no site.</li>
                     </ol>
                 </div>
             </div>
@@ -555,11 +568,13 @@
             const helpText = htmlModal.querySelector('.help-text');
             if (helpText) {
                 helpText.innerHTML = `
-                    <p><strong>Informações:</strong></p>
+                    <p><strong>Instruções:</strong></p>
                     <ol>
-                        <li>A agenda na página inicial é atualizada <strong>automaticamente</strong> quando você adiciona, edita ou remove eventos.</li>
-                        <li>O HTML acima está disponível caso você precise fazer uma edição manual no arquivo index.html.</li>
-                        <li>Para copiar o código, clique no botão "Copiar HTML" acima.</li>
+                        <li><strong>Importante:</strong> A agenda na página inicial <strong>NÃO</strong> é atualizada automaticamente.</li>
+                        <li>Depois de adicionar, editar ou remover eventos, gere o novo HTML clicando em "Gerar HTML da Agenda".</li>
+                        <li>Copie o código HTML gerado clicando no botão "Copiar HTML".</li>
+                        <li>Abra o arquivo <strong>index.html</strong> e substitua o conteúdo entre os comentários "INÍCIO DO CONTEÚDO DA AGENDA" e "FIM DO CONTEÚDO DA AGENDA".</li>
+                        <li>Salve o arquivo index.html para que as alterações apareçam no site.</li>
                     </ol>
                 `;
             }
@@ -625,11 +640,23 @@
                 await loadEvents();
                 
                 // Notificar o usuário que a agenda foi atualizada automaticamente
-                alert('Evento salvo com sucesso! A agenda na página inicial foi atualizada automaticamente.');
+                alert('Evento salvo com sucesso! Lembre-se de clicar em "Gerar HTML da Agenda" e atualizar manualmente o arquivo index.html para que as alterações apareçam no site.');
                 
                 // Disparar evento para atualizar outras páginas abertas
                 const updateEvent = new CustomEvent('site-data-updated');
                 document.dispatchEvent(updateEvent);
+                
+                // Tentar atualizar o localStorage diretamente para garantir que as páginas anônimas vejam a atualização
+                try {
+                    // Atualizar cache para usuários anônimos
+                    const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
+                    currentCache.events = SiteManager.getEvents();
+                    currentCache.lastSync = new Date().toISOString();
+                    localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
+                    console.log('Cache atualizado para páginas anônimas após exclusão');
+                } catch (err) {
+                    console.error('Erro ao atualizar cache após exclusão:', err);
+                }
             } catch (error) {
                 console.error('Erro ao salvar evento:', error);
                 alert('Erro ao salvar o evento. Verifique o console para mais detalhes.');
@@ -648,6 +675,12 @@
                 
                 if (!events || events.length === 0) {
                     eventsList.innerHTML = '<div class="no-events">Nenhum evento cadastrado</div>';
+                    return;
+                }
+
+                // Apply current filter if set
+                if (currentFilter && currentFilter !== 'all') {
+                    filterEvents(currentFilter);
                     return;
                 }
 
@@ -720,11 +753,23 @@
                     await loadEvents();
                     
                     // Notificar o usuário que a agenda foi atualizada automaticamente
-                    alert('Evento excluído com sucesso! A agenda na página inicial foi atualizada automaticamente.');
+                    alert('Evento excluído com sucesso! Lembre-se de clicar em "Gerar HTML da Agenda" e atualizar manualmente o arquivo index.html para que as alterações apareçam no site.');
                     
                     // Disparar evento para atualizar outras páginas abertas
                     const updateEvent = new CustomEvent('site-data-updated');
                     document.dispatchEvent(updateEvent);
+                    
+                    // Tentar atualizar o localStorage diretamente para garantir que as páginas anônimas vejam a atualização
+                    try {
+                        // Atualizar cache para usuários anônimos
+                        const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
+                        currentCache.events = SiteManager.getEvents();
+                        currentCache.lastSync = new Date().toISOString();
+                        localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
+                        console.log('Cache atualizado para páginas anônimas após exclusão');
+                    } catch (err) {
+                        console.error('Erro ao atualizar cache após exclusão:', err);
+                    }
                 } catch (error) {
                     console.error('Erro ao excluir evento:', error);
                     alert('Erro ao excluir evento. Tente novamente.');
@@ -885,6 +930,86 @@
         
         // Initial load
         loadEvents();
+
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        let currentFilter = 'all';
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                filterButtons.forEach(btn => btn.style.background = 'rgba(255, 255, 255, 0.1)');
+                this.style.background = '#ff6b00';
+                
+                // Get filter value
+                currentFilter = this.getAttribute('data-filter');
+                
+                // Apply filter
+                filterEvents(currentFilter);
+            });
+        });
+        
+        // Function to filter events
+        async function filterEvents(filterValue) {
+            try {
+                // Show loading indicator
+                eventsList.innerHTML = '<div class="no-events">Filtrando eventos...</div>';
+                
+                // Get all events
+                const events = await SiteManager.getData().then(data => data.events || []);
+                
+                if (!events || events.length === 0) {
+                    eventsList.innerHTML = '<div class="no-events">Nenhum evento cadastrado</div>';
+                    return;
+                }
+                
+                // Filter events by type if not "all"
+                const filteredEvents = filterValue === 'all' 
+                    ? events 
+                    : events.filter(event => event.type === filterValue);
+                
+                // Check if we have any events after filtering
+                if (filteredEvents.length === 0) {
+                    eventsList.innerHTML = `<div class="no-events">Nenhum evento encontrado na categoria selecionada</div>`;
+                    return;
+                }
+                
+                // Display filtered events
+                eventsList.innerHTML = filteredEvents
+                    .sort((a, b) => a.date.localeCompare(b.date))
+                    .map(event => {
+                        // Format date
+                        const dateParts = event.date ? event.date.split('-') : ['', '', ''];
+                        const formattedDate = dateParts.length === 3 ? 
+                            `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : 
+                            'Data inválida';
+
+                        return `
+                        <div class="event-card">
+                            <div class="event-info">
+                                <h3>${event.title || 'Sem título'}</h3>
+                                <p>
+                                    <i class="far fa-calendar"></i> ${formattedDate} 
+                                    <i class="far fa-clock"></i> ${event.time || 'Horário não definido'}
+                                </p>
+                                <p><i class="fas fa-map-marker-alt"></i> ${event.location || 'Local não definido'}</p>
+                            </div>
+                            <div class="event-actions">
+                                <button onclick="editEvent('${event.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteEvent('${event.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    }).join('');
+            } catch (error) {
+                console.error('Erro ao filtrar eventos:', error);
+                eventsList.innerHTML = '<div class="no-events">Erro ao filtrar eventos. Tente novamente mais tarde.</div>';
+            }
+        }
     </script>
 </body>
 </html> 

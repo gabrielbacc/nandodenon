@@ -5,21 +5,26 @@
 
 // Função para gerar o HTML da agenda baseado nos eventos atuais
 function generateAgendaHtml() {
+    // Verificar se o SiteManager existe
+    if (typeof SiteManager === 'undefined') {
+        console.error('SiteManager não está definido');
+        return '<div class="text-agenda-container" data-aos="fade-up">\n' +
+               '    <div class="simple-agenda" id="simpleAgendaList">\n' +
+               '        <p class="no-events">Erro ao carregar eventos</p>\n' +
+               '    </div>\n' +
+               '</div>';
+    }
+
     // Obter eventos
     const events = SiteManager.getEvents();
+    console.log('Eventos obtidos para agenda:', events ? events.length : 0);
     
-    // Obter data atual
-    const today = new Date();
-    const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    
-    // Filtrar apenas eventos futuros e ordenar por data
-    const upcomingEvents = events
-        .filter(event => event.date >= todayFormatted)
-        .sort((a, b) => a.date.localeCompare(b.date));
+    // Ordenar todos os eventos por data
+    const sortedEvents = events.sort((a, b) => a.date.localeCompare(b.date));
     
     let agendaHtml = '';
     
-    if (upcomingEvents.length === 0) {
+    if (sortedEvents.length === 0) {
         agendaHtml = '<div class="text-agenda-container" data-aos="fade-up">\n';
         agendaHtml += '    <div class="simple-agenda" id="simpleAgendaList">\n';
         agendaHtml += '        <p class="no-events">Nenhum evento agendado</p>\n';
@@ -30,7 +35,7 @@ function generateAgendaHtml() {
         const eventsByMonth = {};
         const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         
-        upcomingEvents.forEach(event => {
+        sortedEvents.forEach(event => {
             const dateParts = event.date.split('-');
             const monthIndex = parseInt(dateParts[1], 10) - 1;
             const monthYear = `${monthNames[monthIndex]} ${dateParts[0]}`;
@@ -81,6 +86,8 @@ function generateAgendaHtml() {
 
 // Função para atualizar dinamicamente a agenda na página atual
 function updateAgendaInPage() {
+    console.log('Atualizando agenda na página...');
+    
     // Atualizar a agenda diretamente no DOM, se estivermos na página index
     const agendaSection = document.querySelector('#agenda .container');
     if (agendaSection) {
@@ -88,21 +95,29 @@ function updateAgendaInPage() {
         
         // Se o container da agenda existir, substituí-lo
         if (agendaContainer) {
+            console.log('Container da agenda encontrado, atualizando...');
             const newAgendaHtml = generateAgendaHtml();
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = newAgendaHtml;
             agendaSection.replaceChild(tempDiv.firstElementChild, agendaContainer);
+            console.log('Agenda atualizada com sucesso');
         } 
         // Se não existir, inserir após o cabeçalho da seção
         else {
+            console.log('Container da agenda não encontrado, criando novo...');
             const sectionHeader = agendaSection.querySelector('.section-header');
             if (sectionHeader) {
                 const newAgendaHtml = generateAgendaHtml();
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = newAgendaHtml;
                 sectionHeader.insertAdjacentElement('afterend', tempDiv.firstElementChild);
+                console.log('Nova agenda inserida com sucesso');
+            } else {
+                console.error('Cabeçalho da seção agenda não encontrado');
             }
         }
+    } else {
+        console.log('Seção de agenda não encontrada na página atual');
     }
 }
 
@@ -116,19 +131,32 @@ document.addEventListener('site-data-updated', function() {
     updateAgendaInPage();
 });
 
-// Gerar o HTML quando o script for carregado
-document.addEventListener('DOMContentLoaded', function() {
-    const agendaHtml = generateAgendaHtml();
-    console.log('HTML da agenda gerado:');
-    console.log(agendaHtml);
-    
-    // Mostrar instruções
-    console.log('------------------------------------------------------');
-    console.log('INSTRUÇÕES:');
-    console.log('1. A agenda será atualizada automaticamente na página atual.');
-    console.log('2. Para exportar o HTML para edição manual do arquivo index.html, utilize o botão "Gerar HTML da Agenda" no painel de administração.');
-    console.log('------------------------------------------------------');
-    
-    // Atualizar a agenda na página atual, se estivermos na página index
+// Também atualizar quando os dados forem inicializados
+document.addEventListener('site-data-initialized', function() {
+    console.log('Evento site-data-initialized detectado, atualizando agenda na página...');
     updateAgendaInPage();
-}); 
+});
+
+// Garantir que a agenda seja atualizada quando o DOM for carregado
+document.addEventListener('DOMContentLoaded', function() {
+    // Se o SiteManager já estiver inicializado, atualizar a agenda
+    if (typeof SiteManager !== 'undefined') {
+        console.log('DOM carregado, verificando eventos e atualizando agenda...');
+        // Inicializar SiteManager se necessário
+        if (typeof SiteManager.init === 'function') {
+            SiteManager.init().then(() => {
+                console.log('SiteManager inicializado, atualizando agenda...');
+                updateAgendaInPage();
+            }).catch(err => {
+                console.error('Erro ao inicializar SiteManager:', err);
+            });
+        } else {
+            updateAgendaInPage();
+        }
+    } else {
+        console.warn('SiteManager não encontrado no DOMContentLoaded');
+    }
+});
+
+// Gerar o HTML quando o script for carregado
+console.log('Script update-agenda.js carregado'); 

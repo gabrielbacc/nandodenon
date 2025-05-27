@@ -223,6 +223,85 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        /* Estilos do Formspree */
+        .formspree-info {
+            text-align: left;
+            margin-top: 15px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .formspree-info a {
+            color: #ff6b00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .formspree-info a:hover {
+            text-decoration: underline;
+            color: #ff8533;
+        }
+        
+        .credential-group {
+            margin: 15px 0;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 6px;
+        }
+        
+        .credential-group label {
+            display: block;
+            color: #ff6b00;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .credential-group input {
+            width: calc(100% - 16px);
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            border-radius: 4px;
+            color: white;
+            font-family: monospace;
+        }
+        
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #ff6b00;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: color 0.3s ease;
+        }
+        
+        .toggle-password:hover {
+            color: #ff8533;
+        }
+
+        .toggle-password:focus {
+            outline: none;
+        }
+
+        /* Remove cursor pointer do card do Formspree */
+        .dashboard-card.no-hover {
+            cursor: default;
+        }
+        
+        .dashboard-card.no-hover:hover {
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -243,8 +322,6 @@
                 <li><a href="index.html">Voltar ao Site</a></li>
                 <li><a href="dashboard.html" class="admin-link active"><i class="fas fa-user-shield"></i> Admin</a></li>
                 <li><a href="manage-calendar.html">Agenda</a></li>
-                <li><a href="manage-gallery.html">Galeria</a></li>
-                <li><a href="manage-messages.html">Mensagens</a></li>
                 <li><a href="manage-finance.html">Financeiro</a></li>
                 <li><a href="manage-settings.html">Configurações</a></li>
                 <li><a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
@@ -277,11 +354,6 @@
                     <p>Próximos eventos</p>
                 </div>
                 <div class="stat-card">
-                    <h4>Mensagens</h4>
-                    <div class="number" id="statsMessages">0</div>
-                    <p>Não lidas</p>
-                </div>
-                <div class="stat-card">
                     <h4>Receita Mensal</h4>
                     <div class="number" id="statsRevenue">R$ 0</div>
                     <p>Este mês</p>
@@ -295,16 +367,31 @@
                     <p>Adicionar, editar e remover eventos da agenda.</p>
                 </a>
                 
-                <a href="manage-gallery.html" class="dashboard-card">
-                    <i class="fas fa-images"></i>
-                    <h3>Gerenciar Galeria</h3>
-                    <p>Adicionar, editar e remover imagens da galeria.</p>
-                </a>
-                
-                <a href="manage-messages.html" class="dashboard-card">
+                <div class="dashboard-card no-hover">
                     <i class="fas fa-envelope"></i>
-                    <h3>Mensagens</h3>
-                    <p>Visualize e responda mensagens de contato</p>
+                    <h3>Formspree</h3>
+                    <div class="formspree-info">
+                        <p>Acesse suas mensagens em: <a href="https://formspree.io/" target="_blank">formspree.io</a></p>
+                        <div class="credential-group">
+                            <label>Login:</label>
+                            <input type="text" value="contatonandodenon@gmail.com" readonly>
+                        </div>
+                        <div class="credential-group">
+                            <label>Senha:</label>
+                            <div class="password-container">
+                                <input type="password" id="formspreePassword" value="Nando231011#" readonly>
+                                <button type="button" class="toggle-password" aria-label="Mostrar/Ocultar senha">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="manage-finance.html" class="dashboard-card">
+                    <i class="fas fa-dollar-sign"></i>
+                    <h3>Financeiro</h3>
+                    <p>Gerencie suas finanças</p>
                 </a>
                 <a href="manage-settings.html" class="dashboard-card">
                     <i class="fas fa-cog"></i>
@@ -389,13 +476,129 @@
             window.location.href = 'index.html';
         });
 
-        // Update stats
+        // Função para buscar eventos da agenda
+        async function buscarEventosAgenda() {
+            try {
+                // Fazer fetch do conteúdo do index.html
+                const response = await fetch('index.html');
+                const html = await response.text();
+                
+                // Criar um DOM parser temporário
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Buscar a seção de agenda
+                const agendaContainer = doc.querySelector('#simpleAgendaList');
+                return agendaContainer;
+            } catch (error) {
+                console.error('Erro ao buscar eventos:', error);
+                return null;
+            }
+        }
+
+        // Função para contar eventos dos últimos 30 dias (eventos passados)
+        async function contarEventosUltimos30Dias() {
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0); // Início do dia atual
+            
+            const trintaDiasAtras = new Date();
+            trintaDiasAtras.setDate(hoje.getDate() - 30);
+            trintaDiasAtras.setHours(0, 0, 0, 0); // Início do dia
+            
+            // Pegar todos os eventos da agenda
+            const agendaContainer = await buscarEventosAgenda();
+            if (!agendaContainer) return 0;
+            
+            const eventItems = agendaContainer.querySelectorAll('.agenda-event-item');
+            let contador = 0;
+            
+            eventItems.forEach(event => {
+                try {
+                    const diaText = event.querySelector('.agenda-day').textContent;
+                    const mesTitle = event.closest('.agenda-month').querySelector('.month-title').textContent;
+                    
+                    // Extrair dia e mês do evento
+                    const dia = parseInt(diaText.replace('Dia ', ''));
+                    const mes = mesTitle.split(' ')[0]; // Pega o nome do mês
+                    const ano = parseInt(mesTitle.split(' ')[1]);
+                    
+                    // Converter mês de texto para número
+                    const meses = {
+                        'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3,
+                        'Maio': 4, 'Junho': 5, 'Julho': 6, 'Agosto': 7,
+                        'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+                    };
+                    
+                    const dataEvento = new Date(ano, meses[mes], dia);
+                    dataEvento.setHours(0, 0, 0, 0); // Início do dia
+                    
+                    console.log('Data do Evento:', dataEvento.toLocaleDateString(), 'Hoje:', hoje.toLocaleDateString());
+                    
+                    // Verificar se está dentro dos últimos 30 dias E já passou
+                    if (dataEvento >= trintaDiasAtras && dataEvento < hoje) {
+                        contador++;
+                        console.log('Evento passado contabilizado:', dia, mes, ano);
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar evento:', error);
+                }
+            });
+            
+            return contador;
+        }
+
+        // Atualizar estatísticas
         async function updateDashboardStats() {
             try {
-                const stats = await SiteManager.getStats();
-                document.getElementById('statsShows').textContent = stats.shows;
-                document.getElementById('statsEvents').textContent = stats.upcomingEvents;
-                document.getElementById('statsMessages').textContent = stats.messages;
+                // Atualizar total de shows dos últimos 30 dias (eventos passados)
+                const totalShows = await contarEventosUltimos30Dias();
+                document.getElementById('statsShows').textContent = totalShows;
+                
+                // Atualizar eventos agendados (apenas eventos futuros)
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0); // Início do dia atual
+                
+                const agendaContainer = await buscarEventosAgenda();
+                let eventosAgendados = 0;
+                
+                if (agendaContainer) {
+                    const eventItems = agendaContainer.querySelectorAll('.agenda-event-item');
+                    eventItems.forEach(event => {
+                        try {
+                            const diaText = event.querySelector('.agenda-day').textContent;
+                            const mesTitle = event.closest('.agenda-month').querySelector('.month-title').textContent;
+                            
+                            const dia = parseInt(diaText.replace('Dia ', ''));
+                            const mes = mesTitle.split(' ')[0];
+                            const ano = parseInt(mesTitle.split(' ')[1]);
+                            
+                            const meses = {
+                                'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3,
+                                'Maio': 4, 'Junho': 5, 'Julho': 6, 'Agosto': 7,
+                                'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+                            };
+                            
+                            const dataEvento = new Date(ano, meses[mes], dia);
+                            dataEvento.setHours(0, 0, 0, 0); // Início do dia
+                            
+                            console.log('Verificando evento futuro:', {
+                                data: dataEvento.toLocaleDateString(),
+                                hoje: hoje.toLocaleDateString(),
+                                isFuturo: dataEvento > hoje
+                            });
+                            
+                            // Contar apenas eventos a partir de amanhã
+                            if (dataEvento > hoje) {
+                                eventosAgendados++;
+                                console.log('Evento futuro contabilizado:', dia, mes, ano);
+                            }
+                        } catch (error) {
+                            console.error('Erro ao processar evento:', error);
+                        }
+                    });
+                }
+                
+                document.getElementById('statsEvents').textContent = eventosAgendados;
                 
                 // Get financial data if FinanceManager exists
                 try {
@@ -439,8 +642,27 @@
             });
         });
         
-        // Iniciar o dashboard quando a página carregar
+        // Inicializar o dashboard quando a página carregar
         document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Adicionar evento de clique no botão de toggle senha
+        const toggleButton = document.querySelector('.toggle-password');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function() {
+                const passwordInput = document.getElementById('formspreePassword');
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
     </script>
 </body>
 </html> 
