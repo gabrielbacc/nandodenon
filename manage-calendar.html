@@ -301,6 +301,43 @@
             margin-left: 10px;
             color: #ff6b00;
         }
+        
+        /* Estilo para o modal de HTML da agenda */
+        #htmlModal .modal-content {
+            max-width: 800px;
+        }
+        
+        #agendaHtmlCode {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            color: #fff;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+        
+        .copy-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: auto;
+        }
+        
+        .help-text {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -327,6 +364,10 @@
             <div class="calendar-header">
                 <h1>Gerenciar Agenda</h1>
                 <div class="header-actions">
+                    <button class="add-category-btn" id="openHtmlModal">
+                        <i class="fas fa-code"></i>
+                        Gerar HTML da Agenda
+                    </button>
                     <button class="add-category-btn" id="openAddCategoryModal">
                         <i class="fas fa-tags"></i>
                         Gerenciar Categorias
@@ -339,6 +380,11 @@
             </div>
 
             <div class="calendar-grid">
+                <div class="events-info" style="background: rgba(255, 103, 0, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(255, 103, 0, 0.3);">
+                    <p style="color: white; margin: 0;"><i class="fas fa-info-circle" style="color: #ff6b00; margin-right: 8px;"></i> Os eventos adicionados aqui serão exibidos automaticamente na página inicial do site em formato de texto simples, organizados por mês.</p>
+                    <p style="color: white; margin-top: 10px;"><i class="fas fa-code" style="color: #ff6b00; margin-right: 8px;"></i> Após adicionar ou remover eventos, clique em <strong>"Gerar HTML da Agenda"</strong> para obter o código HTML atualizado e substituir na página inicial.</p>
+                </div>
+                
                 <div class="events-list" id="eventsList">
                     <!-- Events will be loaded here -->
                 </div>
@@ -439,8 +485,37 @@
             </form>
         </div>
     </div>
+    
+    <!-- HTML Agenda Modal -->
+    <div class="modal" id="htmlModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>HTML da Agenda para o Site</h2>
+                <button class="close-modal" id="closeHtmlModal">&times;</button>
+            </div>
+            <div>
+                <p>Copie o código abaixo e substitua no arquivo <strong>index.html</strong> na seção da agenda:</p>
+                <pre id="agendaHtmlCode"></pre>
+                <button class="copy-btn" id="copyHtmlBtn">
+                    <i class="fas fa-copy"></i>
+                    Copiar HTML
+                </button>
+                <div class="help-text">
+                    <p><strong>Instruções:</strong></p>
+                    <ol>
+                        <li>Clique no botão "Copiar HTML" acima</li>
+                        <li>Abra o arquivo <strong>index.html</strong> no editor</li>
+                        <li>Localize a seção da agenda (busque por <code>&lt;!-- INÍCIO DO CONTEÚDO DA AGENDA - SUBSTITUA TUDO ENTRE ESTAS TAGS QUANDO GERAR NOVO HTML --&gt;</code>)</li>
+                        <li>Substitua todo o conteúdo entre <code>&lt;!-- INÍCIO DO CONTEÚDO DA AGENDA - SUBSTITUA TUDO ENTRE ESTAS TAGS QUANDO GERAR NOVO HTML --&gt;</code> e <code>&lt;!-- FIM DO CONTEÚDO DA AGENDA --&gt;</code></li>
+                        <li>Salve o arquivo</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="js/site-data.js"></script>
+    <script src="js/update-agenda.js"></script>
     <script>
         // Check if user is logged in
         if (!SiteManager.isLoggedIn()) {
@@ -452,6 +527,8 @@
         const eventModal = document.getElementById('eventModal');
         const eventForm = document.getElementById('eventForm');
         const modalTitle = document.getElementById('modalTitle');
+        const htmlModal = document.getElementById('htmlModal');
+        const agendaHtmlCode = document.getElementById('agendaHtmlCode');
 
         // Event Listeners
         document.getElementById('openAddEventModal').addEventListener('click', () => {
@@ -467,6 +544,30 @@
 
         document.getElementById('cancelEvent').addEventListener('click', () => {
             eventModal.style.display = 'none';
+        });
+        
+        // HTML Modal
+        document.getElementById('openHtmlModal').addEventListener('click', () => {
+            // Gerar o HTML da agenda
+            const agendaHtml = generateAgendaHtml();
+            agendaHtmlCode.textContent = agendaHtml;
+            htmlModal.style.display = 'flex';
+        });
+        
+        document.getElementById('closeHtmlModal').addEventListener('click', () => {
+            htmlModal.style.display = 'none';
+        });
+        
+        document.getElementById('copyHtmlBtn').addEventListener('click', () => {
+            const textToCopy = agendaHtmlCode.textContent;
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    alert('HTML copiado para a área de transferência!');
+                })
+                .catch(err => {
+                    console.error('Erro ao copiar: ', err);
+                    alert('Erro ao copiar. Por favor, selecione o texto e copie manualmente.');
+                });
         });
 
         // Logout functionality
@@ -511,6 +612,13 @@
                 
                 // Carregar eventos atualizados
                 await loadEvents();
+                
+                // Notificar o usuário que deve gerar o HTML atualizado
+                alert('Evento salvo com sucesso! Clique em "Gerar HTML da Agenda" para obter o código HTML atualizado para o site.');
+                
+                // Disparar evento para atualizar outras páginas abertas
+                const updateEvent = new CustomEvent('site-data-updated');
+                document.dispatchEvent(updateEvent);
             } catch (error) {
                 console.error('Erro ao salvar evento:', error);
                 alert('Erro ao salvar o evento. Verifique o console para mais detalhes.');
@@ -599,15 +707,19 @@
                 try {
                     await SiteManager.removeEvent(eventId);
                     await loadEvents();
+                    
+                    // Notificar o usuário que deve gerar o HTML atualizado
+                    alert('Evento excluído com sucesso! Clique em "Gerar HTML da Agenda" para obter o código HTML atualizado para o site.');
+                    
+                    // Disparar evento para atualizar outras páginas abertas
+                    const updateEvent = new CustomEvent('site-data-updated');
+                    document.dispatchEvent(updateEvent);
                 } catch (error) {
                     console.error('Erro ao excluir evento:', error);
                     alert('Erro ao excluir evento. Tente novamente.');
                 }
             }
         }
-
-        // Initial load
-        loadEvents();
 
         // Category Management
         const categoryModal = document.getElementById('categoryModal');
@@ -755,8 +867,13 @@
         updateEventTypeSelect();
 
         // Make functions available globally
+        window.editEvent = editEvent;
+        window.deleteEvent = deleteEvent;
         window.editCategory = editCategory;
         window.deleteCategory = deleteCategory;
+        
+        // Initial load
+        loadEvents();
     </script>
 </body>
 </html> 

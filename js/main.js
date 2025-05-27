@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         selectDate(date) {
-            const events = EventManager.getEvents();
+            const events = SiteManager.getEvents();
             const selectedEvents = events.filter(event => event.date === date);
             if (selectedEvents.length > 0) {
                 this.renderEvents('all', date);
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         renderEvents(filter, selectedDate = null) {
-            const events = EventManager.getEvents();
+            const events = SiteManager.getEvents();
             let filteredEvents = [...events];
 
             // Filter by type if not 'all'

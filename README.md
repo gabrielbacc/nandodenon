@@ -7,6 +7,8 @@ Este é o website oficial do Nando Denon, com sistema de dashboard online para g
 - Site público com apresentação do artista
 - Sistema de mensagens para contato
 - Agenda de eventos e shows
+  - Exibição simplificada de agenda no site público
+  - Sistema completo de gerenciamento de agenda para uso interno
 - Galeria de fotos e vídeos
 - Dashboard administrativo para gerenciamento de todo o conteúdo
 - Sistema online para gerenciamento de dados

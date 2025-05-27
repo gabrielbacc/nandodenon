@@ -436,93 +436,37 @@
                 <div class="separator"></div>
             </div>
             
-            <div class="agenda-container">
-                <div class="calendar-wrapper" data-aos="fade-right">
-                    <div class="calendar-header">
-                        <button id="prevMonth" class="month-nav"><i class="fas fa-chevron-left"></i></button>
-                        <h3 id="currentMonth"></h3>
-                        <button id="nextMonth" class="month-nav"><i class="fas fa-chevron-right"></i></button>
-                        <button id="refreshCalendar" class="refresh-btn" title="Atualizar Agenda">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                    <div class="weekdays">
-                        <span>Dom</span>
-                        <span>Seg</span>
-                        <span>Ter</span>
-                        <span>Qua</span>
-                        <span>Qui</span>
-                        <span>Sex</span>
-                        <span>Sáb</span>
-                    </div>
-                    <div id="calendarDays" class="calendar-days">
-                        <!-- Calendar days will be dynamically loaded here -->
-                    </div>
-                </div>
-                
-                <div class="events-list" data-aos="fade-left">
-                    <div class="events-header">
-                        <h3>Próximos Eventos</h3>
-                        <div class="events-filter">
-                            <button class="filter-btn active" data-filter="all">
-                                <i class="fas fa-calendar-alt"></i>
-                                Todos
-                            </button>
-                            <div id="categoryFilters" class="category-filters">
-                                <!-- Category filters will be loaded here -->
+            <!-- INÍCIO DO CONTEÚDO DA AGENDA - SUBSTITUA TUDO ENTRE ESTAS TAGS QUANDO GERAR NOVO HTML -->
+            <div class="text-agenda-container" data-aos="fade-up">
+                <div class="simple-agenda" id="simpleAgendaList">
+                    <div class="agenda-month">
+                        <h3 class="month-title">Maio 2025</h3>
+                        <div class="agenda-events-list">
+                            <div class="agenda-event-item">
+                                <div class="agenda-day">Dia 27</div>
+                                <div class="agenda-details">
+                                    <span class="agenda-location">SBC</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-time">19:00</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-title">Aniversario Thiago</span>
+                                </div>
+                            </div>
+                            <div class="agenda-event-item">
+                                <div class="agenda-day">Dia 27</div>
+                                <div class="agenda-details">
+                                    <span class="agenda-location">Leme - SP</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-time">23:30</span>
+                                    <span class="agenda-separator">|</span>
+                                    <span class="agenda-title">Aniversário Carol</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <style>
-                        .events-filter {
-                            display: flex;
-                            flex-wrap: wrap;
-                            gap: 10px;
-                            margin-top: 20px;
-                        }
-
-                        .filter-btn {
-                            background: rgba(255, 255, 255, 0.1);
-                            border: none;
-                            color: white;
-                            padding: 10px 20px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            transition: all 0.3s ease;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                        }
-
-                        .filter-btn i {
-                            color: #ff6b00;
-                        }
-
-                        .filter-btn:hover {
-                            background: rgba(255, 255, 255, 0.2);
-                        }
-
-                        .filter-btn.active {
-                            background: #ff6b00;
-                        }
-
-                        .filter-btn.active i {
-                            color: white;
-                        }
-
-                        .category-filters {
-                            display: flex;
-                            flex-wrap: wrap;
-                            gap: 10px;
-                        }
-                    </style>
-
-                    <div class="events-timeline">
-                        <!-- Events will be dynamically loaded here -->
-                    </div>
                 </div>
             </div>
+            <!-- FIM DO CONTEÚDO DA AGENDA -->
 
             <div class="agenda-cta" data-aos="fade-up">
                 <h3>Quer garantir sua data?</h3>
@@ -722,14 +666,6 @@
             window.location.reload();
         });
 
-        // Refresh calendar functionality
-        document.getElementById('refreshCalendar').addEventListener('click', function() {
-            loadEventsTimeline();
-            updateCalendar();
-            this.classList.add('rotating');
-            setTimeout(() => this.classList.remove('rotating'), 1000);
-        });
-
         // Form submission to add message
         const contactForm = document.getElementById('contactForm');
         if (contactForm) {
@@ -751,151 +687,175 @@
             });
         }
 
-        // Load events into the timeline
-        function loadEventsTimeline() {
+        // Função para carregar e exibir a agenda de texto simples
+        function loadSimpleAgenda() {
+            console.log('Executando loadSimpleAgenda...');
+            const simpleAgendaList = document.getElementById('simpleAgendaList');
+            
+            if (!simpleAgendaList) {
+                console.error('Elemento simpleAgendaList não encontrado');
+                return;
+            }
+            
+            // Obter eventos atualizados
             const events = SiteManager.getEvents();
-            const eventsTimeline = document.querySelector('.events-timeline');
+            console.log('Eventos obtidos:', events);
             
-            if (!eventsTimeline) return;
-            
-            if (events.length === 0) {
-                eventsTimeline.innerHTML = '<p style="color: rgba(255, 255, 255, 0.7); text-align: center; padding: 20px;">Nenhum evento agendado</p>';
+            if (!events || events.length === 0) {
+                console.log('Nenhum evento encontrado');
+                simpleAgendaList.innerHTML = '<p class="no-events">Nenhum evento agendado</p>';
                 return;
             }
 
-            // Obter a data atual no formato YYYY-MM-DD
+            // Obter a data atual
             const today = new Date();
             const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            console.log('Data atual:', todayFormatted);
 
+            // Filtrar apenas eventos futuros e ordenar por data
             const upcomingEvents = events
                 .filter(event => event.date >= todayFormatted)
                 .sort((a, b) => a.date.localeCompare(b.date));
+            
+            console.log('Eventos futuros:', upcomingEvents);
 
             if (upcomingEvents.length === 0) {
-                eventsTimeline.innerHTML = '<p style="color: rgba(255, 255, 255, 0.7); text-align: center; padding: 20px;">Nenhum evento agendado</p>';
+                console.log('Nenhum evento futuro encontrado');
+                simpleAgendaList.innerHTML = '<p class="no-events">Nenhum evento agendado</p>';
                 return;
             }
 
-            eventsTimeline.innerHTML = upcomingEvents
-                .map(event => {
-                    const dateParts = event.date.split('-');
-                    const eventMonth = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'][parseInt(dateParts[1], 10) - 1];
-                    const eventDay = parseInt(dateParts[2], 10);
-                    const eventYear = dateParts[0];
-                    
-                    return `
-                    <div class="event-item" data-type="${event.type}">
-                        <div class="event-date">
-                            <div class="date-circle">
-                                <span class="month">${eventMonth}</span>
-                                <span class="day">${eventDay}</span>
-                                <span class="year">${eventYear}</span>
-                            </div>
-                        </div>
-                        <div class="event-content">
-                            <h3>${event.title}</h3>
-                            <p><i class="fas fa-clock"></i> ${event.time}</p>
-                            <p><i class="fas fa-map-marker-alt"></i> ${event.location}</p>
-                            ${event.description ? `<p class="event-description">${event.description}</p>` : ''}
-                        </div>
-                    </div>
-                `}).join('');
-        }
-
-        // Event filtering
-        const filterButtons = document.querySelectorAll('.events-filter .filter-btn');
-        filterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const filter = button.getAttribute('data-filter');
+            // Agrupar eventos por mês
+            const eventsByMonth = {};
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            
+            upcomingEvents.forEach(event => {
+                const dateParts = event.date.split('-');
+                const monthIndex = parseInt(dateParts[1], 10) - 1;
+                const monthYear = `${monthNames[monthIndex]} ${dateParts[0]}`;
                 
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                const eventItems = document.querySelectorAll('.event-item');
-                eventItems.forEach(item => {
-                    if (filter === 'all' || item.getAttribute('data-type') === filter) {
-                        item.style.display = 'flex';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-            });
-        });
-
-        // Update calendar with events
-        function updateCalendar() {
-            const events = SiteManager.getEvents();
-            const calendarDays = document.querySelectorAll('.calendar-days .calendar-day');
-            
-            if (!calendarDays.length) return;
-            
-            // Clear existing event markers
-            calendarDays.forEach(day => {
-                day.classList.remove('has-event');
-                day.classList.remove('multiple-events');
-                day.removeAttribute('title');
-            });
-
-            // Add event markers
-            events.forEach(event => {
-                // Usar diretamente a string da data sem criar um objeto Date
-                const dayElement = document.querySelector(`.calendar-days .calendar-day[data-date="${event.date}"]`);
-                if (dayElement) {
-                    dayElement.classList.add('has-event');
-                    
-                    // Se já existe um título, adicionar o novo título com quebra de linha
-                    if (dayElement.title) {
-                        dayElement.title += `\n${event.title}`;
-                        dayElement.classList.add('multiple-events');
-                    } else {
-                        dayElement.title = event.title;
-                    }
+                if (!eventsByMonth[monthYear]) {
+                    eventsByMonth[monthYear] = [];
                 }
+                
+                eventsByMonth[monthYear].push(event);
             });
+
+            console.log('Eventos agrupados por mês:', eventsByMonth);
+
+            // Gerar HTML
+            let html = '';
+            
+            for (const monthYear in eventsByMonth) {
+                html += `<div class="agenda-month">
+                    <h3 class="month-title">${monthYear}</h3>
+                    <div class="agenda-events-list">`;
+                
+                eventsByMonth[monthYear].forEach(event => {
+                    const dateParts = event.date.split('-');
+                    const day = parseInt(dateParts[2], 10);
+                    const formattedTime = event.time || '';
+                    
+                    html += `<div class="agenda-event-item">
+                        <div class="agenda-day">Dia ${day}</div>
+                        <div class="agenda-details">
+                            <span class="agenda-location">${event.location}</span>
+                            <span class="agenda-separator">|</span>
+                            <span class="agenda-time">${formattedTime}</span>
+                            <span class="agenda-separator">|</span>
+                            <span class="agenda-title">${event.title}</span>
+                        </div>
+                    </div>`;
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            console.log('Atualizando HTML da agenda');
+            simpleAgendaList.innerHTML = html;
         }
 
-        // Update event filters with categories
+        // Update event filters with categories - função mantida para compatibilidade
         function updateEventFilters() {
-            const categories = SiteManager.getEventCategories();
-            const categoryFilters = document.getElementById('categoryFilters');
+            // Esta função não faz mais nada com a exibição de calendário removida,
+            // mas mantemos ela para compatibilidade com o código existente
+            console.log("updateEventFilters chamado - função mantida para compatibilidade");
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Inicializar AOS (Animate on Scroll)
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true
+            });
             
-            if (categoryFilters) {
-                categoryFilters.innerHTML = categories.map(category => `
-                    <button class="filter-btn" data-filter="${category.id}">
-                        <i class="fas ${category.icon}"></i>
-                        ${category.name}
-                    </button>
-                `).join('');
-                
-                // Reattach event listeners
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.addEventListener('click', function(e) {
-                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
-                        calendar.filterEvents(e);
-                    });
+            // Inicializar Particles.js
+            if (document.getElementById('particles-js')) {
+                particlesJS('particles-js', {
+                    particles: {
+                        number: { value: 80, density: { enable: true, value_area: 800 } },
+                        color: { value: '#ff6b00' },
+                        shape: { type: 'circle' },
+                        opacity: { value: 0.5, random: true },
+                        size: { value: 3, random: true },
+                        line_linked: { enable: true, distance: 150, color: '#ff6b00', opacity: 0.4, width: 1 },
+                        move: { enable: true, speed: 3, direction: 'none', random: true, straight: false, out_mode: 'out' }
+                    },
+                    interactivity: {
+                        detect_on: 'canvas',
+                        events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } }
+                    }
                 });
             }
-        }
+            
+            // Inicializar CTA particles
+            if (document.getElementById('cta-particles')) {
+                particlesJS('cta-particles', {
+                    particles: {
+                        number: { value: 30, density: { enable: true, value_area: 800 } },
+                        color: { value: '#ff6b00' },
+                        shape: { type: 'circle' },
+                        opacity: { value: 0.3, random: true },
+                        size: { value: 5, random: true },
+                        line_linked: { enable: false },
+                        move: { enable: true, speed: 2, direction: 'none', random: true, straight: false, out_mode: 'out' }
+                    }
+                });
+            }
 
-        // Update filters when data changes
-        document.addEventListener('site-data-updated', updateEventFilters);
-        
-        // Initial load of filters
-        document.addEventListener('DOMContentLoaded', function() {
-            updateEventFilters();
+            // Inicializar o SiteManager antes de qualquer operação
+            console.log('Inicializando SiteManager...');
+            try {
+                await SiteManager.init();
+                console.log('SiteManager inicializado com sucesso');
+            } catch (error) {
+                console.error('Erro ao inicializar SiteManager:', error);
+            }
+
+            // Atualizar interface com dados atuais
             updateLoginStatus();
             updateSocialLinks();
             updateContactInfo();
-            loadEventsTimeline();
-            updateCalendar();
+            
+            // Carregar a agenda simples
+            console.log('Carregando agenda simples...');
+            loadSimpleAgenda();
             
             // Listen for data updates
             document.addEventListener('site-data-updated', function() {
+                console.log('Evento site-data-updated detectado, atualizando interface...');
                 updateSocialLinks();
                 updateContactInfo();
-                loadEventsTimeline();
-                updateCalendar();
+                loadSimpleAgenda();
+            });
+
+            // Também atualizar quando a página receber foco
+            window.addEventListener('focus', function() {
+                console.log('Página recebeu foco, verificando por atualizações...');
+                SiteManager.init().then(() => {
+                    loadSimpleAgenda();
+                });
             });
         });
     </script>
