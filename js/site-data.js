@@ -31,15 +31,13 @@ const defaultData = {
             instagram: '#',
             youtube: '#',
             spotify: '#',
-            tiktok: '#',
-            whatsapp: '#'
+            tiktok: '#'
         },
         contact: {
             phone: '+55 (XX) XXXXX-XXXX',
             email: 'contato@nandodenon.com.br',
             address: 'São Paulo, SP - Brasil'
-        },
-        lastUpdate: new Date().toISOString()
+        }
     },
     // Adicionando estrutura financeira
     transactions: [],
@@ -59,9 +57,10 @@ const defaultData = {
     lastSync: new Date().toISOString()
 };
 
-// Dados atuais
-let siteData = { ...defaultData };
+// Variáveis de estado
 let isInitialized = false;
+let siteData = { ...defaultData };
+let isLoggedIn = false;
 
 // Funções de API
 async function fetchData() {
@@ -118,24 +117,37 @@ async function saveDataToAPI(data) {
     return SiteManager.saveData();
 }
 
-// Inicializar dados
+// Função para inicializar os dados
 async function initializeData() {
-    if (!isInitialized) {
-        console.log('Inicializando dados...');
-        try {
-            siteData = await fetchData();
-            isInitialized = true;
-            
-            // Disparar evento de inicialização
-            const event = new CustomEvent('site-data-initialized');
-            document.dispatchEvent(event);
-            console.log('Dados inicializados com sucesso');
-        } catch (error) {
-            console.error('Erro durante a inicialização dos dados:', error);
+    if (isInitialized) return true;
+
+    try {
+        // Verificar login
+        const token = localStorage.getItem('authToken');
+        const storedLoginState = localStorage.getItem('isLoggedIn') === 'true';
+        isLoggedIn = storedLoginState && !!token;
+
+        // Tentar carregar dados do localStorage
+        const localData = localStorage.getItem('siteData');
+        if (localData) {
+            try {
+                siteData = JSON.parse(localData);
+                console.log('Dados carregados do localStorage');
+            } catch (e) {
+                console.error('Erro ao carregar dados do localStorage:', e);
+                siteData = { ...defaultData };
+            }
+        } else {
             siteData = { ...defaultData };
         }
+
+        isInitialized = true;
+        return true;
+    } catch (error) {
+        console.error('Erro ao inicializar dados:', error);
+        isInitialized = true; // Mesmo com erro, marcamos como inicializado para evitar loops
+        return false;
     }
-    return siteData;
 }
 
 /**
@@ -144,35 +156,176 @@ async function initializeData() {
 const SiteManager = {
     // Inicialização
     init: async function() {
-        await initializeData();
-        return true;
+        return await initializeData();
     },
-    
-    // Verificação de login
+
+    // Autenticação
+    login: function(username, password) {
+        if (username === 'admin' && password === 'admin') {
+            localStorage.setItem('authToken', 'dummy-token');
+            localStorage.setItem('isLoggedIn', 'true');
+            isLoggedIn = true;
+            return true;
+        }
+        return false;
+    },
+
+    logout: function() {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('isLoggedIn');
+        isLoggedIn = false;
+    },
+
     isLoggedIn: function() {
-        return localStorage.getItem('authToken') === 'dev_token';
+        // Verificar tanto a variável de estado quanto o localStorage
+        const storedLoginState = localStorage.getItem('isLoggedIn') === 'true';
+        const hasToken = !!localStorage.getItem('authToken');
+        isLoggedIn = storedLoginState && hasToken;
+        return isLoggedIn;
     },
-    
-    // Login
-    login: async function(username, password) {
+
+    // Gerenciamento de dados
+    getData: async function() {
+        await initializeData();
+        return siteData;
+    },
+
+    saveData: async function() {
         try {
-            if (username === 'admin' && password === 'admin') {
-                localStorage.setItem('authToken', 'dev_token');
-                return true;
-            }
-            return false;
+            localStorage.setItem('siteData', JSON.stringify(siteData));
+            
+            // Atualizar cache para usuários anônimos
+            const publicData = {
+                events: siteData.events,
+                eventCategories: siteData.eventCategories,
+                settings: siteData.settings,
+                lastSync: new Date().toISOString()
+            };
+            localStorage.setItem('siteDataCache', JSON.stringify(publicData));
+            
+            // Disparar evento de atualização
+            document.dispatchEvent(new Event('site-data-updated'));
+            
+            return true;
         } catch (error) {
-            console.error('Erro no login:', error);
+            console.error('Erro ao salvar dados:', error);
             return false;
         }
     },
-    
-    // Logout
-    logout: function() {
-        localStorage.removeItem('authToken');
-        window.location.href = 'login.html';
+
+    // Gerenciamento de eventos
+    getEvents: function() {
+        return siteData.events || [];
     },
-    
+
+    addEvent: async function(event) {
+        await initializeData();
+        
+        if (!event.id) {
+            event.id = Date.now().toString();
+        }
+        
+        siteData.events.push(event);
+        this.updateStats();
+        await this.saveData();
+        return event;
+    },
+
+    updateEvent: async function(eventId, updatedEvent) {
+        await initializeData();
+        
+        const index = siteData.events.findIndex(event => event.id === eventId);
+        if (index !== -1) {
+            siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
+            this.updateStats();
+            await this.saveData();
+            return siteData.events[index];
+        }
+        return null;
+    },
+
+    removeEvent: async function(eventId) {
+        await initializeData();
+        
+        siteData.events = siteData.events.filter(event => event.id !== eventId);
+        this.updateStats();
+        await this.saveData();
+    },
+
+    getEventById: async function(eventId) {
+        await initializeData();
+        return siteData.events.find(event => event.id === eventId);
+    },
+
+    // Gerenciamento de categorias de eventos
+    getEventCategories: function() {
+        return siteData.eventCategories || defaultData.eventCategories;
+    },
+
+    addEventCategory: async function(category) {
+        await initializeData();
+        
+        if (!category.id) {
+            category.id = category.name.toLowerCase().replace(/\s+/g, '-');
+        }
+        if (!category.icon) {
+            category.icon = 'fa-calendar';
+        }
+        siteData.eventCategories.push(category);
+        await this.saveData();
+        return category;
+    },
+
+    updateEventCategory: async function(categoryId, updatedCategory) {
+        await initializeData();
+        
+        const index = siteData.eventCategories.findIndex(cat => cat.id === categoryId);
+        if (index !== -1) {
+            siteData.eventCategories[index] = { ...siteData.eventCategories[index], ...updatedCategory };
+            await this.saveData();
+            return siteData.eventCategories[index];
+        }
+        return null;
+    },
+
+    removeEventCategory: async function(categoryId) {
+        await initializeData();
+        
+        // Não remover se houver eventos usando esta categoria
+        const hasEvents = siteData.events.some(event => event.type === categoryId);
+        if (hasEvents) {
+            return false;
+        }
+        siteData.eventCategories = siteData.eventCategories.filter(cat => cat.id !== categoryId);
+        await this.saveData();
+        return true;
+    },
+
+    // Atualização de estatísticas
+    updateStats: function() {
+        const now = new Date();
+        
+        // Eventos futuros
+        siteData.stats.upcomingEvents = siteData.events.filter(
+            event => new Date(event.date) >= now
+        ).length;
+        
+        // Atualizar outras estatísticas conforme necessário
+        this.saveData().catch(console.error);
+    },
+
+    // Configurações
+    getSettings: function() {
+        return siteData.settings || defaultData.settings;
+    },
+
+    updateSettings: async function(newSettings) {
+        await initializeData();
+        siteData.settings = { ...siteData.settings, ...newSettings };
+        await this.saveData();
+        return siteData.settings;
+    },
+
     // Dados iniciais para teste
     initializeTestData: function() {
         const testData = {
@@ -304,174 +457,6 @@ const SiteManager = {
     
     updateLastSync: function() {
         siteData.lastSync = new Date().toISOString();
-    },
-    
-    // Métodos de Eventos (Agenda)
-    getEvents: function() {
-        // Retornar eventos sincronamente para compatibilidade com páginas que não utilizam async/await
-        if (!isInitialized) {
-            console.warn('Dados não inicializados ao requisitar eventos, inicializando...');
-            // Tentar recuperar dados do cache local
-            const cachedData = JSON.parse(localStorage.getItem('siteDataCache'));
-            if (cachedData && cachedData.events) {
-                console.log('Usando dados do cache para eventos:', cachedData.events.length);
-                return cachedData.events || [];
-            }
-        }
-        
-        console.log(`Retornando ${siteData.events ? siteData.events.length : 0} eventos do SiteManager`);
-        return siteData.events || [];
-    },
-    
-    addEvent: async function(event) {
-        await initializeData();
-        
-        if (!event.id) {
-            event.id = Date.now().toString();
-        }
-        
-        // Garantir que a data está no formato correto YYYY-MM-DD sem alteração de fuso horário
-        if (event.date && event.date.includes('-')) {
-            const dateParts = event.date.split('-');
-            if (dateParts.length === 3) {
-                // Manter exatamente o formato que veio
-                event.date = event.date;
-            }
-        }
-        
-        console.log('Adicionando evento ao servidor:', event);
-        
-        // Verificar se já existe a propriedade events em siteData
-        if (!siteData.events) {
-            console.log('Array de eventos não existe, criando...');
-            siteData.events = [];
-        }
-        
-        // Adicionar evento ao array local primeiro para garantir que é salvo
-        console.log('Adicionando evento localmente:', event);
-        siteData.events.push(event);
-        this.updateStats();
-        
-        // Salvar localmente
-        console.log('Salvando dados localmente...');
-        localStorage.setItem('siteDataCache', JSON.stringify(siteData));
-        
-        // Disparar evento de atualização
-        console.log('Disparando evento site-data-updated');
-        const updateEvent = new CustomEvent('site-data-updated');
-        document.dispatchEvent(updateEvent);
-        
-        // Agora tentar salvar dados completos
-        try {
-            await this.saveData();
-            console.log('Dados salvos com sucesso via saveData');
-            return event;
-        } catch (error) {
-            console.error('Erro ao salvar dados via saveData:', error);
-            
-            // Já disparamos o evento, então retornamos o evento
-            return event;
-        }
-    },
-    
-    updateEvent: async function(eventId, updatedEvent) {
-        await initializeData();
-        
-        // Garantir que a data está no formato correto YYYY-MM-DD sem alteração de fuso horário
-        if (updatedEvent.date && updatedEvent.date.includes('-')) {
-            const dateParts = updatedEvent.date.split('-');
-            if (dateParts.length === 3) {
-                // Manter exatamente o formato que veio
-                updatedEvent.date = updatedEvent.date;
-            }
-        }
-        
-        console.log(`Atualizando evento ${eventId}:`, updatedEvent);
-        
-        // Verificar se temos o array de eventos
-        if (!siteData.events) {
-            console.log('Array de eventos não existe, criando...');
-            siteData.events = [];
-        }
-        
-        // Atualizar localmente primeiro para garantir que os dados são salvos
-        const index = siteData.events.findIndex(event => event.id === eventId);
-        
-        if (index !== -1) {
-            console.log('Evento encontrado localmente, atualizando...');
-            siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
-            this.updateStats();
-        } else {
-            console.warn(`Evento ${eventId} não encontrado localmente, adicionando como novo`);
-            
-            // Se o evento não existe, adicionar como novo
-            const newEvent = { ...updatedEvent, id: eventId };
-            siteData.events.push(newEvent);
-            this.updateStats();
-        }
-        
-        // Salvar localmente primeiro para garantir que temos os dados
-        console.log('Salvando dados localmente...');
-        localStorage.setItem('siteDataCache', JSON.stringify(siteData));
-        
-        // Disparar evento de atualização
-        console.log('Disparando evento site-data-updated');
-        const updateEvent = new CustomEvent('site-data-updated');
-        document.dispatchEvent(updateEvent);
-        
-        // Agora tentar salvar dados completos
-        try {
-            await this.saveData();
-            console.log('Dados salvos com sucesso via saveData');
-            return siteData.events.find(event => event.id === eventId);
-        } catch (error) {
-            console.error('Erro ao salvar dados via saveData:', error);
-            
-            // Já disparamos o evento e atualizamos localmente, então retornamos o evento
-            return siteData.events.find(event => event.id === eventId);
-        }
-    },
-    
-    removeEvent: async function(eventId) {
-        await initializeData();
-        
-        console.log(`Removendo evento ${eventId}`);
-        
-        // Remover localmente primeiro para garantir que funciona
-        const hadEvent = siteData.events.some(event => event.id === eventId);
-        if (hadEvent) {
-            // Remover do array local
-            siteData.events = siteData.events.filter(event => event.id !== eventId);
-            this.updateStats();
-            
-            // Salvar localmente primeiro
-            localStorage.setItem('siteDataCache', JSON.stringify(siteData));
-            console.log(`Evento ${eventId} removido localmente`);
-            
-            // Disparar evento de atualização
-            console.log('Disparando evento site-data-updated');
-            const updateEvent = new CustomEvent('site-data-updated');
-            document.dispatchEvent(updateEvent);
-        } else {
-            console.warn(`Evento ${eventId} não encontrado localmente para remoção`);
-        }
-        
-        // Salvar os dados completos
-        try {
-            await this.saveData();
-            console.log('Dados salvos com sucesso via saveData após remoção');
-            return true;
-        } catch (error) {
-            console.error('Erro ao salvar dados via saveData após remoção:', error);
-            // Já atualizamos localmente e disparamos o evento
-            return hadEvent;
-        }
-    },
-    
-    getEventById: async function(eventId) {
-        await initializeData();
-        
-        return siteData.events.find(event => event.id === eventId);
     },
     
     // Métodos de Galeria
@@ -619,114 +604,11 @@ const SiteManager = {
         await this.saveData();
     },
     
-    // Métodos de Configurações
-    getSettings: function() {
-        // Retornar configurações sincronamente para compatibilidade com páginas que não utilizam async/await
-        if (!isInitialized) {
-            console.warn('Dados não inicializados ao requisitar configurações');
-        }
-        return siteData.settings || defaultData.settings;
-    },
-    
-    updateSettings: async function(newSettings) {
-        await initializeData();
-        
-        siteData.settings = { ...siteData.settings, ...newSettings };
-        siteData.settings.lastUpdate = new Date().toISOString();
-        await this.saveData();
-        return siteData.settings;
-    },
-    
-    updateSocialLinks: async function(links) {
-        await initializeData();
-        
-        siteData.settings.socialLinks = { ...siteData.settings.socialLinks, ...links };
-        siteData.settings.lastUpdate = new Date().toISOString();
-        await this.saveData();
-        return siteData.settings.socialLinks;
-    },
-    
-    updateContactInfo: async function(contact) {
-        await initializeData();
-        
-        siteData.settings.contact = { ...siteData.settings.contact, ...contact };
-        siteData.settings.lastUpdate = new Date().toISOString();
-        await this.saveData();
-        return siteData.settings.contact;
-    },
-    
     // Métodos de Estatísticas
     getStats: async function() {
         await initializeData();
         
         return siteData.stats;
-    },
-    
-    updateStats: function() {
-        // Calcular estatísticas atualizadas
-        const now = new Date();
-        
-        // Eventos futuros
-        siteData.stats.upcomingEvents = siteData.events.filter(
-            event => new Date(event.date) >= now
-        ).length;
-        
-        // Mensagens não lidas
-        siteData.stats.messages = siteData.messages.filter(
-            msg => !msg.read
-        ).length;
-    },
-    
-    getUsername: function() {
-        return localStorage.getItem('username') || 'Admin';
-    },
-    
-    // Métodos de Categorias de Eventos
-    getEventCategories: function() {
-        // Retornar categorias sincronamente para compatibilidade com páginas que não utilizam async/await
-        if (!isInitialized) {
-            console.warn('Dados não inicializados ao requisitar categorias de eventos');
-        }
-        return siteData.eventCategories || defaultData.eventCategories;
-    },
-    
-    addEventCategory: async function(category) {
-        await initializeData();
-        
-        if (!category.id) {
-            category.id = category.name.toLowerCase().replace(/\s+/g, '-');
-        }
-        if (!category.icon) {
-            category.icon = 'fa-calendar';
-        }
-        siteData.eventCategories.push(category);
-        await this.saveData();
-        return category;
-    },
-    
-    updateEventCategory: async function(categoryId, updatedCategory) {
-        await initializeData();
-        
-        const index = siteData.eventCategories.findIndex(cat => cat.id === categoryId);
-        if (index !== -1) {
-            siteData.eventCategories[index] = { ...siteData.eventCategories[index], ...updatedCategory };
-            await this.saveData();
-            return siteData.eventCategories[index];
-        }
-        return null;
-    },
-    
-    removeEventCategory: async function(categoryId) {
-        await initializeData();
-        
-        // Don't remove if there are events using this category
-        const hasEvents = siteData.events.some(event => event.type === categoryId);
-        if (hasEvents) {
-            return false;
-        }
-        siteData.eventCategories = siteData.eventCategories.filter(cat => cat.id !== categoryId);
-        await this.saveData();
-        return true;
     },
 };
 

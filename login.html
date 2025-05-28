@@ -132,6 +132,27 @@
     </div>
 
     <script src="js/site-data.js"></script>
-    <script src="js/login.js"></script>
+    <script>
+        // Verificar se já está logado
+        if (SiteManager.isLoggedIn()) {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Configurar formulário de login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (SiteManager.login(username, password)) {
+                window.location.href = 'dashboard.html';
+            } else {
+                errorMessage.textContent = 'Usuário ou senha inválidos';
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html> 

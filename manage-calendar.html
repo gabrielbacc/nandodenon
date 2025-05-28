@@ -938,8 +938,8 @@
         filterButtons.forEach(button => {
             button.addEventListener('click', function() {
                 // Update active button
-                filterButtons.forEach(btn => btn.style.background = 'rgba(255, 255, 255, 0.1)');
-                this.style.background = '#ff6b00';
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
                 
                 // Get filter value
                 currentFilter = this.getAttribute('data-filter');

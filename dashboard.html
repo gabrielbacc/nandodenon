@@ -218,7 +218,7 @@
             font-size: 48px;
             animation: spin 1s infinite linear;
         }
-        
+
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -230,13 +230,13 @@
             margin-top: 15px;
             color: rgba(255, 255, 255, 0.7);
         }
-        
+
         .formspree-info a {
             color: #ff6b00;
             text-decoration: none;
             font-weight: bold;
         }
-        
+
         .formspree-info a:hover {
             text-decoration: underline;
             color: #ff8533;
@@ -256,7 +256,7 @@
             font-size: 0.9em;
             font-weight: bold;
         }
-        
+
         .credential-group input {
             width: calc(100% - 16px);
             padding: 8px;
@@ -272,7 +272,7 @@
             display: flex;
             align-items: center;
         }
-        
+
         .toggle-password {
             position: absolute;
             right: 8px;
@@ -298,7 +298,7 @@
         .dashboard-card.no-hover {
             cursor: default;
         }
-        
+
         .dashboard-card.no-hover:hover {
             transform: none;
         }
@@ -408,74 +408,42 @@
         // Loading overlay management
         const loadingOverlay = document.getElementById('loadingOverlay');
         
-        // Verificar login de forma simples e direta
-        function checkLoginStatus() {
-            console.log('Verificando status de login...');
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            const hasToken = !!localStorage.getItem('authToken');
-            console.log(`isLoggedIn: ${isLoggedIn}, hasToken: ${hasToken}`);
-            
-            if (!isLoggedIn || !hasToken) {
-                console.warn('Usuário não está logado, redirecionando para login');
-                window.location.href = 'login.html';
-                return false;
-            }
-            
-            console.log('Usuário está autenticado');
-            return true;
-        }
-        
-        // Inicializar o sistema
-        async function initDashboard() {
-            try {
-                // Verificar login primeiro, antes de qualquer operação
-                if (!checkLoginStatus()) {
-                    return;
-                }
-                
-                console.log('Inicializando dashboard...');
-                
-                // Initialize SiteManager
-                await SiteManager.init();
-                
-                // Set current date
-                const currentDate = new Date();
-                document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('pt-BR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                // Set admin name
-                const username = localStorage.getItem('username') || 'Admin';
-                document.getElementById('adminName').textContent = username;
-                console.log(`Nome do administrador: ${username}`);
-                
-                // Update stats
-                await updateDashboardStats();
-                
-                // Hide loading overlay
+        // Função para esconder o loading com delay mínimo
+        function hideLoadingWithDelay() {
+            setTimeout(() => {
                 loadingOverlay.style.display = 'none';
-            } catch (error) {
-                console.error('Erro ao inicializar dashboard:', error);
-                alert('Erro ao carregar dados. Por favor, tente novamente.');
-                // Esconder loading overlay mesmo em caso de erro
-                loadingOverlay.style.display = 'none';
-            }
+            }, 1000); // Delay de 1 segundo
         }
 
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Realizando logout...');
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('username');
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('loginTime');
-            console.log('Logout realizado, redirecionando para index');
-            window.location.href = 'index.html';
-        });
+        // Verificar autenticação
+        if (!SiteManager.isLoggedIn()) {
+            window.location.href = 'login.html';
+        } else {
+            // Atualizar nome do usuário
+            document.getElementById('adminName').textContent = 'Admin';
+            
+            // Configurar logout
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                SiteManager.logout();
+                window.location.href = 'login.html';
+            });
+            
+            // Set current date
+            const currentDate = new Date();
+            document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('pt-BR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Update stats e esconder loading depois
+            updateDashboardStats().then(() => {
+                hideLoadingWithDelay();
+            }).catch(() => {
+                hideLoadingWithDelay();
+            });
+        }
 
         // Função para buscar eventos da agenda
         async function buscarEventosAgenda() {
@@ -490,6 +458,10 @@
                 
                 // Buscar a seção de agenda
                 const agendaContainer = doc.querySelector('#simpleAgendaList');
+                if (!agendaContainer) {
+                    console.warn('Container da agenda não encontrado');
+                    return null;
+                }
                 return agendaContainer;
             } catch (error) {
                 console.error('Erro ao buscar eventos:', error);
@@ -533,12 +505,9 @@
                     const dataEvento = new Date(ano, meses[mes], dia);
                     dataEvento.setHours(0, 0, 0, 0); // Início do dia
                     
-                    console.log('Data do Evento:', dataEvento.toLocaleDateString(), 'Hoje:', hoje.toLocaleDateString());
-                    
                     // Verificar se está dentro dos últimos 30 dias E já passou
                     if (dataEvento >= trintaDiasAtras && dataEvento < hoje) {
                         contador++;
-                        console.log('Evento passado contabilizado:', dia, mes, ano);
                     }
                 } catch (error) {
                     console.error('Erro ao processar evento:', error);
@@ -614,9 +583,6 @@
             }
         }
 
-        // Listen for data updates
-        document.addEventListener('site-data-updated', updateDashboardStats);
-
         // Menu mobile toggle
         const menuToggle = document.querySelector('.menu-toggle');
         const nav = document.querySelector('nav');
@@ -636,9 +602,6 @@
             });
         });
         
-        // Inicializar o dashboard quando a página carregar
-        document.addEventListener('DOMContentLoaded', initDashboard);
-
         // Adicionar evento de clique no botão de toggle senha
         const toggleButton = document.querySelector('.toggle-password');
         if (toggleButton) {

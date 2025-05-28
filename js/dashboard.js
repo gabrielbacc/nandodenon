@@ -1,33 +1,28 @@
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Verificar autenticação
     if (!SiteManager.isLoggedIn()) {
-        window.location.href = 'login.html';
+        location.href = 'login.html';
         return;
     }
 
-    try {
-        // Configurar logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                SiteManager.logout();
-            });
-        }
-
-        // Atualizar nome do usuário na dashboard
-        const usernameElement = document.getElementById('username');
-        if (usernameElement) {
-            usernameElement.textContent = 'Admin';
-        }
-
-        // Carregar dados da dashboard
-        await loadDashboardData();
-
-    } catch (error) {
-        console.error('Erro ao inicializar dashboard:', error);
-        SiteManager.logout();
+    // Configurar logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            SiteManager.logout();
+            location.href = 'login.html';
+        });
     }
+
+    // Atualizar nome do usuário
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) {
+        usernameElement.textContent = SiteManager.getUsername();
+    }
+
+    // Carregar dados
+    loadDashboardData();
 });
 
 async function loadDashboardData() {
@@ -35,7 +30,7 @@ async function loadDashboardData() {
         const stats = await SiteManager.getStats();
         updateDashboardStats(stats);
     } catch (error) {
-        console.error('Erro ao carregar dados da dashboard:', error);
+        console.error('Erro ao carregar dados:', error);
     }
 }
 
