@@ -41,6 +41,21 @@ const defaultData = {
         },
         lastUpdate: new Date().toISOString()
     },
+    // Adicionando estrutura financeira
+    transactions: [],
+    bandMembers: [],
+    expenses: [],
+    shows: [],
+    finance: {
+        currentIncome: 0,
+        currentExpenses: 0,
+        netProfit: 0,
+        incomeTrend: 0,
+        expensesTrend: 0,
+        profitTrend: 0,
+        showIncome: 0,
+        showIncomeTrend: 0
+    },
     lastSync: new Date().toISOString()
 };
 
@@ -129,13 +144,113 @@ async function initializeData() {
 const SiteManager = {
     // Inicialização
     init: async function() {
+        if (!this.isLoggedIn()) {
+            console.log('Usuário não está logado');
+            return false;
+        }
         await initializeData();
-        return this;
+        return true;
+    },
+    
+    // Verificação de login
+    isLoggedIn: function() {
+        const token = localStorage.getItem('authToken');
+        return !!token;
+    },
+    
+    // Login
+    login: async function(username, password) {
+        try {
+            // Simulação de login para desenvolvimento
+            if (username === 'admin' && password === 'admin') {
+                localStorage.setItem('authToken', 'dev_token');
+                await this.init();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Erro no login:', error);
+            return false;
+        }
+    },
+    
+    // Logout
+    logout: function() {
+        localStorage.removeItem('authToken');
+        siteData = { ...defaultData };
+        isInitialized = false;
+    },
+    
+    // Dados iniciais para teste
+    initializeTestData: function() {
+        const testData = {
+            transactions: [
+                {
+                    id: '1',
+                    date: '2024-03-15',
+                    description: 'Show Aniversário Enrico',
+                    type: 'receita',
+                    category: 'show',
+                    amount: 3500,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '2',
+                    date: '2024-03-14',
+                    description: 'Pagamento Banda - Show Enrico',
+                    type: 'despesa',
+                    category: 'pagamento-banda',
+                    amount: 1500,
+                    createdAt: new Date().toISOString()
+                }
+            ],
+            bandMembers: [
+                {
+                    id: '1',
+                    name: 'João Silva',
+                    instrument: 'Guitarra',
+                    showRate: 500,
+                    phone: '11999999999',
+                    email: 'joao@email.com'
+                }
+            ],
+            finance: {
+                currentIncome: 3500,
+                currentExpenses: 1500,
+                netProfit: 2000,
+                incomeTrend: 15,
+                expensesTrend: 5,
+                profitTrend: 25,
+                showIncome: 3500,
+                showIncomeTrend: 20
+            }
+        };
+
+        siteData = {
+            ...siteData,
+            ...testData
+        };
+
+        localStorage.setItem('siteDataCache', JSON.stringify(siteData));
+        return siteData;
     },
     
     // Métodos gerais
     getData: async function() {
-        await initializeData();
+        if (!this.isLoggedIn()) {
+            throw new Error('AUTH_REQUIRED');
+        }
+        
+        if (!isInitialized) {
+            await this.init();
+        }
+        
+        // Se não houver dados no cache, inicializar dados de teste
+        const cachedData = localStorage.getItem('siteDataCache');
+        if (!cachedData) {
+            return this.initializeTestData();
+        }
+        
         return siteData;
     },
     
@@ -568,53 +683,6 @@ const SiteManager = {
         siteData.stats.messages = siteData.messages.filter(
             msg => !msg.read
         ).length;
-    },
-    
-    // Autenticação e sessão
-    isLoggedIn: function() {
-        return localStorage.getItem('isLoggedIn') === 'true' && localStorage.getItem('authToken');
-    },
-    
-    login: async function(username, password) {
-        try {
-            console.log('Tentando fazer login:', username);
-            const response = await fetch(`${API_BASE_URL}/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success) {
-                    console.log('Login realizado com sucesso');
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('loginTime', Date.now().toString());
-                    
-                    // Recarregar dados
-                    isInitialized = false;
-                    await initializeData();
-                    
-                    return true;
-                }
-            }
-            console.warn('Falha no login');
-            return false;
-        } catch (error) {
-            console.error('Erro ao fazer login:', error);
-            return false;
-        }
-    },
-    
-    logout: function() {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('username');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('loginTime');
     },
     
     getUsername: function() {

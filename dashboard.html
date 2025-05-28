@@ -323,6 +323,7 @@
                 <li><a href="dashboard.html" class="admin-link active"><i class="fas fa-user-shield"></i> Admin</a></li>
                 <li><a href="manage-calendar.html">Agenda</a></li>
                 <li><a href="manage-finance.html">Financeiro</a></li>
+                <li><a href="manage-band.html">Banda</a></li>
                 <li><a href="manage-settings.html">Configurações</a></li>
                 <li><a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
             </ul>
@@ -581,16 +582,9 @@
                             const dataEvento = new Date(ano, meses[mes], dia);
                             dataEvento.setHours(0, 0, 0, 0); // Início do dia
                             
-                            console.log('Verificando evento futuro:', {
-                                data: dataEvento.toLocaleDateString(),
-                                hoje: hoje.toLocaleDateString(),
-                                isFuturo: dataEvento > hoje
-                            });
-                            
-                            // Contar apenas eventos a partir de amanhã
-                            if (dataEvento > hoje) {
+                            // Contar todos os eventos futuros, incluindo eventos do dia atual
+                            if (dataEvento >= hoje) {
                                 eventosAgendados++;
-                                console.log('Evento futuro contabilizado:', dia, mes, ano);
                             }
                         } catch (error) {
                             console.error('Erro ao processar evento:', error);

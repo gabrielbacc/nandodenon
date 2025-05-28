@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Nando Denon</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        .login-section {
+        .login-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -16,15 +16,14 @@
             padding: 20px;
         }
 
-        .login-container {
+        .login-box {
             background: rgba(255, 255, 255, 0.05);
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
             width: 100%;
             max-width: 400px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .login-logo {
@@ -33,7 +32,8 @@
         }
 
         .login-logo img {
-            max-width: 200px;
+            height: 60px;
+            width: auto;
         }
 
         .login-form {
@@ -42,184 +42,187 @@
             gap: 20px;
         }
 
-        .login-form input {
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid rgba(255, 107, 0, 0.3);
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 5px;
+            border-radius: 8px;
             color: white;
             font-size: 16px;
+            transition: all 0.3s ease;
         }
 
-        .login-form input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff6b00;
+            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
         }
 
-        .login-form button {
-            padding: 15px;
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff6b00;
+            font-size: 20px;
+        }
+
+        .login-btn {
             background: #ff6b00;
-            border: none;
-            border-radius: 5px;
             color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .login-form button:hover {
+        .login-btn:hover {
             background: #ff8533;
+            transform: translateY(-2px);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .back-to-site {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-to-site a {
+            color: #ff6b00;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .back-to-site a:hover {
+            text-decoration: underline;
         }
 
         .error-message {
-            color: #ff4444;
-            text-align: center;
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             display: none;
+            align-items: center;
+            gap: 10px;
         }
-        
-        .loading-spinner {
+
+        .success-message {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             display: none;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        
-        .loading-spinner i {
-            color: #ff6b00;
-            font-size: 24px;
-            animation: spin 1s infinite linear;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .debug-info {
-            margin-top: 20px;
-            color: #999;
-            font-size: 12px;
-            text-align: center;
+            align-items: center;
+            gap: 10px;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="logo">
-            <a href="index.html">
-                <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
-            </a>
-        </div>
-        <nav>
-            <ul class="nav-links">
-                <li><a href="index.html">Voltar ao Site</a></li>
-            </ul>
-        </nav>
-        <div class="menu-toggle">
-            <i class="fas fa-bars"></i>
-        </div>
-    </header>
-
-    <!-- Login Section -->
-    <section class="login-section">
-        <div class="login-container">
+    <div class="login-container">
+        <div class="login-box">
             <div class="login-logo">
                 <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
             </div>
-            <div class="loading-spinner" id="loadingSpinner">
-                <i class="fas fa-spinner"></i>
+            
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Usuário ou senha incorretos</span>
             </div>
-            <form class="login-form" id="loginForm">
-                <input type="text" id="username" placeholder="Usuário" value="admin" required>
-                <input type="password" id="password" placeholder="Senha" value="admin" required>
-                <p class="error-message" id="errorMessage">Usuário ou senha incorretos</p>
-                <button type="submit" id="loginButton">Entrar</button>
+            
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i>
+                <span>Login realizado com sucesso!</span>
+            </div>
+
+            <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Usuário" required>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Senha" required>
+                </div>
+                <button type="submit" class="login-btn" id="loginButton">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Entrar
+                </button>
             </form>
-            <div class="debug-info" id="debugInfo"></div>
+
+            <div class="back-to-site">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    Voltar ao Site
+                </a>
+            </div>
         </div>
-    </section>
+    </div>
 
     <script src="js/site-data.js"></script>
     <script>
-        // Função de log para também mostrar informações na tela
-        function debugLog(message) {
-            console.log(message);
-            const debugInfo = document.getElementById('debugInfo');
-            debugInfo.innerHTML += message + '<br>';
-        }
-        
-        // Verificar se já está logado
-        function checkLogin() {
-            if (localStorage.getItem('isLoggedIn') === 'true' && localStorage.getItem('authToken')) {
-                debugLog('Usuário já está logado, redirecionando para dashboard');
-                window.location.href = 'dashboard.html';
-                return true;
-            }
-            return false;
-        }
-        
-        // Login simplificado para garantir funcionamento
-        function loginDirectly(username, password) {
-            debugLog(`Tentando login direto com: ${username}`);
-            
-            if (username === 'admin' && password === 'admin') {
-                debugLog('Credenciais corretas, autenticando...');
-                
-                // Salvar dados de autenticação
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', username);
-                localStorage.setItem('authToken', 'nandodenon2024');
-                localStorage.setItem('loginTime', Date.now().toString());
-                
-                // Redirecionar para dashboard
-                debugLog('Login bem-sucedido, redirecionando para dashboard');
-                window.location.href = 'dashboard.html';
-                return true;
-            }
-            
-            debugLog('Credenciais incorretas ou erro no login');
-            return false;
-        }
-        
-        // Inicializar ao carregar a página
-        document.addEventListener('DOMContentLoaded', function() {
-            debugLog('Página de login carregada');
-            
-            // Checar se já está logado
-            if (!checkLogin()) {
-                debugLog('Usuário não está logado, mostrando formulário');
-            }
-        });
-
-        // Manipulação do formulário
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        async function handleLogin(event) {
+            event.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-            const loadingSpinner = document.getElementById('loadingSpinner');
             const loginButton = document.getElementById('loginButton');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
             
-            // Reset error message
-            errorMessage.style.display = 'none';
-            
-            // Show loading spinner
-            loadingSpinner.style.display = 'block';
+            // Desabilitar botão e mostrar loading
             loginButton.disabled = true;
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
             
-            debugLog(`Tentando login com: ${username} / ${password}`);
-            
-            // Tentar primeiro o login direto
-            const directLoginSuccess = loginDirectly(username, password);
-            
-            if (!directLoginSuccess) {
-                // Se o login direto falhar, tente pela API
-                debugLog('Login direto falhou, tentando via API...');
+            try {
+                const success = await SiteManager.login(username, password);
                 
-                // Mostrar erro
-                errorMessage.style.display = 'block';
-                loadingSpinner.style.display = 'none';
+                if (success) {
+                    successMessage.style.display = 'flex';
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    errorMessage.style.display = 'flex';
+                    loginButton.disabled = false;
+                    loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
+                }
+            } catch (error) {
+                console.error('Erro ao fazer login:', error);
+                errorMessage.style.display = 'flex';
                 loginButton.disabled = false;
+                loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
+            }
+        }
+
+        // Verificar se já está logado
+        document.addEventListener('DOMContentLoaded', () => {
+            if (SiteManager.isLoggedIn()) {
+                window.location.href = 'dashboard.html';
             }
         });
     </script>
