@@ -1,28 +1,24 @@
 document.addEventListener('DOMContentLoaded', async function() {
-    // Verificar autenticação antes de qualquer coisa
+    // Verificar autenticação
     if (!SiteManager.isLoggedIn()) {
         window.location.href = 'login.html';
         return;
     }
 
     try {
-        // Inicializar o SiteManager
-        await SiteManager.init();
-        
         // Configurar logout
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 SiteManager.logout();
-                window.location.href = 'login.html';
             });
         }
 
         // Atualizar nome do usuário na dashboard
         const usernameElement = document.getElementById('username');
         if (usernameElement) {
-            usernameElement.textContent = SiteManager.getUsername();
+            usernameElement.textContent = 'Admin';
         }
 
         // Carregar dados da dashboard
@@ -30,15 +26,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     } catch (error) {
         console.error('Erro ao inicializar dashboard:', error);
-        alert('Erro ao carregar dashboard. Por favor, faça login novamente.');
         SiteManager.logout();
-        window.location.href = 'login.html';
     }
 });
 
 async function loadDashboardData() {
     try {
-        // Aqui você pode adicionar a lógica para carregar os dados específicos da dashboard
         const stats = await SiteManager.getStats();
         updateDashboardStats(stats);
     } catch (error) {
@@ -47,7 +40,6 @@ async function loadDashboardData() {
 }
 
 function updateDashboardStats(stats) {
-    // Atualizar estatísticas na interface
     const elements = {
         'totalShows': stats.shows,
         'upcomingEvents': stats.upcomingEvents,

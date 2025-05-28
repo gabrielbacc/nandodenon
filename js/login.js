@@ -1,13 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Verificar se já está logado
+    // Se já estiver logado, redirecionar para dashboard
     if (SiteManager.isLoggedIn()) {
-        if (window.location.pathname.includes('login.html')) {
-            window.location.href = 'dashboard.html';
-        }
+        window.location.href = 'dashboard.html';
         return;
     }
 
-    // Configurar o formulário de login
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async function(e) {
