@@ -146,8 +146,20 @@ const SiteManager = {
     init: async function() {
         if (!this.isLoggedIn()) {
             console.log('Usuário não está logado');
+            // Verificar se estamos na dashboard
+            if (window.location.pathname.includes('dashboard.html')) {
+                window.location.href = 'login.html';
+                return false;
+            }
             return false;
         }
+        
+        // Se estamos na página de login e já logados, redirecionar para dashboard
+        if (window.location.pathname.includes('login.html') && this.isLoggedIn()) {
+            window.location.href = 'dashboard.html';
+            return false;
+        }
+        
         await initializeData();
         return true;
     },
@@ -155,7 +167,18 @@ const SiteManager = {
     // Verificação de login
     isLoggedIn: function() {
         const token = localStorage.getItem('authToken');
-        return !!token;
+        // Adicionar verificação de tempo de expiração do token
+        const loginTime = localStorage.getItem('loginTime');
+        if (token && loginTime) {
+            // Token expira após 24 horas
+            const expirationTime = parseInt(loginTime) + (24 * 60 * 60 * 1000);
+            if (Date.now() > expirationTime) {
+                this.logout();
+                return false;
+            }
+            return true;
+        }
+        return false;
     },
     
     // Login
@@ -164,6 +187,7 @@ const SiteManager = {
             // Simulação de login para desenvolvimento
             if (username === 'admin' && password === 'admin') {
                 localStorage.setItem('authToken', 'dev_token');
+                localStorage.setItem('loginTime', Date.now().toString());
                 await this.init();
                 return true;
             }
