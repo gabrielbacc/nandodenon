@@ -1,5 +1,21 @@
 class FinanceManager {
     constructor() {
+        this.initializeEmptyData();
+        this.loadData().catch(error => {
+            console.error('Erro ao carregar dados financeiros:', error);
+            this.initializeEmptyData();
+        });
+
+        // Adicionar listener para atualização de dados
+        document.addEventListener('site-data-updated', () => {
+            console.log('Detectada atualização de dados, recarregando...');
+            this.loadData().catch(error => {
+                console.error('Erro ao recarregar dados financeiros:', error);
+            });
+        });
+    }
+
+    initializeEmptyData() {
         this.transactions = [];
         this.bandMembers = [];
         this.expenses = [];
@@ -26,123 +42,47 @@ class FinanceManager {
             return instance;
         } catch (error) {
             console.error('Erro na inicialização do FinanceManager:', error);
-            // Em caso de erro, retornar uma nova instância com dados padrão
-            const instance = new FinanceManager();
-            instance.initializeDefaultData();
-            return instance;
+            throw error;
         }
-    }
-
-    initializeDefaultData() {
-        console.log('Inicializando dados padrão...');
-        // Dados de exemplo para desenvolvimento
-        const currentDate = new Date();
-        const lastMonth = new Date(currentDate);
-        lastMonth.setMonth(currentDate.getMonth() - 1);
-        
-        this.transactions = [
-            {
-                id: '1',
-                date: currentDate.toISOString().split('T')[0],
-                description: 'Show Aniversário Enrico',
-                type: 'receita',
-                category: 'show',
-                amount: 3500,
-                createdAt: currentDate.toISOString()
-            },
-            {
-                id: '2',
-                date: currentDate.toISOString().split('T')[0],
-                description: 'Pagamento Banda - Show Enrico',
-                type: 'despesa',
-                category: 'pagamento-banda',
-                amount: 1500,
-                createdAt: currentDate.toISOString()
-            },
-            {
-                id: '3',
-                date: lastMonth.toISOString().split('T')[0],
-                description: 'Show Corporativo',
-                type: 'receita',
-                category: 'show',
-                amount: 5000,
-                createdAt: lastMonth.toISOString()
-            },
-            {
-                id: '4',
-                date: lastMonth.toISOString().split('T')[0],
-                description: 'Equipamentos de Som',
-                type: 'despesa',
-                category: 'equipamentos',
-                amount: 2000,
-                createdAt: lastMonth.toISOString()
-            }
-        ];
-
-        this.bandMembers = [
-            {
-                id: '1',
-                name: 'João Silva',
-                instrument: 'Guitarra',
-                showRate: 500,
-                phone: '11999999999',
-                email: 'joao@email.com'
-            },
-            {
-                id: '2',
-                name: 'Maria Santos',
-                instrument: 'Baixo',
-                showRate: 500,
-                phone: '11988888888',
-                email: 'maria@email.com'
-            }
-        ];
-
-        console.log('Dados padrão criados:', {
-            transactions: this.transactions,
-            bandMembers: this.bandMembers
-        });
-
-        // Atualizar dados financeiros e salvar
-        this.updateFinancialData()
-            .then(() => this.saveData())
-            .then(() => console.log('Dados padrão salvos com sucesso'))
-            .catch(error => console.error('Erro ao salvar dados padrão:', error));
-
-        return true;
     }
 
     async loadData() {
         try {
             console.log('Carregando dados financeiros...');
             const data = await SiteManager.getData();
-            console.log('Dados carregados:', data);
             
-            if (!data) {
-                console.log('Nenhum dado encontrado, inicializando dados padrão...');
-                return this.initializeDefaultData();
-            }
-            
-            // Garantir que temos um objeto de dados financeiros
-            if (!data.finance) {
-                data.finance = {};
+            if (!data || !data.finance) {
+                console.log('Nenhum dado encontrado, inicializando dados vazios...');
+                this.initializeEmptyData();
+                return true;
             }
             
             // Carregar transações
             this.transactions = data.finance.transactions || [];
-            console.log('Transações carregadas:', this.transactions);
             
             // Carregar outros dados financeiros
             this.bandMembers = data.finance.bandMembers || [];
             this.expenses = data.finance.expenses || [];
             this.shows = data.finance.shows || [];
             
+            // Carregar resumo financeiro
+            this.finance = {
+                currentIncome: data.finance.currentIncome || 0,
+                currentExpenses: data.finance.currentExpenses || 0,
+                netProfit: data.finance.netProfit || 0,
+                incomeTrend: data.finance.incomeTrend || 0,
+                expensesTrend: data.finance.expensesTrend || 0,
+                profitTrend: data.finance.profitTrend || 0,
+                showIncome: data.finance.showIncome || 0,
+                showIncomeTrend: data.finance.showIncomeTrend || 0
+            };
+            
             await this.updateFinancialData();
-            console.log('Dados financeiros atualizados');
+            console.log('Dados financeiros carregados com sucesso');
             return true;
         } catch (error) {
             console.error('Erro ao carregar dados financeiros:', error);
-            return this.initializeDefaultData();
+            throw error;
         }
     }
 
@@ -156,18 +96,35 @@ class FinanceManager {
                 data.finance = {};
             }
             
-            // Salvar todos os dados financeiros em uma única propriedade
+            // Salvar todos os dados financeiros
             data.finance = {
-                ...data.finance,
                 transactions: this.transactions,
                 bandMembers: this.bandMembers,
                 expenses: this.expenses,
                 shows: this.shows,
-                summary: this.finance
+                currentIncome: this.finance.currentIncome,
+                currentExpenses: this.finance.currentExpenses,
+                netProfit: this.finance.netProfit,
+                incomeTrend: this.finance.incomeTrend,
+                expensesTrend: this.finance.expensesTrend,
+                profitTrend: this.finance.profitTrend,
+                showIncome: this.finance.showIncome,
+                showIncomeTrend: this.finance.showIncomeTrend
             };
             
-            console.log('Dados a serem salvos:', data.finance);
             await SiteManager.saveData(data);
+            
+            // Atualizar o cache
+            try {
+                const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
+                currentCache.finance = data.finance;
+                currentCache.lastSync = new Date().toISOString();
+                localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
+                console.log('Cache financeiro atualizado');
+            } catch (err) {
+                console.error('Erro ao atualizar cache financeiro:', err);
+            }
+            
             console.log('Dados financeiros salvos com sucesso');
         } catch (error) {
             console.error('Erro ao salvar dados financeiros:', error);
@@ -177,27 +134,49 @@ class FinanceManager {
 
     // Gestão de Transações
     async addTransaction(transaction) {
-        transaction.id = Date.now().toString();
-        transaction.createdAt = new Date().toISOString();
-        this.transactions.push(transaction);
-        await this.updateFinancialData();
-        await this.saveData();
-        return transaction;
+        try {
+            transaction.id = Date.now().toString();
+            transaction.createdAt = new Date().toISOString();
+            this.transactions.push(transaction);
+            await this.updateFinancialData();
+            await this.saveData();
+            return transaction;
+        } catch (error) {
+            console.error('Erro ao adicionar transação:', error);
+            throw error;
+        }
     }
 
     async updateTransaction(id, updatedTransaction) {
-        const index = this.transactions.findIndex(t => t.id === id);
-        if (index === -1) throw new Error('Transação não encontrada');
-        this.transactions[index] = { ...this.transactions[index], ...updatedTransaction };
-        await this.updateFinancialData();
-        await this.saveData();
-        return this.transactions[index];
+        try {
+            const index = this.transactions.findIndex(t => t.id === id);
+            if (index === -1) throw new Error('Transação não encontrada');
+            
+            this.transactions[index] = { 
+                ...this.transactions[index], 
+                ...updatedTransaction,
+                updatedAt: new Date().toISOString()
+            };
+            
+            await this.updateFinancialData();
+            await this.saveData();
+            return this.transactions[index];
+        } catch (error) {
+            console.error('Erro ao atualizar transação:', error);
+            throw error;
+        }
     }
 
     async deleteTransaction(id) {
-        this.transactions = this.transactions.filter(t => t.id !== id);
-        await this.updateFinancialData();
-        await this.saveData();
+        try {
+            this.transactions = this.transactions.filter(t => t.id !== id);
+            await this.updateFinancialData();
+            await this.saveData();
+            return true;
+        } catch (error) {
+            console.error('Erro ao excluir transação:', error);
+            throw error;
+        }
     }
 
     // Gestão de Banda
@@ -245,31 +224,37 @@ class FinanceManager {
 
     // Relatórios
     getMonthlyIncome(month = new Date().getMonth(), year = new Date().getFullYear()) {
-        console.log('Calculando receita mensal para:', { month, year });
-        const income = this.transactions
+        return this.transactions
             .filter(t => {
                 const date = new Date(t.date);
                 return date.getMonth() === month && 
                        date.getFullYear() === year && 
                        t.type === 'receita';
             })
-            .reduce((total, t) => total + Number(t.amount), 0);
-        console.log('Receita calculada:', income);
-        return income;
+            .reduce((sum, t) => sum + Number(t.amount), 0);
     }
 
     getMonthlyExpenses(month = new Date().getMonth(), year = new Date().getFullYear()) {
-        console.log('Calculando despesas mensais para:', { month, year });
-        const expenses = this.transactions
+        return this.transactions
             .filter(t => {
                 const date = new Date(t.date);
                 return date.getMonth() === month && 
                        date.getFullYear() === year && 
                        t.type === 'despesa';
             })
-            .reduce((total, t) => total + Number(t.amount), 0);
-        console.log('Despesas calculadas:', expenses);
-        return expenses;
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+    }
+
+    getMonthlyShowIncome(month = new Date().getMonth(), year = new Date().getFullYear()) {
+        return this.transactions
+            .filter(t => {
+                const date = new Date(t.date);
+                return date.getMonth() === month && 
+                       date.getFullYear() === year && 
+                       t.type === 'receita' &&
+                       t.category === 'show';
+            })
+            .reduce((sum, t) => sum + Number(t.amount), 0);
     }
 
     getShowProfit(showId) {
@@ -302,68 +287,29 @@ class FinanceManager {
     // Análises
     async updateFinancialData() {
         try {
-            console.log('Atualizando dados financeiros...');
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
-
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            // Calcular mês atual
+            const currentIncome = this.getMonthlyIncome(currentMonth, currentYear);
+            const currentExpenses = this.getMonthlyExpenses(currentMonth, currentYear);
+            const currentShowIncome = this.getMonthlyShowIncome(currentMonth, currentYear);
+            
+            // Calcular mês anterior
             const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
             const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-
-            console.log('Período atual:', { currentMonth, currentYear });
-            console.log('Período anterior:', { lastMonth, lastMonthYear });
-
-            // Calcular receitas e despesas do mês atual
-            const currentIncome = this.getMonthlyIncome(currentMonth, currentYear);
+            
             const lastMonthIncome = this.getMonthlyIncome(lastMonth, lastMonthYear);
-            const currentExpenses = this.getMonthlyExpenses(currentMonth, currentYear);
             const lastMonthExpenses = this.getMonthlyExpenses(lastMonth, lastMonthYear);
-
-            console.log('Valores calculados:', {
-                currentIncome,
-                lastMonthIncome,
-                currentExpenses,
-                lastMonthExpenses
-            });
-
-            // Calcular receita de shows
-            const currentShowIncome = this.transactions
-                .filter(t => {
-                    const date = new Date(t.date);
-                    return date.getMonth() === currentMonth &&
-                           date.getFullYear() === currentYear &&
-                           t.type === 'receita' &&
-                           t.category === 'show';
-                })
-                .reduce((total, t) => total + Number(t.amount), 0);
-
-            const lastMonthShowIncome = this.transactions
-                .filter(t => {
-                    const date = new Date(t.date);
-                    return date.getMonth() === lastMonth &&
-                           date.getFullYear() === lastMonthYear &&
-                           t.type === 'receita' &&
-                           t.category === 'show';
-                })
-                .reduce((total, t) => total + Number(t.amount), 0);
-
-            console.log('Receita de shows:', {
-                currentShowIncome,
-                lastMonthShowIncome
-            });
-
+            const lastMonthShowIncome = this.getMonthlyShowIncome(lastMonth, lastMonthYear);
+            
             // Calcular tendências
             const incomeTrend = lastMonthIncome === 0 ? 100 : ((currentIncome - lastMonthIncome) / lastMonthIncome) * 100;
-            const expensesTrend = lastMonthExpenses === 0 ? 0 : ((currentExpenses - lastMonthExpenses) / lastMonthExpenses) * 100;
+            const expensesTrend = lastMonthExpenses === 0 ? 100 : ((currentExpenses - lastMonthExpenses) / lastMonthExpenses) * 100;
             const showIncomeTrend = lastMonthShowIncome === 0 ? 100 : ((currentShowIncome - lastMonthShowIncome) / lastMonthShowIncome) * 100;
-
-            console.log('Tendências calculadas:', {
-                incomeTrend,
-                expensesTrend,
-                showIncomeTrend
-            });
-
-            // Atualizar objeto finance
+            
+            // Atualizar dados financeiros
             this.finance = {
                 currentIncome,
                 currentExpenses,
@@ -376,9 +322,8 @@ class FinanceManager {
                 showIncome: currentShowIncome,
                 showIncomeTrend
             };
-
-            console.log('Dados financeiros atualizados:', this.finance);
-            return true;
+            
+            return this.finance;
         } catch (error) {
             console.error('Erro ao atualizar dados financeiros:', error);
             throw error;

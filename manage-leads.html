@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Leads - Nando Denon</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .leads-manager {
+            padding: 80px 20px 20px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .leads-header {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leads-header h1 {
+            color: #ff6b00;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .add-lead-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .add-lead-btn:hover {
+            background: #ff8533;
+        }
+
+        .leads-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .lead-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border: 1px solid rgba(255, 103, 0, 0.2);
+        }
+
+        .lead-info {
+            flex: 1;
+            color: white;
+        }
+
+        .lead-info h3 {
+            margin: 0 0 10px 0;
+            color: #ff6b00;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lead-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .lead-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .lead-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lead-actions button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .lead-actions button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ff6b00;
+        }
+
+        .lead-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+
+        .status-novo { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .status-contato { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+        .status-negociacao { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
+        .status-fechado { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .status-convertido { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            margin: 20px auto;
+            padding: 25px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: #1a1a1a;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 107, 0, 0.3);
+        }
+
+        .modal-header h2 {
+            color: #ff6b00;
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 5px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #ff6b00;
+        }
+
+        .modal-body {
+            padding: 20px 0;
+        }
+
+        .modal-body > div {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body > div:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .modal-body h3 {
+            color: #ff6b00;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .modal-body p {
+            color: #fff;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #ff6b00;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .lead-history {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        .history-item i {
+            color: #ff6b00;
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            color: #ff6b00;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 103, 0, 0.2);
+            border-radius: 4px;
+            color: #ff6b00;
+        }
+
+        .filter-group select option {
+            background: #1a1a1a;
+            color: #ff6b00;
+        }
+
+        .filter-group input::placeholder {
+            color: rgba(255, 103, 0, 0.5);
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #ff6b00;
+            box-shadow: 0 0 0 1px rgba(255, 103, 0, 0.2);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 103, 0, 0.2);
+        }
+
+        .stat-card h4 {
+            color: #ff6b00;
+            margin: 0;
+        }
+
+        .stat-card .number {
+            font-size: 24px;
+            color: white;
+            margin: 10px 0;
+        }
+
+        .stat-card p {
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .leads-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .lead-card {
+                flex-direction: column;
+            }
+
+            .lead-actions {
+                margin-top: 15px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .filter-section {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10px;
+                padding: 15px;
+            }
+
+            .backup-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .backup-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <a href="dashboard.html">
+                <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
+            </a>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Voltar ao Dashboard</a></li>
+                <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+        <div class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <div class="leads-manager">
+        <div class="container">
+            <div class="leads-header">
+                <h1>Gerenciar Leads</h1>
+                <div class="header-actions">
+                    <button class="add-lead-btn" style="background: #444;" id="openImportExportModal">
+                        <i class="fas fa-sync"></i>
+                        Importar/Exportar
+                    </button>
+                    <button class="add-lead-btn" style="background: #28a745;" id="openEventTypesModal">
+                        <i class="fas fa-tags"></i>
+                        Tipos de Evento
+                    </button>
+                    <button class="add-lead-btn" id="openAddLeadModal">
+                        <i class="fas fa-plus"></i>
+                        Novo Lead
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <h4>Total de Leads</h4>
+                    <div class="number" id="totalLeads">0</div>
+                    <p>Ativos no momento</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Taxa de Conversão</h4>
+                    <div class="number" id="conversionRate">0%</div>
+                    <p>Leads convertidos</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Leads Novos</h4>
+                    <div class="number" id="newLeads">0</div>
+                    <p>Últimos 30 dias</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Em Negociação</h4>
+                    <div class="number" id="negotiatingLeads">0</div>
+                    <p>Aguardando fechamento</p>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label for="statusFilter">Status</label>
+                    <select id="statusFilter">
+                        <option value="todos">Todos</option>
+                        <option value="novo">Novo</option>
+                        <option value="contato">Em Contato</option>
+                        <option value="negociacao">Em Negociação</option>
+                        <option value="fechado">Fechado</option>
+                        <option value="convertido">Convertido</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="typeFilter">Tipo de Evento</label>
+                    <select id="typeFilter">
+                        <option value="todos">Todos</option>
+                        <option value="casamento">Casamento</option>
+                        <option value="aniversario">Aniversário</option>
+                        <option value="corporativo">Corporativo</option>
+                        <option value="bar">Bar/Restaurante</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="dateFilter">Data do Contato</label>
+                    <input type="date" id="dateFilter">
+                </div>
+                <div class="filter-group">
+                    <label for="searchFilter">Buscar</label>
+                    <input type="text" id="searchFilter" placeholder="Nome, local, etc...">
+                </div>
+            </div>
+
+            <div class="leads-grid" id="leadsList">
+                <!-- Leads serão carregados aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar/Editar Lead -->
+    <div class="modal" id="leadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Novo Lead</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <form id="leadForm">
+                <input type="hidden" id="leadId">
+                <div class="form-group">
+                    <label for="leadName">Nome do Cliente/Empresa</label>
+                    <input type="text" id="leadName" required>
+                </div>
+                <div class="form-group">
+                    <label for="leadContact">Contato</label>
+                    <input type="text" id="leadContact" required>
+                </div>
+                <div class="form-group">
+                    <label for="leadType">Tipo de Evento</label>
+                    <select id="leadType" required>
+                        <option value="casamento">Casamento</option>
+                        <option value="aniversario">Aniversário</option>
+                        <option value="corporativo">Corporativo</option>
+                        <option value="bar">Bar/Restaurante</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="leadStatus">Status</label>
+                    <select id="leadStatus" required>
+                        <option value="novo">Novo</option>
+                        <option value="contato">Em Contato</option>
+                        <option value="negociacao">Em Negociação</option>
+                        <option value="fechado">Fechado</option>
+                        <option value="convertido">Convertido</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="leadDate">Data do Primeiro Contato</label>
+                    <input type="date" id="leadDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="leadBudget">Orçamento Proposto (R$)</label>
+                    <input type="number" id="leadBudget" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="leadNotes">Observações</label>
+                    <textarea id="leadNotes"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelLead">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Tipos de Evento -->
+    <div class="modal" id="eventTypesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gerenciar Tipos de Evento</h2>
+                <button class="close-modal" id="closeEventTypesModal">&times;</button>
+            </div>
+            <div id="eventTypesList" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto;">
+                <!-- Lista de tipos será carregada aqui -->
+            </div>
+            <form id="eventTypeForm" style="display: none;">
+                <input type="hidden" id="eventTypeId">
+                <div class="form-group">
+                    <label for="eventTypeName">Nome do Tipo</label>
+                    <input type="text" id="eventTypeName" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventTypeIcon">Ícone <i id="iconPreview" class="fas fa-star icon-preview"></i></label>
+                    <select id="eventTypeIcon" required>
+                        <option value="fa-ring">Aliança</option>
+                        <option value="fa-cake-candles">Bolo</option>
+                        <option value="fa-building">Prédio</option>
+                        <option value="fa-martini-glass">Taça</option>
+                        <option value="fa-music">Música</option>
+                        <option value="fa-star">Estrela</option>
+                        <option value="fa-heart">Coração</option>
+                        <option value="fa-gift">Presente</option>
+                        <option value="fa-glass-cheers">Brinde</option>
+                        <option value="fa-users">Grupo</option>
+                        <option value="fa-microphone">Microfone</option>
+                        <option value="fa-champagne-glasses">Taças</option>
+                        <option value="fa-church">Igreja</option>
+                        <option value="fa-handshake">Acordo</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelEventType">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+            <div class="form-actions" style="margin-top: 20px;">
+                <button class="btn btn-primary" id="addNewEventType">
+                    <i class="fas fa-plus"></i> Novo Tipo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Importação/Exportação -->
+    <div class="modal" id="importExportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Backup do Sistema</h2>
+                <button class="close-modal" id="closeImportExportModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 30px;">
+                    <h3>Exportar Todos os Dados</h3>
+                    <p>Faça backup de todos os dados do sistema (Agenda, Leads, Financeiro, etc):</p>
+                    <button class="btn btn-primary" id="exportDataBtn" style="width: 100%;">
+                        <i class="fas fa-download"></i>
+                        Exportar Todos os Dados
+                    </button>
+                </div>
+                
+                <div>
+                    <h3>Importar Dados</h3>
+                    <p>Importe dados de outro backup para adicionar ao seu sistema:</p>
+                    <div class="form-group">
+                        <div style="margin-bottom: 15px;">
+                            <button class="btn btn-primary" id="importFileBtn" style="width: 100%;">
+                                <i class="fas fa-file-upload"></i>
+                                Carregar Arquivo de Backup
+                            </button>
+                            <input type="file" id="importFileInput" style="display: none;" accept=".json">
+                        </div>
+                        <div style="text-align: center; margin: 10px 0;">
+                            <span style="color: rgba(255,255,255,0.7);">- ou -</span>
+                        </div>
+                        <label for="importDataText">Cole o conteúdo do backup aqui:</label>
+                        <textarea id="importDataText" rows="5" style="width: 100%; margin-bottom: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 10px; color: white;"></textarea>
+                        <button class="btn btn-primary" id="importDataBtn" style="width: 100%;">
+                            <i class="fas fa-upload"></i>
+                            Importar Dados
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h3>Backups Automáticos</h3>
+                    <p>O sistema mantém automaticamente os últimos 5 backups:</p>
+                    <div id="backupsList" style="max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 5px; padding: 10px; margin: 15px 0;">
+                        <!-- Lista de backups será carregada aqui -->
+                    </div>
+                </div>
+
+                <div class="help-text" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <p style="color: #ff6b00;"><i class="fas fa-info-circle"></i> Como funciona:</p>
+                    <ul style="color: rgba(255,255,255,0.7); margin-left: 20px;">
+                        <li>O sistema mantém automaticamente 5 backups dos seus dados</li>
+                        <li>Um novo backup é criado a cada 30 minutos de uso</li>
+                        <li>Backups também são criados antes de qualquer importação</li>
+                        <li>Ao importar dados de outro usuário, eles serão <strong>adicionados</strong> aos seus dados existentes</li>
+                        <li>Dados duplicados (mesmo ID) não serão importados</li>
+                        <li>Valores financeiros serão somados aos seus valores atuais</li>
+                        <li>Você pode compartilhar seus dados com outros usuários sem medo de perder informações</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/site-data.js"></script>
+    <script>
+        // Check if user is logged in
+        if (!SiteManager.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        // DOM Elements
+        const leadsList = document.getElementById('leadsList');
+        const leadModal = document.getElementById('leadModal');
+        const leadForm = document.getElementById('leadForm');
+        const modalTitle = document.getElementById('modalTitle');
+
+        // Event Listeners
+        document.getElementById('openAddLeadModal').addEventListener('click', () => {
+            modalTitle.textContent = 'Novo Lead';
+            leadForm.reset();
+            document.getElementById('leadId').value = '';
+            leadModal.style.display = 'flex';
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            leadModal.style.display = 'none';
+        });
+
+        document.getElementById('cancelLead').addEventListener('click', () => {
+            leadModal.style.display = 'none';
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            SiteManager.logout();
+            window.location.href = 'index.html';
+        });
+
+        // Form submission
+        leadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const leadId = document.getElementById('leadId').value;
+            const newLead = {
+                id: leadId || Date.now().toString(),
+                name: document.getElementById('leadName').value,
+                contact: document.getElementById('leadContact').value,
+                type: document.getElementById('leadType').value,
+                status: document.getElementById('leadStatus').value,
+                date: document.getElementById('leadDate').value,
+                budget: document.getElementById('leadBudget').value,
+                notes: document.getElementById('leadNotes').value,
+                history: []
+            };
+
+            if (!leadId) {
+                // Novo lead
+                newLead.history.push({
+                    date: new Date().toISOString(),
+                    action: 'Criação do lead',
+                    details: 'Lead cadastrado no sistema'
+                });
+            }
+
+            try {
+                if (leadId) {
+                    await SiteManager.updateLead(leadId, newLead);
+                    console.log('Lead atualizado:', newLead);
+                } else {
+                    await SiteManager.addLead(newLead);
+                    console.log('Novo lead adicionado:', newLead);
+                }
+                
+                leadModal.style.display = 'none';
+                await loadLeads();
+                updateStats();
+            } catch (error) {
+                console.error('Erro ao salvar lead:', error);
+                alert('Erro ao salvar o lead. Tente novamente.');
+            }
+        });
+
+        // Load and display leads
+        async function loadLeads() {
+            try {
+                const leads = await SiteManager.getData().then(data => data.leads || []);
+                
+                if (!leads || leads.length === 0) {
+                    leadsList.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 20px;">Nenhum lead cadastrado</div>';
+                    return;
+                }
+
+                leadsList.innerHTML = leads
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map(lead => {
+                        const statusClasses = {
+                            'novo': 'status-novo',
+                            'contato': 'status-contato',
+                            'negociacao': 'status-negociacao',
+                            'fechado': 'status-fechado',
+                            'convertido': 'status-convertido'
+                        };
+
+                        const statusLabels = {
+                            'novo': 'Novo',
+                            'contato': 'Em Contato',
+                            'negociacao': 'Em Negociação',
+                            'fechado': 'Fechado',
+                            'convertido': 'Convertido'
+                        };
+
+                        const typeIcons = {
+                            'casamento': 'fa-ring',
+                            'aniversario': 'fa-cake-candles',
+                            'corporativo': 'fa-building',
+                            'bar': 'fa-martini-glass',
+                            'outro': 'fa-star'
+                        };
+
+                        return `
+                            <div class="lead-card">
+                                <div class="lead-info">
+                                    <h3>
+                                        <i class="fas ${typeIcons[lead.type] || 'fa-star'}"></i>
+                                        ${lead.name}
+                                        <span class="lead-status ${statusClasses[lead.status]}">${statusLabels[lead.status]}</span>
+                                    </h3>
+                                    <div class="lead-details">
+                                        <div class="lead-detail">
+                                            <i class="fas fa-phone"></i>
+                                            ${lead.contact}
+                                        </div>
+                                        <div class="lead-detail">
+                                            <i class="fas fa-calendar"></i>
+                                            ${new Date(lead.date).toLocaleDateString('pt-BR')}
+                                        </div>
+                                        ${lead.budget ? `
+                                            <div class="lead-detail">
+                                                <i class="fas fa-dollar-sign"></i>
+                                                R$ ${Number(lead.budget).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    ${lead.notes ? `
+                                        <div class="lead-detail" style="margin-top: 10px;">
+                                            <i class="fas fa-sticky-note"></i>
+                                            ${lead.notes}
+                                        </div>
+                                    ` : ''}
+                                    ${lead.history && lead.history.length > 0 ? `
+                                        <div class="lead-history">
+                                            ${lead.history.slice(-2).map(item => `
+                                                <div class="history-item">
+                                                    <i class="fas fa-history"></i>
+                                                    <span>${new Date(item.date).toLocaleDateString('pt-BR')}: ${item.action}</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div class="lead-actions">
+                                    <button onclick="editLead('${lead.id}')" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteLead('${lead.id}')" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button onclick="addHistory('${lead.id}')" title="Adicionar Histórico">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+            } catch (error) {
+                console.error('Erro ao carregar leads:', error);
+                leadsList.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 20px;">Erro ao carregar leads. Tente novamente mais tarde.</div>';
+            }
+        }
+
+        // Edit lead
+        async function editLead(leadId) {
+            try {
+                const lead = await SiteManager.getLeadById(leadId);
+                if (lead) {
+                    document.getElementById('leadId').value = lead.id;
+                    document.getElementById('leadName').value = lead.name || '';
+                    document.getElementById('leadContact').value = lead.contact || '';
+                    document.getElementById('leadType').value = lead.type || 'outro';
+                    document.getElementById('leadStatus').value = lead.status || 'novo';
+                    document.getElementById('leadDate').value = lead.date || '';
+                    document.getElementById('leadBudget').value = lead.budget || '';
+                    document.getElementById('leadNotes').value = lead.notes || '';
+
+                    modalTitle.textContent = 'Editar Lead';
+                    leadModal.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Erro ao editar lead:', error);
+                alert('Erro ao carregar dados do lead para edição.');
+            }
+        }
+
+        // Delete lead
+        async function deleteLead(leadId) {
+            if (confirm('Tem certeza que deseja excluir este lead?')) {
+                try {
+                    await SiteManager.removeLead(leadId);
+                    await loadLeads();
+                    updateStats();
+                } catch (error) {
+                    console.error('Erro ao excluir lead:', error);
+                    alert('Erro ao excluir lead. Tente novamente.');
+                }
+            }
+        }
+
+        // Add history
+        async function addHistory(leadId) {
+            const action = prompt('Digite a ação realizada:');
+            if (action) {
+                try {
+                    const lead = await SiteManager.getLeadById(leadId);
+                    if (lead) {
+                        if (!lead.history) lead.history = [];
+                        
+                        lead.history.push({
+                            date: new Date().toISOString(),
+                            action: action,
+                            details: ''
+                        });
+
+                        await SiteManager.updateLead(leadId, lead);
+                        await loadLeads();
+                    }
+                } catch (error) {
+                    console.error('Erro ao adicionar histórico:', error);
+                    alert('Erro ao adicionar histórico. Tente novamente.');
+                }
+            }
+        }
+
+        // Update statistics
+        async function updateStats() {
+            try {
+                const leads = await SiteManager.getData().then(data => data.leads || []);
+                
+                const totalLeads = leads.length;
+                const convertedLeads = leads.filter(lead => lead.status === 'convertido').length;
+                const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : 0;
+                
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                const newLeads = leads.filter(lead => new Date(lead.date) >= thirtyDaysAgo).length;
+                
+                const negotiatingLeads = leads.filter(lead => lead.status === 'negociacao').length;
+
+                document.getElementById('totalLeads').textContent = totalLeads;
+                document.getElementById('conversionRate').textContent = `${conversionRate}%`;
+                document.getElementById('newLeads').textContent = newLeads;
+                document.getElementById('negotiatingLeads').textContent = negotiatingLeads;
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
+            }
+        }
+
+        // Filter functionality
+        const filters = {
+            status: document.getElementById('statusFilter'),
+            type: document.getElementById('typeFilter'),
+            date: document.getElementById('dateFilter'),
+            search: document.getElementById('searchFilter')
+        };
+
+        Object.values(filters).forEach(filter => {
+            filter.addEventListener('change', applyFilters);
+        });
+
+        filters.search.addEventListener('input', applyFilters);
+
+        async function applyFilters() {
+            try {
+                let leads = await SiteManager.getData().then(data => data.leads || []);
+                
+                // Filtro por status
+                if (filters.status.value !== 'todos') {
+                    leads = leads.filter(lead => lead.status === filters.status.value);
+                }
+                
+                // Filtro por tipo
+                if (filters.type.value !== 'todos') {
+                    leads = leads.filter(lead => lead.type === filters.type.value);
+                }
+                
+                // Filtro por data
+                if (filters.date.value) {
+                    const filterDate = new Date(filters.date.value);
+                    leads = leads.filter(lead => {
+                        const leadDate = new Date(lead.date);
+                        return leadDate.toDateString() === filterDate.toDateString();
+                    });
+                }
+                
+                // Filtro por busca
+                if (filters.search.value) {
+                    const searchTerm = filters.search.value.toLowerCase();
+                    leads = leads.filter(lead => 
+                        lead.name.toLowerCase().includes(searchTerm) ||
+                        lead.contact.toLowerCase().includes(searchTerm) ||
+                        (lead.notes && lead.notes.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                // Atualizar a exibição
+                if (leads.length === 0) {
+                    leadsList.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 20px;">Nenhum lead encontrado com os filtros selecionados</div>';
+                } else {
+                    loadLeads(); // Recarregar a lista com os filtros aplicados
+                }
+            } catch (error) {
+                console.error('Erro ao aplicar filtros:', error);
+            }
+        }
+
+        // Event Types Management
+        const eventTypesModal = document.getElementById('eventTypesModal');
+        const eventTypeForm = document.getElementById('eventTypeForm');
+        const eventTypesList = document.getElementById('eventTypesList');
+        const iconPreview = document.getElementById('iconPreview');
+        const eventTypeIcon = document.getElementById('eventTypeIcon');
+
+        // Update icon preview when selection changes
+        eventTypeIcon.addEventListener('change', function() {
+            iconPreview.className = 'fas ' + this.value + ' icon-preview';
+        });
+
+        document.getElementById('openEventTypesModal').addEventListener('click', () => {
+            loadEventTypes();
+            eventTypesModal.style.display = 'flex';
+            eventTypeForm.style.display = 'none';
+        });
+
+        document.getElementById('closeEventTypesModal').addEventListener('click', () => {
+            eventTypesModal.style.display = 'none';
+        });
+
+        document.getElementById('addNewEventType').addEventListener('click', () => {
+            eventTypeForm.reset();
+            document.getElementById('eventTypeId').value = '';
+            eventTypeForm.style.display = 'block';
+            iconPreview.className = 'fas fa-star icon-preview';
+        });
+
+        document.getElementById('cancelEventType').addEventListener('click', () => {
+            eventTypeForm.style.display = 'none';
+        });
+
+        async function loadEventTypes() {
+            try {
+                const types = await SiteManager.getEventTypes();
+                
+                if (!types || types.length === 0) {
+                    eventTypesList.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 20px;">Nenhum tipo cadastrado</div>';
+                    return;
+                }
+
+                eventTypesList.innerHTML = types.map(type => `
+                    <div class="category-item">
+                        <div class="category-info">
+                            <i class="fas ${type.icon}"></i>
+                            <span>${type.name}</span>
+                        </div>
+                        <div class="category-actions">
+                            <button onclick="editEventType('${type.id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteEventType('${type.id}')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Atualizar os selects de tipo de evento
+                updateEventTypeSelects(types);
+            } catch (error) {
+                console.error('Erro ao carregar tipos:', error);
+                eventTypesList.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 20px;">Erro ao carregar tipos. Tente novamente mais tarde.</div>';
+            }
+        }
+
+        function updateEventTypeSelects(types) {
+            const selects = [
+                document.getElementById('leadType'),
+                document.getElementById('typeFilter')
+            ];
+
+            selects.forEach(select => {
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = types.map(type => 
+                        `<option value="${type.id}">${type.name}</option>`
+                    ).join('');
+                    if (currentValue && types.some(t => t.id === currentValue)) {
+                        select.value = currentValue;
+                    }
+                }
+            });
+        }
+
+        async function editEventType(typeId) {
+            try {
+                const types = await SiteManager.getEventTypes();
+                const type = types.find(t => t.id === typeId);
+                
+                if (type) {
+                    document.getElementById('eventTypeId').value = type.id;
+                    document.getElementById('eventTypeName').value = type.name;
+                    document.getElementById('eventTypeIcon').value = type.icon;
+                    iconPreview.className = 'fas ' + type.icon + ' icon-preview';
+                    eventTypeForm.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao editar tipo:', error);
+                alert('Erro ao carregar dados do tipo para edição.');
+            }
+        }
+
+        async function deleteEventType(typeId) {
+            if (confirm('Tem certeza que deseja excluir este tipo? Não será possível excluir se houver leads usando este tipo.')) {
+                try {
+                    const success = await SiteManager.removeEventType(typeId);
+                    if (!success) {
+                        alert('Não é possível excluir este tipo pois existem leads vinculados a ele.');
+                    } else {
+                        await loadEventTypes();
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir tipo:', error);
+                    alert('Erro ao excluir tipo. Tente novamente.');
+                }
+            }
+        }
+
+        eventTypeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const typeId = document.getElementById('eventTypeId').value;
+            const newType = {
+                name: document.getElementById('eventTypeName').value,
+                icon: document.getElementById('eventTypeIcon').value
+            };
+
+            try {
+                if (typeId) {
+                    await SiteManager.updateEventType(typeId, newType);
+                } else {
+                    await SiteManager.addEventType(newType);
+                }
+
+                eventTypeForm.style.display = 'none';
+                await loadEventTypes();
+            } catch (error) {
+                console.error('Erro ao salvar tipo:', error);
+                alert('Erro ao salvar tipo. Tente novamente.');
+            }
+        });
+
+        // Import/Export Functionality
+        const importExportModal = document.getElementById('importExportModal');
+        const importFileInput = document.getElementById('importFileInput');
+        const importDataText = document.getElementById('importDataText');
+        const backupsList = document.getElementById('backupsList');
+
+        // Função para fechar o modal
+        function closeImportExportModal() {
+            importExportModal.style.display = 'none';
+            importDataText.value = '';
+        }
+
+        // Event listeners para fechar o modal
+        document.getElementById('closeImportExportModal').addEventListener('click', closeImportExportModal);
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && importExportModal.style.display === 'flex') {
+                closeImportExportModal();
+            }
+        });
+
+        // Fechar modal clicando fora
+        importExportModal.addEventListener('click', function(e) {
+            if (e.target === importExportModal) {
+                closeImportExportModal();
+            }
+        });
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        function loadBackupsList() {
+            try {
+                const backupKeys = Object.keys(localStorage)
+                    .filter(key => key.startsWith('siteBackup_'))
+                    .sort()
+                    .reverse();
+
+                if (backupKeys.length === 0) {
+                    backupsList.innerHTML = `
+                        <div style="color: rgba(255,255,255,0.7); text-align: center; padding: 10px;">
+                            Nenhum backup encontrado
+                        </div>
+                    `;
+                    return;
+                }
+
+                backupsList.innerHTML = backupKeys.map(key => {
+                    const backup = JSON.parse(localStorage.getItem(key));
+                    return `
+                        <div class="backup-item">
+                            <div class="backup-info">
+                                <i class="fas fa-save" style="color: #ff6b00; margin-right: 8px;"></i>
+                                Backup de ${formatDate(backup.timestamp)}
+                            </div>
+                            <div class="backup-actions">
+                                <button onclick="restoreBackup('${key}')" title="Restaurar">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                <button onclick="deleteBackup('${key}')" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Erro ao carregar lista de backups:', error);
+                backupsList.innerHTML = `
+                    <div style="color: rgba(255,255,255,0.7); text-align: center; padding: 10px;">
+                        Erro ao carregar backups
+                    </div>
+                `;
+            }
+        }
+
+        document.getElementById('openImportExportModal').addEventListener('click', () => {
+            importExportModal.style.display = 'flex';
+            importDataText.value = '';
+            loadBackupsList();
+        });
+
+        document.getElementById('exportDataBtn').addEventListener('click', async () => {
+            try {
+                const exportData = SiteManager.exportData();
+                
+                // Criar elemento temporário para download
+                const blob = new Blob([exportData], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nando-denon-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Copiar para a área de transferência
+                navigator.clipboard.writeText(exportData)
+                    .then(() => {
+                        alert('Dados exportados com sucesso! O arquivo foi baixado e o código também foi copiado para sua área de transferência.');
+                    })
+                    .catch(() => {
+                        alert('Dados exportados com sucesso! O arquivo foi baixado.');
+                    });
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar dados. Por favor, tente novamente.');
+            }
+        });
+
+        document.getElementById('importFileBtn').addEventListener('click', () => {
+            importFileInput.click();
+        });
+
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    importDataText.value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('importDataBtn').addEventListener('click', async () => {
+            const importData = importDataText.value.trim();
+            if (!importData) {
+                alert('Por favor, insira os dados para importação.');
+                return;
+            }
+
+            if (!confirm('ATENÇÃO: A importação substituirá todos os dados atuais. Tem certeza que deseja continuar?')) {
+                return;
+            }
+
+            try {
+                await SiteManager.importData(importData);
+                alert('Dados importados com sucesso! A página será recarregada.');
+                window.location.reload();
+            } catch (error) {
+                console.error('Erro ao importar:', error);
+                alert('Erro ao importar dados: ' + error.message);
+            }
+        });
+
+        // Initial load
+        loadLeads();
+        updateStats();
+
+        // Make functions available globally
+        window.editLead = editLead;
+        window.deleteLead = deleteLead;
+        window.addHistory = addHistory;
+        window.editEventType = editEventType;
+        window.deleteEventType = deleteEventType;
+    </script>
+</body>
+</html> 

@@ -724,6 +724,10 @@
                         <i class="fas fa-sign-out-alt"></i>
                         Sair
                     </a>
+                    <a href="dashboard.html" class="admin-link" id="dashboardLink" style="display: none;">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
                 </div>
             </div>
         </div>
@@ -817,13 +821,16 @@
         function updateLoginStatus() {
             const loginLink = document.getElementById('loginLink');
             const logoutBtn = document.getElementById('logoutBtn');
+            const dashboardLink = document.getElementById('dashboardLink');
             
             if (SiteManager.isLoggedIn()) {
                 loginLink.style.display = 'none';
                 logoutBtn.style.display = 'flex';
+                dashboardLink.style.display = 'flex';
             } else {
                 loginLink.style.display = 'flex';
                 logoutBtn.style.display = 'none';
+                dashboardLink.style.display = 'none';
             }
         }
 

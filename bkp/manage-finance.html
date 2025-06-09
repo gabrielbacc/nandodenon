@@ -6,7 +6,7 @@
     <title>Financeiro - Nando Denon</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         .finance-manager {
             padding: 80px 20px 20px;
@@ -120,7 +120,7 @@
         }
 
         .chart-wrapper {
-            height: calc(100% - 60px); /* Altura total menos o header */
+            height: 100%;
             width: 100%;
             position: relative;
         }
@@ -135,37 +135,11 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            height: 40px; /* Altura fixa para o header */
         }
 
         .chart-header h3 {
             color: #ff6b00;
             margin: 0;
-        }
-
-        .chart-filters {
-            display: flex;
-            gap: 10px;
-        }
-
-        .chart-filter {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 107, 0, 0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .chart-filter:hover {
-            background: rgba(255, 107, 0, 0.2);
-        }
-
-        .chart-filter.active {
-            background: #ff6b00;
-            border-color: #ff6b00;
         }
 
         .table-container {
@@ -206,11 +180,14 @@
             cursor: pointer;
             border: none;
             transition: all 0.3s ease;
+            font-size: 14px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-size: 14px;
-            font-weight: 500;
+        }
+
+        .btn i {
+            font-size: 16px;
         }
 
         .btn-primary {
@@ -218,19 +195,142 @@
             color: white;
         }
 
+        .btn-primary:hover {
+            background: #ff8533;
+        }
+
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        .btn:active {
-            transform: translateY(0);
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #bb2d3b;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .finance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .finance-header h1 {
+            color: #ff6b00;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .add-transaction-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .add-transaction-btn:hover {
+            background: #ff8533;
+        }
+
+        .add-transaction-btn i {
+            font-size: 16px;
+        }
+
+        .transaction-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .transaction-actions button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .transaction-actions button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ff6b00;
+        }
+
+        .modal .btn {
+            font-weight: 500;
+        }
+
+        .modal .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-btn.active {
+            background: #ff6b00;
+        }
+
+        .category-actions button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .category-actions button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ff6b00;
         }
 
         @media (max-width: 768px) {
@@ -257,6 +357,23 @@
                 padding: 8px 15px;
                 font-size: 13px;
             }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                height: auto;
+            }
+
+            .chart-filters {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+
+            .chart-filter {
+                white-space: nowrap;
+            }
         }
 
         /* Estilos do Modal */
@@ -270,274 +387,192 @@
             background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
             backdrop-filter: blur(5px);
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
         }
 
         .modal-content {
-            position: relative;
             background: #1a1a1a;
-            margin: 10% auto;
+            margin: 20px auto;
             padding: 25px;
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
             border-radius: 10px;
             border: 1px solid rgba(255, 107, 0, 0.3);
+            position: relative;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        /* Estilos do Formulário */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: #1a1a1a;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 107, 0, 0.3);
+        }
+
+        .modal-header h2 {
+            color: #ff6b00;
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 5px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #ff6b00;
+        }
+
+        .modal-body {
+            padding: 20px 0;
+        }
+
+        .modal-body > div {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body > div:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .modal-body h3 {
+            color: #ff6b00;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .modal-body p {
+            color: #fff;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
 
-        .form-row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
         .form-group label {
             display: block;
+            color: white;
             margin-bottom: 8px;
-            color: #fff;
-            font-weight: 500;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid rgba(255, 107, 0, 0.3);
+        #backupsList {
+            max-height: 300px;
+            overflow-y: auto;
             background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            font-size: 14px;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 15px 0;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #ff6b00;
-            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
-        }
-
-        .form-group select option {
-            background: #1a1a1a;
-            color: #fff;
-        }
-
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .form-actions {
+        .backup-item {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 8px;
+            border-radius: 5px;
+        }
+
+        .backup-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+
+        .backup-info {
+            color: white;
+            flex: 1;
+        }
+
+        .backup-actions {
+            display: flex;
             gap: 10px;
+        }
+
+        .backup-actions button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.3s ease;
+            font-size: 1.1em;
+        }
+
+        .backup-actions button:hover {
+            color: #ff6b00;
+        }
+
+        .help-text {
+            background: rgba(255, 107, 0, 0.1);
+            border-radius: 5px;
+            padding: 15px;
             margin-top: 20px;
         }
 
-        /* Ajustes nos inputs de busca e filtros */
-        input[type="text"],
-        input[type="number"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="date"],
-        select {
-            padding: 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 107, 0, 0.3);
-            color: #fff;
-            font-size: 14px;
+        .help-text ul {
+            list-style-type: none;
+            padding-left: 0;
         }
 
-        input[type="text"]::placeholder,
-        input[type="number"]::placeholder,
-        input[type="email"]::placeholder,
-        input[type="tel"]::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+        .help-text ul li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
         }
 
-        .table-header {
-            margin-bottom: 20px;
-        }
-
-        .table-header h3 {
+        .help-text ul li:before {
+            content: "•";
             color: #ff6b00;
-            margin: 0 0 15px 0;
-        }
-
-        /* Estilos dos Filtros */
-        .filters-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            background: rgba(20, 20, 20, 0.8);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 107, 0, 0.2);
-            margin-bottom: 20px;
-        }
-
-        .filter-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .filter-input,
-        .filter-select {
-            width: 100%;
-            padding: 12px 15px;
-            border-radius: 6px;
-            background: rgba(30, 30, 30, 0.9);
-            border: 1px solid rgba(255, 107, 0, 0.2);
-            color: #fff;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .filter-input:focus,
-        .filter-select:focus {
-            outline: none;
-            border-color: #ff6b00;
-            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.1);
-        }
-
-        .filter-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .filter-select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ff6b00' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: calc(100% - 12px) center;
-            padding-right: 35px;
-        }
-
-        .filter-select option {
-            background: #1a1a1a;
-            color: #fff;
-            padding: 8px;
-        }
-
-        .date-range {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .date-range .filter-input {
-            width: calc(50% - 20px);
-        }
-
-        .date-separator {
-            color: #ff6b00;
-            font-weight: 500;
-        }
-
-        /* Botão de Limpar Filtros */
-        .btn-filter {
-            padding: 12px 20px;
-            background: rgba(255, 107, 0, 0.1);
-            border: 1px solid rgba(255, 107, 0, 0.3);
-            color: #ff6b00;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .btn-filter:hover {
-            background: rgba(255, 107, 0, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .btn-filter i {
-            font-size: 14px;
+            position: absolute;
+            left: 0;
         }
 
         @media (max-width: 768px) {
-            .filters-container {
-                flex-direction: column;
+            .modal-content {
+                width: 95%;
+                margin: 10px;
                 padding: 15px;
             }
 
-            .filter-group {
-                width: 100%;
-            }
-
-            .date-range {
+            .backup-item {
                 flex-direction: column;
+                align-items: flex-start;
                 gap: 10px;
             }
 
-            .date-range .filter-input {
+            .backup-actions {
                 width: 100%;
+                justify-content: flex-start;
             }
-
-            .date-separator {
-                display: none;
-            }
-
-            .btn-filter {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        /* Estilos das Seções */
-        .section-content {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .section-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Estilos para relatórios */
-        .reports-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 107, 0, 0.1);
-        }
-
-        .report-section {
-            margin-bottom: 30px;
-        }
-
-        .report-section h3 {
-            color: #ff6b00;
-            margin-bottom: 20px;
-        }
-
-        .report-filters {
-            margin-bottom: 20px;
-        }
-
-        .report-content {
-            min-height: 300px;
         }
     </style>
 </head>
@@ -545,7 +580,7 @@
     <!-- Header -->
     <header>
         <div class="logo">
-            <a href="index.html">
+            <a href="dashboard.html">
                 <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
             </a>
         </div>
@@ -567,14 +602,17 @@
     <div class="finance-manager">
         <div class="container">
             <div class="finance-header">
-                <div>
-                    <h1>Gestão Financeira</h1>
-                    <p style="color: white; margin: 5px 0 0 0;">Controle completo das suas finanças</p>
+                <h1>Financeiro</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="openImportExportModal">
+                        <i class="fas fa-sync"></i>
+                        Importar/Exportar
+                    </button>
+                    <button class="add-transaction-btn" id="addTransactionBtn">
+                        <i class="fas fa-plus"></i>
+                        Nova Transação
+                    </button>
                 </div>
-                <button class="btn btn-primary" onclick="showAddTransactionModal()">
-                    <i class="fas fa-plus"></i>
-                    Nova Transação
-                </button>
             </div>
 
             <div class="finance-nav">
@@ -582,68 +620,56 @@
                     <i class="fas fa-chart-line"></i>
                     Visão Geral
                 </a>
-                <a href="#" class="finance-nav-item" data-section="shows" onclick="showSection('shows', this)">
-                    <i class="fas fa-music"></i>
-                    Shows
-                </a>
-                <a href="#" class="finance-nav-item" data-section="banda" onclick="showSection('banda', this)">
-                    <i class="fas fa-users"></i>
-                    Banda
-                </a>
-                <a href="#" class="finance-nav-item" data-section="despesas" onclick="showSection('despesas', this)">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    Despesas
-                </a>
-                <a href="#" class="finance-nav-item" data-section="relatorios" onclick="showSection('relatorios', this)">
-                    <i class="fas fa-chart-bar"></i>
-                    Relatórios
-                </a>
             </div>
 
-            <!-- Seção Visão Geral -->
+            <!-- Seção: Visão Geral -->
             <div id="visao-geral-section" class="section-content">
                 <div class="dashboard-cards">
                     <div class="dashboard-card">
-                        <h3><i class="fas fa-dollar-sign"></i> Receita Total</h3>
-                        <div class="value">R$ 25.000,00</div>
-                        <div class="trend positive">
+                        <h3><i class="fas fa-money-bill-wave"></i> Receita Total</h3>
+                        <div class="value" id="totalIncome">R$ 0,00</div>
+                        <div class="trend" id="incomeTrend">
                             <i class="fas fa-arrow-up"></i>
-                            15% em relação ao mês anterior
+                            0%
                         </div>
                     </div>
+
                     <div class="dashboard-card">
                         <h3><i class="fas fa-music"></i> Receita Shows</h3>
-                        <div class="value">R$ 18.000,00</div>
-                        <div class="trend positive">
+                        <div class="value" id="showIncome">R$ 0,00</div>
+                        <div class="trend" id="showIncomeTrend">
                             <i class="fas fa-arrow-up"></i>
-                            20% em relação ao mês anterior
+                            0%
                         </div>
                     </div>
+
                     <div class="dashboard-card">
-                        <h3><i class="fas fa-file-invoice-dollar"></i> Despesas</h3>
-                        <div class="value">R$ 8.000,00</div>
-                        <div class="trend negative">
-                            <i class="fas fa-arrow-up"></i>
-                            5% em relação ao mês anterior
+                        <h3><i class="fas fa-hand-holding-usd"></i> Despesas</h3>
+                        <div class="value" id="totalExpenses">R$ 0,00</div>
+                        <div class="trend" id="expensesTrend">
+                            <i class="fas fa-arrow-down"></i>
+                            0%
                         </div>
                     </div>
+
                     <div class="dashboard-card">
-                        <h3><i class="fas fa-chart-pie"></i> Lucro Líquido</h3>
-                        <div class="value">R$ 17.000,00</div>
-                        <div class="trend positive">
+                        <h3><i class="fas fa-chart-line"></i> Lucro Líquido</h3>
+                        <div class="value" id="netProfit">R$ 0,00</div>
+                        <div class="trend" id="profitTrend">
                             <i class="fas fa-arrow-up"></i>
-                            25% em relação ao mês anterior
+                            0%
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="chart-container">
                     <div class="chart-header">
                         <h3>Receitas e Despesas</h3>
                         <div class="chart-filters">
-                            <button class="chart-filter active" onclick="updateChart('mês')">Mês</button>
-                            <button class="chart-filter" onclick="updateChart('trimestre')">Trimestre</button>
-                            <button class="chart-filter" onclick="updateChart('ano')">Ano</button>
+                            <button class="chart-filter active" onclick="updateChart('month')">Mensal</button>
+                            <button class="chart-filter" onclick="updateChart('trimestre')">Trimestral</button>
+                            <button class="chart-filter" onclick="updateChart('semestre')">Semestral</button>
+                            <button class="chart-filter" onclick="updateChart('ano')">Anual</button>
                         </div>
                     </div>
                     <div class="chart-wrapper">
@@ -654,147 +680,80 @@
                 <div class="table-container">
                     <div class="table-header">
                         <h3>Últimas Transações</h3>
-                        <div class="filters-container">
-                            <div class="filter-group">
-                                <input type="text" id="searchFilter" placeholder="Buscar transação..." class="filter-input">
-                            </div>
-                            <div class="filter-group">
-                                <select id="typeFilter" class="filter-select">
-                                    <option value="all">Todos os Tipos</option>
-                                    <option value="receita">Receitas</option>
-                                    <option value="despesa">Despesas</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <select id="categoryFilter" class="filter-select">
-                                    <option value="all">Todas Categorias</option>
-                                    <option value="show">Shows</option>
-                                    <option value="streaming">Streaming</option>
-                                    <option value="merchandising">Merchandising</option>
-                                    <option value="direitos-autorais">Direitos Autorais</option>
-                                    <option value="patrocinio">Patrocínio</option>
-                                    <option value="equipamentos">Equipamentos</option>
-                                    <option value="transporte">Transporte</option>
-                                    <option value="alimentacao">Alimentação</option>
-                                    <option value="hospedagem">Hospedagem</option>
-                                    <option value="pagamento-banda">Pagamento Banda</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="manutencao">Manutenção</option>
-                                </select>
-                            </div>
-                            <div class="filter-group date-range">
-                                <input type="date" id="startDate" class="filter-input">
-                                <span class="date-separator">até</span>
-                                <input type="date" id="endDate" class="filter-input">
-                            </div>
-                            <button class="btn-filter" onclick="resetFilters()">
-                                <i class="fas fa-undo"></i>
-                                Limpar Filtros
-                            </button>
-                        </div>
                     </div>
-                    <table class="finance-table">
+                    <table class="finance-table" id="transactionsTable">
                         <thead>
                             <tr>
                                 <th>Data</th>
                                 <th>Descrição</th>
-                                <th>Categoria</th>
-                                <th>Tipo</th>
                                 <th>Valor</th>
+                                <th>Categoria</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>15/05/2024</td>
-                                <td>Show Aniversário Enrico</td>
-                                <td>Shows</td>
-                                <td style="color: #2ecc71;">Receita</td>
-                                <td>R$ 3.500,00</td>
-                                <td>
-                                    <button class="btn btn-secondary" style="padding: 5px 10px;">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-secondary" style="padding: 5px 10px;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>14/05/2024</td>
-                                <td>Pagamento Banda - Show Enrico</td>
-                                <td>Banda</td>
-                                <td style="color: #e74c3c;">Despesa</td>
-                                <td>R$ 1.500,00</td>
-                                <td>
-                                    <button class="btn btn-secondary" style="padding: 5px 10px;">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-secondary" style="padding: 5px 10px;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                            <!-- Transações serão carregadas aqui -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- As outras seções serão criadas dinamicamente pelo JavaScript -->
+            <!-- Seção: Despesas -->
+            <div id="despesas-section" class="section-content" style="display: none;">
+                <!-- Conteúdo da seção de despesas -->
+            </div>
+
+            <!-- Seção: Relatórios -->
+            <div id="relatorios-section" class="section-content" style="display: none;">
+                <!-- Conteúdo da seção de relatórios -->
+            </div>
         </div>
     </div>
 
-    <!-- Modal de Nova Transação -->
-    <div id="transactionModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
-        <div class="modal-content" style="position: relative; background: #1a1a1a; margin: 10% auto; padding: 20px; width: 90%; max-width: 600px; border-radius: 10px; border: 1px solid rgba(255,107,0,0.3);">
-            <h2 style="color: #ff6b00; margin-top: 0;">Nova Transação</h2>
+    <!-- Modal de Transação -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nova Transação</h2>
+                <button class="close-modal">&times;</button>
+            </div>
             <form id="transactionForm">
-                <div class="form-group">
-                    <label>Descrição</label>
-                    <input type="text" name="description" required>
-                </div>
+                <input type="hidden" id="transactionId" name="transactionId">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Tipo</label>
-                        <select name="type" required>
+                        <label for="transactionDate">Data</label>
+                        <input type="date" id="transactionDate" name="transactionDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionType">Tipo</label>
+                        <select id="transactionType" name="transactionType" required>
                             <option value="receita">Receita</option>
                             <option value="despesa">Despesa</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Categoria</label>
-                        <select name="category" required>
-                            <option value="show">Show</option>
-                            <option value="streaming">Streaming</option>
-                            <option value="merchandising">Merchandising</option>
-                            <option value="direitos-autorais">Direitos Autorais</option>
-                            <option value="patrocinio">Patrocínio</option>
-                            <option value="equipamentos">Equipamentos</option>
-                            <option value="transporte">Transporte</option>
-                            <option value="alimentacao">Alimentação</option>
-                            <option value="hospedagem">Hospedagem</option>
-                            <option value="pagamento-banda">Pagamento Banda</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="manutencao">Manutenção</option>
-                        </select>
-                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="transactionDescription">Descrição</label>
+                    <input type="text" id="transactionDescription" name="transactionDescription" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Valor</label>
-                        <input type="number" name="amount" step="0.01" required>
+                        <label for="transactionAmount">Valor</label>
+                        <input type="number" id="transactionAmount" name="transactionAmount" step="0.01" required>
                     </div>
                     <div class="form-group">
-                        <label>Data</label>
-                        <input type="date" name="date" required>
+                        <label for="transactionCategory">Categoria</label>
+                        <select id="transactionCategory" name="transactionCategory" required>
+                            <option value="show">Show</option>
+                            <option value="pagamento-banda">Pagamento Banda</option>
+                            <option value="equipamentos">Equipamentos</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="outros">Outros</option>
+                        </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Observações</label>
-                    <textarea name="notes" rows="3"></textarea>
-                </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeTransactionModal()">Cancelar</button>
+                    <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Salvar</button>
                 </div>
             </form>
@@ -804,7 +763,10 @@
     <!-- Modal de Membro da Banda -->
     <div id="bandMemberModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
         <div class="modal-content" style="position: relative; background: #1a1a1a; margin: 10% auto; padding: 20px; width: 90%; max-width: 600px; border-radius: 10px; border: 1px solid rgba(255,107,0,0.3);">
-            <h2 style="color: #ff6b00; margin-top: 0;">Novo Membro da Banda</h2>
+            <div class="modal-header">
+                <h2>Novo Membro da Banda</h2>
+                <button class="close-modal" id="closeBandMemberModal"><i class="fas fa-times"></i></button>
+            </div>
             <form id="bandMemberForm">
                 <div class="form-row">
                     <div class="form-group">
@@ -842,968 +804,79 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Modal de Importação/Exportação -->
+    <div class="modal" id="importExportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Backup do Sistema</h2>
+                <button class="close-modal" id="closeImportExportModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 30px;">
+                    <h3>Exportar Todos os Dados</h3>
+                    <p>Faça backup de todos os dados do sistema (Agenda, Leads, Financeiro, etc):</p>
+                    <button class="btn btn-primary" id="exportDataBtn" style="width: 100%;">
+                        <i class="fas fa-download"></i>
+                        Exportar Todos os Dados
+                    </button>
+                </div>
+                
+                <div>
+                    <h3>Importar Dados</h3>
+                    <p>Importe dados de outro backup para adicionar ao seu sistema:</p>
+                    <div class="form-group">
+                        <div style="margin-bottom: 15px;">
+                            <button class="btn btn-primary" id="importFileBtn" style="width: 100%;">
+                                <i class="fas fa-file-upload"></i>
+                                Carregar Arquivo de Backup
+                            </button>
+                            <input type="file" id="importFileInput" style="display: none;" accept=".json">
+                        </div>
+                        <div style="text-align: center; margin: 10px 0;">
+                            <span style="color: rgba(255,255,255,0.7);">- ou -</span>
+                        </div>
+                        <label for="importDataText">Cole o conteúdo do backup aqui:</label>
+                        <textarea id="importDataText" rows="5" style="width: 100%; margin-bottom: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 10px; color: white;"></textarea>
+                        <button class="btn btn-primary" id="importDataBtn" style="width: 100%;">
+                            <i class="fas fa-upload"></i>
+                            Importar Dados
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h3>Backups Automáticos</h3>
+                    <p>O sistema mantém automaticamente os últimos 5 backups:</p>
+                    <div id="backupsList" style="max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 5px; padding: 10px; margin: 15px 0;">
+                        <!-- Lista de backups será carregada aqui -->
+                    </div>
+                </div>
+
+                <div class="help-text" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <p style="color: #ff6b00;"><i class="fas fa-info-circle"></i> Como funciona:</p>
+                    <ul style="color: rgba(255,255,255,0.7); margin-left: 20px;">
+                        <li>O sistema mantém automaticamente 5 backups dos seus dados</li>
+                        <li>Um novo backup é criado a cada 30 minutos de uso</li>
+                        <li>Backups também são criados antes de qualquer importação</li>
+                        <li>Ao importar dados de outro usuário, eles serão <strong>adicionados</strong> aos seus dados existentes</li>
+                        <li>Dados duplicados (mesmo ID) não serão importados</li>
+                        <li>Valores financeiros serão somados aos seus valores atuais</li>
+                        <li>Você pode compartilhar seus dados com outros usuários sem medo de perder informações</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/site-data.js"></script>
     <script src="js/finance-manager.js"></script>
+    <script src="js/update-finance.js"></script>
     <script>
-        let financeManager;
-        let financeChart;
-
-        // Inicialização
-        async function initFinanceManager() {
-            try {
-                console.log('Iniciando FinanceManager...');
-                
-                // Verificar login
-                if (!SiteManager.isLoggedIn()) {
-                    console.error('Usuário não está logado');
-                    window.location.href = 'login.html';
-                    return;
-                }
-
-                // Inicializar o FinanceManager
-                financeManager = await FinanceManager.init();
-                console.log('FinanceManager inicializado:', financeManager);
-                console.log('Transações carregadas:', financeManager.transactions);
-
-                // Inicializar o gráfico
-                initializeChart();
-                console.log('Gráfico inicializado');
-
-                // Configurar event listeners
-                setupEventListeners();
-                console.log('Event listeners configurados');
-                
-                // Mostrar seção inicial e atualizar interface
-                showSection('visao-geral', document.querySelector('.finance-nav-item[data-section="visao-geral"]'));
-                await updateDashboard();
-                
-                // Atualizar o gráfico com os dados iniciais
-                const activeFilter = document.querySelector('.chart-filter.active');
-                if (activeFilter) {
-                    console.log('Atualizando gráfico com filtro inicial:', activeFilter.textContent);
-                    updateChart(activeFilter.textContent.toLowerCase());
-                } else {
-                    console.log('Nenhum filtro ativo, usando "mês" como padrão');
-                    updateChart('mês');
-                }
-
-                // Carregar dados iniciais na tabela
-                await updateTransactionsTable(financeManager.transactions);
-                console.log('Inicialização completa');
-            } catch (error) {
-                console.error('Erro ao inicializar gerenciador financeiro:', error);
-                retryInitialization();
-            }
+        // Verificar login
+        if (!SiteManager.isLoggedIn()) {
+            window.location.href = 'login.html';
         }
-
-        // Função para mostrar seção
-        function showSection(sectionId, element) {
-            console.log('Mostrando seção:', sectionId);
-            
-            // Atualizar navegação
-            document.querySelectorAll('.finance-nav-item').forEach(item => item.classList.remove('active'));
-            element.classList.add('active');
-
-            // Esconder todas as seções primeiro
-            document.querySelectorAll('.section-content').forEach(section => {
-                section.style.display = 'none';
-            });
-
-            // Mostrar a seção selecionada
-            const sectionElement = document.getElementById(`${sectionId}-section`);
-            if (sectionElement) {
-                sectionElement.style.display = 'block';
-            }
-
-            // Atualizar conteúdo baseado na seção
-            switch (sectionId) {
-                case 'visao-geral':
-                    const activeFilter = document.querySelector('.chart-filter.active');
-                    const period = activeFilter ? activeFilter.textContent.toLowerCase() : 'mês';
-                    console.log('Atualizando visão geral com período:', period);
-                    
-                    updateDashboard().then(() => {
-                        console.log('Dashboard atualizado, atualizando gráfico');
-                        updateChart(period);
-                    });
-                    break;
-
-                case 'shows':
-                    // Atualizar tabela de shows
-                    updateShowsTable();
-                    break;
-
-                case 'banda':
-                    // Atualizar tabela de membros da banda
-                    updateBandTable();
-                    break;
-
-                case 'despesas':
-                    // Atualizar tabela de despesas
-                    updateExpensesTable();
-                    break;
-
-                case 'relatorios':
-                    // Atualizar relatórios
-                    updateReports();
-                    break;
-            }
-        }
-
-        // Funções para cada seção
-        async function updateShowsTable() {
-            if (!financeManager) return;
-
-            const showTransactions = financeManager.transactions.filter(t => 
-                t.category === 'show' && t.type === 'receita'
-            );
-
-            // Atualizar a tabela de shows aqui
-            console.log('Shows filtrados:', showTransactions);
-        }
-
-        async function updateBandTable() {
-            if (!financeManager) return;
-
-            const bandTransactions = financeManager.transactions.filter(t => 
-                t.category === 'pagamento-banda' && t.type === 'despesa'
-            );
-
-            // Atualizar a tabela da banda aqui
-            console.log('Transações da banda:', bandTransactions);
-        }
-
-        async function updateExpensesTable() {
-            if (!financeManager) return;
-
-            const expenses = financeManager.transactions.filter(t => 
-                t.type === 'despesa'
-            );
-
-            // Atualizar a tabela de despesas aqui
-            console.log('Despesas:', expenses);
-        }
-
-        async function updateReports() {
-            if (!financeManager) return;
-
-            // Gerar relatórios aqui
-            const summary = financeManager.getFinancialSummary();
-            console.log('Resumo financeiro para relatórios:', summary);
-        }
-
-        // Atualizar a estrutura HTML para incluir as seções
-        document.addEventListener('DOMContentLoaded', () => {
-            const container = document.querySelector('.container');
-            if (!container) return;
-
-            // Criar elementos para cada seção
-            const sections = ['visao-geral', 'shows', 'banda', 'despesas', 'relatorios'];
-            sections.forEach(sectionId => {
-                if (!document.getElementById(`${sectionId}-section`)) {
-                    const section = document.createElement('div');
-                    section.id = `${sectionId}-section`;
-                    section.className = 'section-content';
-                    section.style.display = 'none';
-                    
-                    // Adicionar conteúdo específico para cada seção
-                    switch (sectionId) {
-                        case 'visao-geral':
-                            // O conteúdo já existe
-                            section.style.display = 'block';
-                            break;
-
-                        case 'shows':
-                            section.innerHTML = `
-                                <div class="table-container">
-                                    <div class="table-header">
-                                        <h3>Shows</h3>
-                                        <div class="filters-container">
-                                            <!-- Adicionar filtros específicos para shows aqui -->
-                                        </div>
-                                    </div>
-                                    <table class="finance-table" id="shows-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Data</th>
-                                                <th>Descrição</th>
-                                                <th>Valor</th>
-                                                <th>Local</th>
-                                                <th>Status</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            `;
-                            break;
-
-                        case 'banda':
-                            section.innerHTML = `
-                                <div class="table-container">
-                                    <div class="table-header">
-                                        <h3>Membros da Banda</h3>
-                                        <div class="filters-container">
-                                            <!-- Adicionar filtros específicos para banda aqui -->
-                                        </div>
-                                    </div>
-                                    <table class="finance-table" id="band-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Nome</th>
-                                                <th>Instrumento</th>
-                                                <th>Valor por Show</th>
-                                                <th>Total Pago</th>
-                                                <th>Shows Participados</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            `;
-                            break;
-
-                        case 'despesas':
-                            section.innerHTML = `
-                                <div class="table-container">
-                                    <div class="table-header">
-                                        <h3>Despesas</h3>
-                                        <div class="filters-container">
-                                            <!-- Adicionar filtros específicos para despesas aqui -->
-                                        </div>
-                                    </div>
-                                    <table class="finance-table" id="expenses-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Data</th>
-                                                <th>Descrição</th>
-                                                <th>Categoria</th>
-                                                <th>Valor</th>
-                                                <th>Status</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            `;
-                            break;
-
-                        case 'relatorios':
-                            section.innerHTML = `
-                                <div class="reports-container">
-                                    <div class="report-section">
-                                        <h3>Relatório Financeiro</h3>
-                                        <div class="report-filters">
-                                            <!-- Adicionar filtros de relatório aqui -->
-                                        </div>
-                                        <div class="report-content">
-                                            <!-- Conteúdo do relatório será adicionado aqui -->
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                            break;
-                    }
-                    
-                    container.appendChild(section);
-                }
-            });
-        });
-
-        // Funções de Filtro
-        async function filterTransactions() {
-            if (!financeManager) {
-                console.error('FinanceManager não está inicializado');
-                return;
-            }
-
-            try {
-                const searchTerm = document.getElementById('searchFilter').value.toLowerCase().trim();
-                const typeFilter = document.getElementById('typeFilter').value;
-                const categoryFilter = document.getElementById('categoryFilter').value;
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-
-                console.log('Aplicando filtros:', {
-                    searchTerm,
-                    typeFilter,
-                    categoryFilter,
-                    startDate,
-                    endDate
-                });
-
-                // Começar com todas as transações
-                let filteredTransactions = [...financeManager.transactions];
-                console.log('Total de transações antes do filtro:', filteredTransactions.length);
-
-                // Filtro de busca por texto
-                if (searchTerm) {
-                    filteredTransactions = filteredTransactions.filter(transaction => {
-                        const descriptionMatch = transaction.description.toLowerCase().includes(searchTerm);
-                        const categoryMatch = formatCategory(transaction.category).toLowerCase().includes(searchTerm);
-                        const matches = descriptionMatch || categoryMatch;
-                        console.log(`Transação "${transaction.description}" ${matches ? 'corresponde' : 'não corresponde'} ao termo "${searchTerm}"`);
-                        return matches;
-                    });
-                }
-
-                // Filtro por tipo
-                if (typeFilter !== 'all') {
-                    filteredTransactions = filteredTransactions.filter(transaction => {
-                        const matches = transaction.type === typeFilter;
-                        console.log(`Transação "${transaction.description}" ${matches ? 'corresponde' : 'não corresponde'} ao tipo "${typeFilter}"`);
-                        return matches;
-                    });
-                }
-
-                // Filtro por categoria
-                if (categoryFilter !== 'all') {
-                    filteredTransactions = filteredTransactions.filter(transaction => {
-                        const matches = transaction.category === categoryFilter;
-                        console.log(`Transação "${transaction.description}" ${matches ? 'corresponde' : 'não corresponde'} à categoria "${categoryFilter}"`);
-                        return matches;
-                    });
-                }
-
-                // Filtro por data
-                if (startDate || endDate) {
-                    filteredTransactions = filteredTransactions.filter(transaction => {
-                        const transactionDate = new Date(transaction.date);
-                        transactionDate.setHours(0, 0, 0, 0);
-
-                        let matches = true;
-                        if (startDate) {
-                            const start = new Date(startDate);
-                            start.setHours(0, 0, 0, 0);
-                            matches = matches && transactionDate >= start;
-                        }
-                        if (endDate) {
-                            const end = new Date(endDate);
-                            end.setHours(23, 59, 59, 999);
-                            matches = matches && transactionDate <= end;
-                        }
-
-                        console.log(`Transação "${transaction.description}" de ${transaction.date} ${matches ? 'está' : 'não está'} no período selecionado`);
-                        return matches;
-                    });
-                }
-
-                console.log('Transações após filtros:', filteredTransactions);
-
-                // Atualizar a tabela com as transações filtradas
-                await updateTransactionsTable(filteredTransactions);
-
-                // Atualizar os totais baseado nas transações filtradas
-                updateFilteredTotals(filteredTransactions);
-            } catch (error) {
-                console.error('Erro ao filtrar transações:', error);
-            }
-        }
-
-        // Função para atualizar os totais baseado nas transações filtradas
-        function updateFilteredTotals(filteredTransactions) {
-            try {
-                console.log('Calculando totais para:', filteredTransactions);
-                
-                const totals = filteredTransactions.reduce((acc, transaction) => {
-                    if (transaction.type === 'receita') {
-                        acc.income += Number(transaction.amount);
-                        if (transaction.category === 'show') {
-                            acc.showIncome += Number(transaction.amount);
-                        }
-                    } else {
-                        acc.expenses += Number(transaction.amount);
-                    }
-                    return acc;
-                }, { income: 0, expenses: 0, showIncome: 0 });
-
-                console.log('Totais calculados:', totals);
-
-                // Atualizar os cards com os valores filtrados
-                updateDashboardCard('Receita Total', totals.income, 0);
-                updateDashboardCard('Receita Shows', totals.showIncome, 0);
-                updateDashboardCard('Despesas', totals.expenses, 0);
-                updateDashboardCard('Lucro Líquido', totals.income - totals.expenses, 0);
-            } catch (error) {
-                console.error('Erro ao atualizar totais:', error);
-            }
-        }
-
-        // Função para resetar filtros
-        function resetFilters() {
-            try {
-                document.getElementById('searchFilter').value = '';
-                document.getElementById('typeFilter').value = 'all';
-                document.getElementById('categoryFilter').value = 'all';
-                document.getElementById('startDate').value = '';
-                document.getElementById('endDate').value = '';
-                
-                console.log('Filtros resetados');
-                
-                // Recarregar todas as transações
-                filterTransactions();
-            } catch (error) {
-                console.error('Erro ao resetar filtros:', error);
-            }
-        }
-
-        // Função para configurar event listeners dos filtros
-        function setupFilterListeners() {
-            try {
-                const filterElements = [
-                    'searchFilter',
-                    'typeFilter',
-                    'categoryFilter',
-                    'startDate',
-                    'endDate'
-                ];
-
-                filterElements.forEach(elementId => {
-                    const element = document.getElementById(elementId);
-                    if (element) {
-                        // Usar 'input' para campos de texto e data, 'change' para selects
-                        const eventType = element.tagName === 'SELECT' ? 'change' : 'input';
-                        element.addEventListener(eventType, () => {
-                            console.log(`Filtro ${elementId} alterado:`, element.value);
-                            filterTransactions();
-                        });
-                        console.log(`Event listener configurado para ${elementId}`);
-                    } else {
-                        console.error(`Elemento ${elementId} não encontrado`);
-                    }
-                });
-
-                console.log('Event listeners configurados');
-            } catch (error) {
-                console.error('Erro ao configurar event listeners:', error);
-            }
-        }
-
-        // Função para tentar novamente
-        async function retryInitialization() {
-            await initFinanceManager();
-        }
-
-        // Atualização do Dashboard
-        async function updateDashboard() {
-            if (!financeManager) {
-                console.error('FinanceManager não está inicializado');
-                return;
-            }
-
-            try {
-                console.log('Atualizando dashboard...');
-                const summary = financeManager.getFinancialSummary();
-                console.log('Resumo financeiro:', summary);
-                
-                // Atualizar cards
-                updateDashboardCard('Receita Total', summary.currentIncome, summary.incomeTrend);
-                updateDashboardCard('Receita Shows', summary.showIncome, summary.showIncomeTrend);
-                updateDashboardCard('Despesas', summary.currentExpenses, summary.expensesTrend);
-                updateDashboardCard('Lucro Líquido', summary.netProfit, summary.profitTrend);
-
-                // Atualizar tabela de transações
-                await updateTransactionsTable();
-                console.log('Dashboard atualizado');
-            } catch (error) {
-                console.error('Erro ao atualizar dashboard:', error);
-                // Mostrar mensagem de erro sutil
-                const errorToast = document.createElement('div');
-                errorToast.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    background: rgba(231, 76, 60, 0.9);
-                    color: white;
-                    padding: 15px 20px;
-                    border-radius: 5px;
-                    z-index: 9999;
-                    animation: fadeIn 0.3s ease;
-                `;
-                errorToast.innerHTML = `
-                    <i class="fas fa-exclamation-circle"></i>
-                    Erro ao atualizar dados. 
-                    <button onclick="retryInitialization()" style="background: none; border: none; color: white; text-decoration: underline; cursor: pointer;">
-                        Tentar novamente
-                    </button>
-                `;
-                document.body.appendChild(errorToast);
-                
-                // Remover toast após 5 segundos
-                setTimeout(() => {
-                    if (document.body.contains(errorToast)) {
-                        document.body.removeChild(errorToast);
-                    }
-                }, 5000);
-            }
-        }
-
-        function updateDashboardCard(title, value, trend) {
-            const cards = document.querySelectorAll('.dashboard-card');
-            const card = Array.from(cards).find(card => card.querySelector('h3').textContent.includes(title));
-            
-            if (card) {
-                card.querySelector('.value').textContent = formatCurrency(value);
-                const trendElement = card.querySelector('.trend');
-                trendElement.className = `trend ${trend >= 0 ? 'positive' : 'negative'}`;
-                trendElement.innerHTML = `
-                    <i class="fas fa-arrow-${trend >= 0 ? 'up' : 'down'}"></i>
-                    ${Math.abs(trend).toFixed(1)}% em relação ao mês anterior
-                `;
-            }
-        }
-
-        // Handlers de Formulários
-        async function handleTransactionSubmit(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            const transaction = {
-                description: formData.get('description'),
-                type: formData.get('type'),
-                category: formData.get('category'),
-                amount: parseFloat(formData.get('amount')),
-                date: formData.get('date'),
-                notes: formData.get('notes')
-            };
-
-            try {
-                await financeManager.addTransaction(transaction);
-                closeTransactionModal();
-                await updateDashboard();
-                updateChart(document.querySelector('.chart-filter.active').textContent.toLowerCase());
-                this.reset();
-            } catch (error) {
-                console.error('Erro ao adicionar transação:', error);
-                alert('Erro ao salvar transação. Por favor, tente novamente.');
-            }
-        }
-
-        async function handleBandMemberSubmit(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            const member = {
-                name: formData.get('name'),
-                instrument: formData.get('instrument'),
-                phone: formData.get('phone'),
-                email: formData.get('email'),
-                showRate: parseFloat(formData.get('showRate')),
-                notes: formData.get('notes')
-            };
-
-            try {
-                await financeManager.addBandMember(member);
-                closeBandMemberModal();
-                this.reset();
-            } catch (error) {
-                console.error('Erro ao adicionar membro:', error);
-                alert('Erro ao salvar membro. Por favor, tente novamente.');
-            }
-        }
-
-        function handleTableActions(e) {
-            const button = e.target.closest('button');
-            if (!button) return;
-
-            const row = button.closest('tr');
-            const id = row.dataset.id;
-
-            if (button.querySelector('.fa-edit')) {
-                editTransaction(id);
-            } else if (button.querySelector('.fa-trash')) {
-                deleteTransaction(id);
-            }
-        }
-
-        // Funções de Tabela
-        async function updateTransactionsTable(transactions = null) {
-            try {
-                const tbody = document.querySelector('.finance-table tbody');
-                if (!tbody) {
-                    console.error('Elemento tbody não encontrado');
-                    return;
-                }
-
-                const transactionsToShow = transactions || financeManager.transactions;
-                console.log('Atualizando tabela com:', transactionsToShow);
-                
-                if (transactionsToShow.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 20px;">
-                                Nenhuma transação encontrada
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                // Ordenar transações por data (mais recentes primeiro)
-                const sortedTransactions = transactionsToShow.sort((a, b) => 
-                    new Date(b.date) - new Date(a.date)
-                );
-
-                tbody.innerHTML = sortedTransactions.map(transaction => `
-                    <tr data-id="${transaction.id}">
-                        <td>${formatDate(transaction.date)}</td>
-                        <td>${transaction.description}</td>
-                        <td>${formatCategory(transaction.category)}</td>
-                        <td style="color: ${transaction.type === 'receita' ? '#2ecc71' : '#e74c3c'}">
-                            ${formatType(transaction.type)}
-                        </td>
-                        <td>${formatCurrency(transaction.amount)}</td>
-                        <td>
-                            <button class="btn btn-secondary" style="padding: 5px 10px;" onclick="editTransaction('${transaction.id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-secondary" style="padding: 5px 10px;" onclick="deleteTransaction('${transaction.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-
-                console.log('Tabela atualizada com', sortedTransactions.length, 'transações');
-            } catch (error) {
-                console.error('Erro ao atualizar tabela:', error);
-            }
-        }
-
-        // Funções auxiliares de formatação
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR');
-        }
-
-        function formatCategory(category) {
-            const categoryMap = {
-                'show': 'Shows',
-                'streaming': 'Streaming',
-                'merchandising': 'Merchandising',
-                'direitos-autorais': 'Direitos Autorais',
-                'patrocinio': 'Patrocínio',
-                'equipamentos': 'Equipamentos',
-                'transporte': 'Transporte',
-                'alimentacao': 'Alimentação',
-                'hospedagem': 'Hospedagem',
-                'pagamento-banda': 'Pagamento Banda',
-                'marketing': 'Marketing',
-                'manutencao': 'Manutenção'
-            };
-            return categoryMap[category] || category;
-        }
-
-        function formatType(type) {
-            return type.charAt(0).toUpperCase() + type.slice(1);
-        }
-
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            }).format(value);
-        }
-
-        // Funções do Modal
-        function showAddTransactionModal() {
-            const modal = document.getElementById('transactionModal');
-            modal.style.display = 'block';
-            
-            // Resetar formulário
-            document.getElementById('transactionForm').reset();
-            
-            // Definir data atual como padrão
-            const today = new Date().toISOString().split('T')[0];
-            modal.querySelector('[name="date"]').value = today;
-        }
-
-        function closeTransactionModal() {
-            document.getElementById('transactionModal').style.display = 'none';
-        }
-
-        function showBandMemberModal() {
-            document.getElementById('bandMemberModal').style.display = 'block';
-        }
-
-        function closeBandMemberModal() {
-            document.getElementById('bandMemberModal').style.display = 'none';
-        }
-
-        // Funções de Edição e Exclusão
-        async function editTransaction(id) {
-            const transaction = financeManager.transactions.find(t => t.id === id);
-            if (!transaction) return;
-
-            const form = document.getElementById('transactionForm');
-            form.querySelector('[name="description"]').value = transaction.description;
-            form.querySelector('[name="type"]').value = transaction.type;
-            form.querySelector('[name="category"]').value = transaction.category;
-            form.querySelector('[name="amount"]').value = transaction.amount;
-            form.querySelector('[name="date"]').value = transaction.date;
-            form.querySelector('[name="notes"]').value = transaction.notes || '';
-
-            showAddTransactionModal();
-        }
-
-        async function deleteTransaction(id) {
-            if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
-
-            try {
-                await financeManager.deleteTransaction(id);
-                await updateDashboard();
-                updateChart(document.querySelector('.chart-filter.active').textContent.toLowerCase());
-            } catch (error) {
-                console.error('Erro ao excluir transação:', error);
-                alert('Erro ao excluir transação. Por favor, tente novamente.');
-            }
-        }
-
-        // Funções do Gráfico
-        function initializeChart() {
-            const ctx = document.getElementById('financeChart').getContext('2d');
-            financeChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Receitas',
-                            borderColor: '#2ecc71',
-                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                            data: [],
-                            fill: true
-                        },
-                        {
-                            label: 'Despesas',
-                            borderColor: '#e74c3c',
-                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                            data: [],
-                            fill: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#fff',
-                                callback: value => formatCurrency(value)
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#fff'
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: context => {
-                                    const label = context.dataset.label;
-                                    const value = context.raw;
-                                    return `${label}: ${formatCurrency(value)}`;
-                                }
-                            }
-                        },
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                color: '#fff',
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Inicializar com dados mensais
-            updateChart('mês');
-        }
-
-        function updateChart(period) {
-            if (!financeManager) {
-                console.error('FinanceManager não está inicializado');
-                return;
-            }
-
-            console.log('Atualizando gráfico para período:', period);
-            const { labels, incomes, expenses } = getChartData(period);
-            
-            console.log('Dados do gráfico:', { labels, incomes, expenses });
-            
-            financeChart.data.labels = labels;
-            financeChart.data.datasets[0].data = incomes;
-            financeChart.data.datasets[1].data = expenses;
-            financeChart.update();
-        }
-
-        function getChartData(period) {
-            const now = new Date();
-            let labels = [];
-            let incomes = [];
-            let expenses = [];
-
-            console.log('Obtendo dados para período:', period);
-            console.log('Transações disponíveis:', financeManager.transactions);
-
-            switch (period.toLowerCase()) {
-                case 'mês':
-                    // Últimos 30 dias
-                    for (let i = 29; i >= 0; i--) {
-                        const date = new Date(now);
-                        date.setDate(date.getDate() - i);
-                        labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-                        
-                        const dayTransactions = financeManager.transactions.filter(t => {
-                            const tDate = new Date(t.date);
-                            return tDate.getDate() === date.getDate() &&
-                                   tDate.getMonth() === date.getMonth() &&
-                                   tDate.getFullYear() === date.getFullYear();
-                        });
-                        
-                        const dayIncome = dayTransactions
-                            .filter(t => t.type === 'receita')
-                            .reduce((sum, t) => sum + Number(t.amount), 0);
-                        
-                        const dayExpense = dayTransactions
-                            .filter(t => t.type === 'despesa')
-                            .reduce((sum, t) => sum + Number(t.amount), 0);
-                        
-                        incomes.push(dayIncome);
-                        expenses.push(dayExpense);
-                    }
-                    break;
-
-                case 'trimestre':
-                    // Últimos 3 meses
-                    for (let i = 2; i >= 0; i--) {
-                        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                        labels.push(date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }));
-                        
-                        const monthTransactions = financeManager.transactions.filter(t => {
-                            const tDate = new Date(t.date);
-                            return tDate.getMonth() === date.getMonth() &&
-                                   tDate.getFullYear() === date.getFullYear();
-                        });
-                        
-                        const monthIncome = monthTransactions
-                            .filter(t => t.type === 'receita')
-                            .reduce((sum, t) => sum + Number(t.amount), 0);
-                        
-                        const monthExpense = monthTransactions
-                            .filter(t => t.type === 'despesa')
-                            .reduce((sum, t) => sum + Number(t.amount), 0);
-                        
-                        incomes.push(monthIncome);
-                        expenses.push(monthExpense);
-                    }
-                    break;
-
-                case 'ano':
-                    // Últimos 12 meses
-                    for (let i = 11; i >= 0; i--) {
-                        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                        labels.push(date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }));
-                        
-                        const monthTransactions = financeManager.transactions.filter(t => {
-                            const tDate = new Date(t.date);
-                            return tDate.getMonth() === date.getMonth() &&
-                                   tDate.getFullYear() === date.getFullYear();
-                        });
-                        
-                        const monthIncome = monthTransactions
-                            .filter(t => t.type === 'receita')
-                            .reduce((sum, t) => sum + Number(t.amount), 0);
-                        
-                        const monthExpense = monthTransactions
-                            .filter(t => t.type === 'despesa')
-                            .reduce((sum, t) => sum + Number(t.amount), 0);
-                        
-                        incomes.push(monthIncome);
-                        expenses.push(monthExpense);
-                    }
-                    break;
-            }
-
-            console.log('Dados processados:', { labels, incomes, expenses });
-            return { labels, incomes, expenses };
-        }
-
-        // Configurar event listeners
-        function setupEventListeners() {
-            try {
-                // Configurar filtros
-                setupFilterListeners();
-
-                // Filtros do gráfico
-                document.querySelectorAll('.chart-filter').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        console.log('Filtro do gráfico clicado:', button.textContent);
-                        
-                        // Remover classe active de todos os botões
-                        document.querySelectorAll('.chart-filter').forEach(b => b.classList.remove('active'));
-                        
-                        // Adicionar classe active ao botão clicado
-                        button.classList.add('active');
-                        
-                        // Atualizar o gráfico
-                        updateChart(button.textContent.toLowerCase());
-                    });
-                });
-
-                // Form de transação
-                const transactionForm = document.getElementById('transactionForm');
-                if (transactionForm) {
-                    transactionForm.addEventListener('submit', handleTransactionSubmit);
-                }
-
-                // Form de membro da banda
-                const bandMemberForm = document.getElementById('bandMemberForm');
-                if (bandMemberForm) {
-                    bandMemberForm.addEventListener('submit', handleBandMemberSubmit);
-                }
-
-                // Botões de ação da tabela
-                const financeTable = document.querySelector('.finance-table');
-                if (financeTable) {
-                    financeTable.addEventListener('click', handleTableActions);
-                }
-
-                // Botão de limpar filtros
-                const resetButton = document.querySelector('.btn-filter');
-                if (resetButton) {
-                    resetButton.addEventListener('click', resetFilters);
-                }
-
-                console.log('Todos os event listeners configurados com sucesso');
-            } catch (error) {
-                console.error('Erro ao configurar event listeners:', error);
-            }
-        }
-
-        // Inicializar quando a página carregar
-        document.addEventListener('DOMContentLoaded', initFinanceManager);
-
-        // Atualizar quando os dados forem alterados
-        document.addEventListener('site-data-updated', updateDashboard);
     </script>
 </body>
+</html> 
 </html> 

@@ -194,31 +194,21 @@ const SiteManager = {
         }
     },
 
-    saveData: function() {
+    saveData: async function() {
         try {
-            // Validar dados antes de salvar
-            if (!siteData.events) siteData.events = [];
-            if (!siteData.gallery) siteData.gallery = [];
-            if (!siteData.messages) siteData.messages = [];
-            
-            // Remover eventos inválidos
-            siteData.events = siteData.events.filter(event => 
-                event && 
-                event.id && 
-                event.title && 
-                event.date && 
-                event.time && 
-                event.location
-            );
-            
             localStorage.setItem('siteData', JSON.stringify(siteData));
-            this.updateLastSync();
             
-            // Atualizar cache para usuários anônimos
-            const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
-            currentCache.events = this.getEvents();
-            currentCache.lastSync = new Date().toISOString();
-            localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
+            // Atualizar cache para dados públicos
+            try {
+                const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
+                currentCache.events = siteData.events || [];
+                currentCache.finance = siteData.finance || {};
+                currentCache.leads = siteData.leads || [];
+                currentCache.lastSync = new Date().toISOString();
+                localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
+            } catch (err) {
+                console.error('Erro ao atualizar cache:', err);
+            }
             
             // Disparar evento de atualização
             const event = new CustomEvent('site-data-updated');
@@ -227,7 +217,7 @@ const SiteManager = {
             return true;
         } catch (error) {
             console.error('Erro ao salvar dados:', error);
-            return false;
+            throw new Error('Não foi possível salvar os dados: ' + error.message);
         }
     },
 
@@ -459,62 +449,6 @@ const SiteManager = {
         return siteData;
     },
     
-    saveData: async function() {
-        this.updateLastSync();
-        
-        // Sempre salvar localmente primeiro
-        localStorage.setItem('siteDataCache', JSON.stringify(siteData));
-        console.log('Dados salvos em localStorage');
-        
-        try {
-            // Só salvar dados no servidor se estiver logado
-            if (SiteManager.isLoggedIn()) {
-                console.log('Enviando dados para a API...');
-                const response = await fetch(`${API_BASE_URL}/data`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
-                    body: JSON.stringify(siteData)
-                });
-                
-                if (response.ok) {
-                    console.log('Dados salvos com sucesso na API');
-                    
-                    // Disparar evento de atualização para quem estiver escutando
-                    const event = new CustomEvent('site-data-updated');
-                    document.dispatchEvent(event);
-                    
-                    return true;
-                }
-                console.warn('Falha ao salvar dados na API, mas salvos localmente');
-                
-                // Disparar evento mesmo quando a API falha
-                const event = new CustomEvent('site-data-updated');
-                document.dispatchEvent(event);
-                
-                return false;
-            }
-            
-            console.log('Dados salvos apenas localmente (usuário não logado)');
-            
-            // Disparar evento mesmo sem salvar na API
-            const event = new CustomEvent('site-data-updated');
-            document.dispatchEvent(event);
-            
-            return false;
-        } catch (error) {
-            console.error('Erro ao salvar dados na API:', error);
-            
-            // Disparar evento mesmo quando ocorre erro
-            const event = new CustomEvent('site-data-updated');
-            document.dispatchEvent(event);
-            
-            return false;
-        }
-    },
-    
     updateLastSync: function() {
         try {
             siteData.lastSync = new Date().toISOString();
@@ -673,6 +607,377 @@ const SiteManager = {
         await initializeData();
         
         return siteData.stats;
+    },
+
+    // Leads Management
+    async getLeads() {
+        const data = await this.getData();
+        return data.leads || [];
+    },
+
+    async getLeadById(leadId) {
+        const leads = await this.getLeads();
+        return leads.find(lead => lead.id === leadId);
+    },
+
+    async addLead(lead) {
+        const data = await this.getData();
+        if (!data.leads) data.leads = [];
+        data.leads.push(lead);
+        await this.saveData();
+        return lead;
+    },
+
+    async updateLead(leadId, updatedLead) {
+        const data = await this.getData();
+        if (!data.leads) data.leads = [];
+        const index = data.leads.findIndex(lead => lead.id === leadId);
+        if (index !== -1) {
+            data.leads[index] = { ...data.leads[index], ...updatedLead };
+            await this.saveData();
+            return data.leads[index];
+        }
+        return null;
+    },
+
+    async removeLead(leadId) {
+        const data = await this.getData();
+        if (!data.leads) return false;
+        const index = data.leads.findIndex(lead => lead.id === leadId);
+        if (index !== -1) {
+            data.leads.splice(index, 1);
+            await this.saveData();
+            return true;
+        }
+        return false;
+    },
+
+    // Event Types Management
+    getEventTypes() {
+        const data = this.getData();
+        return data.eventTypes || [
+            { id: 'casamento', name: 'Casamento', icon: 'fa-ring' },
+            { id: 'aniversario', name: 'Aniversário', icon: 'fa-cake-candles' },
+            { id: 'corporativo', name: 'Corporativo', icon: 'fa-building' },
+            { id: 'bar', name: 'Bar/Restaurante', icon: 'fa-martini-glass' },
+            { id: 'outro', name: 'Outro', icon: 'fa-star' }
+        ];
+    },
+
+    async addEventType(eventType) {
+        const data = await this.getData();
+        if (!data.eventTypes) {
+            data.eventTypes = this.getEventTypes();
+        }
+        eventType.id = eventType.name.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]/g, '');
+        data.eventTypes.push(eventType);
+        await this.saveData(data);
+        return eventType;
+    },
+
+    async updateEventType(typeId, updatedType) {
+        const data = await this.getData();
+        if (!data.eventTypes) {
+            data.eventTypes = this.getEventTypes();
+        }
+        const index = data.eventTypes.findIndex(type => type.id === typeId);
+        if (index !== -1) {
+            data.eventTypes[index] = { ...data.eventTypes[index], ...updatedType };
+            await this.saveData(data);
+            return data.eventTypes[index];
+        }
+        return null;
+    },
+
+    async removeEventType(typeId) {
+        const data = await this.getData();
+        if (!data.eventTypes) return false;
+        
+        // Verificar se existem leads usando este tipo
+        if (data.leads && data.leads.some(lead => lead.type === typeId)) {
+            return false; // Não permite remover se houver leads usando
+        }
+        
+        const index = data.eventTypes.findIndex(type => type.id === typeId);
+        if (index !== -1) {
+            data.eventTypes.splice(index, 1);
+            await this.saveData(data);
+            return true;
+        }
+        return false;
+    },
+
+    // Import/Export Functions
+    exportData() {
+        try {
+            // Criar objeto com todos os dados do sistema
+            const exportData = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                data: {
+                    // Dados do sistema principal
+                    events: siteData.events || [],
+                    gallery: siteData.gallery || [],
+                    messages: siteData.messages || [],
+                    eventCategories: siteData.eventCategories || [],
+                    stats: siteData.stats || {},
+                    settings: siteData.settings || {},
+                    
+                    // Dados financeiros
+                    finance: siteData.finance || {
+                        transactions: [],
+                        bandMembers: [],
+                        expenses: [],
+                        shows: [],
+                        currentIncome: 0,
+                        currentExpenses: 0,
+                        netProfit: 0,
+                        incomeTrend: 0,
+                        expensesTrend: 0,
+                        profitTrend: 0,
+                        showIncome: 0,
+                        showIncomeTrend: 0
+                    },
+                    
+                    // Dados de leads
+                    leads: siteData.leads || [],
+                    eventTypes: siteData.eventTypes || [],
+                    
+                    // Metadados
+                    lastSync: new Date().toISOString(),
+                    exportedBy: localStorage.getItem('adminName') || 'Admin'
+                }
+            };
+
+            // Converter para string e codificar em base64
+            const jsonStr = JSON.stringify(exportData);
+            const base64Data = btoa(jsonStr);
+
+            return base64Data;
+        } catch (error) {
+            console.error('Erro ao exportar dados:', error);
+            throw new Error('Não foi possível exportar os dados: ' + error.message);
+        }
+    },
+
+    async importData(base64Data) {
+        try {
+            // Criar backup antes de importar
+            const backupKey = this._createBackup();
+            if (!backupKey) {
+                throw new Error('Não foi possível criar backup antes de importar');
+            }
+
+            // Decodificar e parsear os dados
+            const jsonStr = atob(base64Data);
+            const importData = JSON.parse(jsonStr);
+
+            // Validar versão e estrutura
+            if (!importData.version || !importData.data) {
+                throw new Error('Formato de dados inválido');
+            }
+
+            try {
+                // Validar dados que serão importados
+                if (!this._validateData(importData.data)) {
+                    throw new Error('Os dados a serem importados são inválidos');
+                }
+
+                // Carregar dados atuais
+                const currentData = await this.getData();
+
+                // Função auxiliar para mesclar arrays removendo duplicatas por ID
+                const mergeArraysById = (current = [], imported = []) => {
+                    const merged = [...current];
+                    imported.forEach(item => {
+                        if (!item.id) {
+                            item.id = Date.now() + Math.random().toString(36).substr(2, 9);
+                        }
+                        const existingIndex = merged.findIndex(x => x.id === item.id);
+                        if (existingIndex === -1) {
+                            merged.push(item);
+                        }
+                    });
+                    return merged;
+                };
+
+                // Mesclar dados
+                siteData = {
+                    ...currentData,
+                    events: mergeArraysById(currentData.events, importData.data.events),
+                    gallery: mergeArraysById(currentData.gallery, importData.data.gallery),
+                    messages: mergeArraysById(currentData.messages, importData.data.messages),
+                    eventCategories: mergeArraysById(currentData.eventCategories, importData.data.eventCategories),
+                    eventTypes: mergeArraysById(currentData.eventTypes, importData.data.eventTypes),
+                    leads: mergeArraysById(currentData.leads, importData.data.leads),
+                    stats: { ...currentData.stats, ...importData.data.stats },
+                    settings: { ...currentData.settings, ...importData.data.settings },
+                    finance: {
+                        transactions: mergeArraysById(
+                            currentData.finance?.transactions,
+                            importData.data.finance?.transactions
+                        ),
+                        bandMembers: mergeArraysById(
+                            currentData.finance?.bandMembers,
+                            importData.data.finance?.bandMembers
+                        ),
+                        expenses: mergeArraysById(
+                            currentData.finance?.expenses,
+                            importData.data.finance?.expenses
+                        ),
+                        shows: mergeArraysById(
+                            currentData.finance?.shows,
+                            importData.data.finance?.shows
+                        ),
+                        currentIncome: (currentData.finance?.currentIncome || 0) + (importData.data.finance?.currentIncome || 0),
+                        currentExpenses: (currentData.finance?.currentExpenses || 0) + (importData.data.finance?.currentExpenses || 0),
+                        netProfit: (currentData.finance?.netProfit || 0) + (importData.data.finance?.netProfit || 0),
+                        incomeTrend: Math.max(currentData.finance?.incomeTrend || 0, importData.data.finance?.incomeTrend || 0),
+                        expensesTrend: Math.max(currentData.finance?.expensesTrend || 0, importData.data.finance?.expensesTrend || 0),
+                        profitTrend: Math.max(currentData.finance?.profitTrend || 0, importData.data.finance?.profitTrend || 0),
+                        showIncome: (currentData.finance?.showIncome || 0) + (importData.data.finance?.showIncome || 0),
+                        showIncomeTrend: Math.max(currentData.finance?.showIncomeTrend || 0, importData.data.finance?.showIncomeTrend || 0)
+                    },
+                    lastSync: new Date().toISOString()
+                };
+
+                // Salvar os dados mesclados
+                await this.saveData();
+
+                // Disparar evento de atualização
+                const event = new CustomEvent('site-data-updated');
+                document.dispatchEvent(event);
+
+                return true;
+            } catch (error) {
+                // Se algo der errado, restaurar do backup
+                await this._restoreFromBackup(backupKey);
+                throw error;
+            }
+        } catch (error) {
+            console.error('Erro ao importar dados:', error);
+            throw new Error(`Não foi possível importar os dados: ${error.message}`);
+        }
+    },
+
+    _validateData(data) {
+        try {
+            // Verificar se os dados são um objeto válido
+            if (!data || typeof data !== 'object') return false;
+
+            // Verificar estruturas essenciais
+            const requiredStructures = [
+                'events',
+                'gallery',
+                'messages',
+                'eventCategories',
+                'stats',
+                'settings',
+                'transactions',
+                'bandMembers',
+                'expenses',
+                'shows',
+                'finance',
+                'leads',
+                'eventTypes'
+            ];
+
+            // Verificar se todas as estruturas existem
+            for (const structure of requiredStructures) {
+                if (data[structure] === undefined) {
+                    data[structure] = defaultData[structure];
+                }
+
+                // Garantir que arrays sejam arrays
+                if (Array.isArray(defaultData[structure])) {
+                    if (!Array.isArray(data[structure])) {
+                        data[structure] = [];
+                    }
+                }
+                // Garantir que objetos sejam objetos
+                else if (typeof defaultData[structure] === 'object') {
+                    if (typeof data[structure] !== 'object' || data[structure] === null) {
+                        data[structure] = { ...defaultData[structure] };
+                    }
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Erro na validação de dados:', error);
+            return false;
+        }
+    },
+
+    // Função para criar backup
+    _createBackup() {
+        try {
+            const timestamp = new Date().toISOString();
+            const backupKey = `siteBackup_${timestamp}`;
+            
+            // Criar objeto de backup
+            const backup = {
+                timestamp: timestamp,
+                data: { ...siteData }
+            };
+            
+            // Salvar backup
+            localStorage.setItem(backupKey, JSON.stringify(backup));
+            
+            // Manter apenas os 5 backups mais recentes
+            const backupKeys = Object.keys(localStorage)
+                .filter(key => key.startsWith('siteBackup_'))
+                .sort()
+                .reverse();
+                
+            // Remover backups extras
+            if (backupKeys.length > 5) {
+                backupKeys.slice(5).forEach(key => localStorage.removeItem(key));
+            }
+            
+            return backupKey;
+        } catch (error) {
+            console.error('Erro ao criar backup:', error);
+            return null;
+        }
+    },
+
+    // Função para restaurar backup
+    async _restoreFromBackup(specificKey = null) {
+        try {
+            // Encontrar o backup mais recente ou usar o especificado
+            const backupKeys = Object.keys(localStorage)
+                .filter(key => key.startsWith('siteBackup_'))
+                .sort()
+                .reverse();
+                
+            if (backupKeys.length === 0) {
+                throw new Error('Nenhum backup encontrado');
+            }
+            
+            const backupKey = specificKey || backupKeys[0];
+            const backup = JSON.parse(localStorage.getItem(backupKey));
+            
+            if (!backup || !backup.data) {
+                throw new Error('Backup corrompido');
+            }
+            
+            // Restaurar dados
+            siteData = { ...backup.data };
+            localStorage.setItem('siteData', JSON.stringify(siteData));
+            localStorage.setItem('siteDataCache', JSON.stringify({
+                events: siteData.events,
+                lastSync: new Date().toISOString()
+            }));
+            
+            return true;
+        } catch (error) {
+            console.error('Erro ao restaurar backup:', error);
+            return false;
+        }
     },
 };
 

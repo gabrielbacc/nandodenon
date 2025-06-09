@@ -302,6 +302,252 @@
         .dashboard-card.no-hover:hover {
             transform: none;
         }
+
+        /* Estilos para o modal de backup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            margin: 20px auto;
+            padding: 25px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: #1a1a1a;
+            padding: 10px 0;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 107, 0, 0.3);
+        }
+
+        .modal-header h2 {
+            color: #ff6b00;
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 5px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #ff6b00;
+        }
+
+        .modal-body {
+            padding: 20px 0;
+        }
+
+        .modal-body > div {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body > div:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .modal-body h3 {
+            color: #ff6b00;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .modal-body p {
+            color: #fff;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #ff6b00;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff8533;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #backupsList {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            padding: 10px;
+            margin: 15px 0;
+        }
+
+        .backup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 8px;
+            border-radius: 5px;
+        }
+
+        .backup-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+
+        .backup-info {
+            color: white;
+            flex: 1;
+        }
+
+        .backup-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .backup-actions button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.3s ease;
+            font-size: 1.1em;
+        }
+
+        .backup-actions button:hover {
+            color: #ff6b00;
+        }
+
+        .help-text {
+            background: rgba(255, 107, 0, 0.1);
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .help-text ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .help-text ul li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .help-text ul li:before {
+            content: "•";
+            color: #ff6b00;
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10px;
+                padding: 15px;
+            }
+
+            .backup-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .backup-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
@@ -322,6 +568,7 @@
                 <li><a href="index.html">Voltar ao Site</a></li>
                 <li><a href="dashboard.html" class="admin-link active"><i class="fas fa-user-shield"></i> Admin</a></li>
                 <li><a href="manage-calendar.html">Agenda</a></li>
+                <li><a href="manage-leads.html">Leads</a></li>
                 <li><a href="manage-finance.html">Financeiro</a></li>
                 <li><a href="manage-band.html">Banda</a></li>
                 <li><a href="manage-settings.html">Configurações</a></li>
@@ -340,7 +587,13 @@
                     <h1>Dashboard Administrativo</h1>
                     <p class="dashboard-welcome">Bem-vindo, <span id="adminName">Admin</span></p>
                 </div>
-                <div class="dashboard-date" id="currentDate"></div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="openBackupModal">
+                        <i class="fas fa-database"></i>
+                        Backup do Sistema
+                    </button>
+                    <div class="dashboard-date" id="currentDate"></div>
+                </div>
             </div>
 
             <div class="stats-row">
@@ -366,6 +619,12 @@
                     <i class="fas fa-calendar-alt"></i>
                     <h3>Gerenciar Agenda</h3>
                     <p>Adicionar, editar e remover eventos da agenda.</p>
+                </a>
+                
+                <a href="manage-leads.html" class="dashboard-card">
+                    <i class="fas fa-funnel-dollar"></i>
+                    <h3>Gerenciar Leads</h3>
+                    <p>Acompanhe e gerencie leads e orçamentos.</p>
                 </a>
                 
                 <div class="dashboard-card no-hover">
@@ -399,6 +658,70 @@
                     <h3>Configurações</h3>
                     <p>Ajuste as configurações do sistema</p>
                 </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Backup do Sistema -->
+    <div class="modal" id="backupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Backup do Sistema</h2>
+                <button class="close-modal" id="closeBackupModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 30px;">
+                    <h3>Exportar Todos os Dados</h3>
+                    <p>Faça backup de todos os dados do sistema (Agenda, Leads, Financeiro, etc):</p>
+                    <button class="btn btn-primary" id="exportAllDataBtn" style="width: 100%;">
+                        <i class="fas fa-download"></i>
+                        Exportar Todos os Dados
+                    </button>
+                </div>
+                
+                <div>
+                    <h3>Importar Dados</h3>
+                    <p>Importe dados de outro backup para adicionar ao seu sistema:</p>
+                    <div class="form-group">
+                        <div style="margin-bottom: 15px;">
+                            <button class="btn btn-primary" id="importAllFileBtn" style="width: 100%;">
+                                <i class="fas fa-file-upload"></i>
+                                Carregar Arquivo de Backup
+                            </button>
+                            <input type="file" id="importAllFileInput" style="display: none;" accept=".json">
+                        </div>
+                        <div style="text-align: center; margin: 10px 0;">
+                            <span style="color: rgba(255,255,255,0.7);">- ou -</span>
+                        </div>
+                        <label for="importAllDataText">Cole o conteúdo do backup aqui:</label>
+                        <textarea id="importAllDataText" rows="5" style="width: 100%; margin-bottom: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 10px; color: white;"></textarea>
+                        <button class="btn btn-primary" id="importAllDataBtn" style="width: 100%;">
+                            <i class="fas fa-upload"></i>
+                            Importar Dados
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h3>Backups Automáticos</h3>
+                    <p>O sistema mantém automaticamente os últimos 5 backups:</p>
+                    <div id="backupsList" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Lista de backups será carregada aqui -->
+                    </div>
+                </div>
+
+                <div class="help-text" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <p style="color: #ff6b00;"><i class="fas fa-info-circle"></i> Como funciona:</p>
+                    <ul style="color: rgba(255,255,255,0.7); margin-left: 20px;">
+                        <li>O sistema mantém automaticamente 5 backups dos seus dados</li>
+                        <li>Um novo backup é criado a cada 30 minutos de uso</li>
+                        <li>Backups também são criados antes de qualquer importação</li>
+                        <li>Ao importar dados de outro usuário, eles serão <strong>adicionados</strong> aos seus dados existentes</li>
+                        <li>Dados duplicados (mesmo ID) não serão importados</li>
+                        <li>Valores financeiros serão somados aos seus valores atuais</li>
+                        <li>Você pode compartilhar seus dados com outros usuários sem medo de perder informações</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -620,6 +943,236 @@
                 }
             });
         }
+
+        // Backup Modal Functionality
+        const backupModal = document.getElementById('backupModal');
+        const importAllFileInput = document.getElementById('importAllFileInput');
+        const importAllDataText = document.getElementById('importAllDataText');
+
+        // Open backup modal
+        document.getElementById('openBackupModal').addEventListener('click', () => {
+            backupModal.style.display = 'flex';
+            loadBackupsList();
+        });
+
+        // Close backup modal
+        document.getElementById('closeBackupModal').addEventListener('click', () => {
+            backupModal.style.display = 'none';
+            importAllDataText.value = '';
+        });
+
+        // Close modal when clicking outside
+        backupModal.addEventListener('click', (e) => {
+            if (e.target === backupModal) {
+                backupModal.style.display = 'none';
+                importAllDataText.value = '';
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && backupModal.style.display === 'flex') {
+                backupModal.style.display = 'none';
+                importAllDataText.value = '';
+            }
+        });
+
+        // Export all data
+        document.getElementById('exportAllDataBtn').addEventListener('click', async () => {
+            try {
+                // Show loading state
+                const btn = document.getElementById('exportAllDataBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
+                btn.disabled = true;
+
+                const exportData = SiteManager.exportData();
+                
+                // Create temporary element for download
+                const blob = new Blob([exportData], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nando-denon-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                alert('Dados exportados com sucesso!');
+
+                // Restore button state
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            } catch (error) {
+                console.error('Erro ao exportar dados:', error);
+                alert('Erro ao exportar dados: ' + error.message);
+                
+                // Restore button on error
+                const btn = document.getElementById('exportAllDataBtn');
+                btn.innerHTML = '<i class="fas fa-download"></i> Exportar Todos os Dados';
+                btn.disabled = false;
+            }
+        });
+
+        // Import file button click
+        document.getElementById('importAllFileBtn').addEventListener('click', () => {
+            importAllFileInput.click();
+        });
+
+        // Handle file selection
+        importAllFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                importAllDataText.value = e.target.result;
+            };
+            reader.readAsText(file);
+        });
+
+        // Import data button click
+        document.getElementById('importAllDataBtn').addEventListener('click', async () => {
+            try {
+                const importData = importAllDataText.value.trim();
+                if (!importData) {
+                    alert('Por favor, insira os dados para importar ou selecione um arquivo.');
+                    return;
+                }
+
+                // Show loading state
+                const btn = document.getElementById('importAllDataBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+                btn.disabled = true;
+
+                // Import the data
+                await SiteManager.importData(importData);
+                
+                alert('Dados importados com sucesso! A página será recarregada.');
+                window.location.reload();
+            } catch (error) {
+                console.error('Erro ao importar dados:', error);
+                alert('Erro ao importar dados: ' + error.message);
+                
+                // Restore button on error
+                const btn = document.getElementById('importAllDataBtn');
+                btn.innerHTML = '<i class="fas fa-upload"></i> Importar Dados';
+                btn.disabled = false;
+            }
+        });
+
+        // Load backups list
+        function loadBackupsList() {
+            const backupsList = document.getElementById('backupsList');
+            backupsList.innerHTML = '<div style="color: rgba(255,255,255,0.7); text-align: center; padding: 10px;">Carregando backups...</div>';
+
+            try {
+                // Get all backups
+                const backupKeys = Object.keys(localStorage)
+                    .filter(key => key.startsWith('siteBackup_'))
+                    .sort()
+                    .reverse();
+
+                if (backupKeys.length === 0) {
+                    backupsList.innerHTML = '<div style="color: rgba(255,255,255,0.7); text-align: center; padding: 10px;">Nenhum backup encontrado</div>';
+                    return;
+                }
+
+                backupsList.innerHTML = backupKeys.map(key => {
+                    const backup = JSON.parse(localStorage.getItem(key));
+                    const date = new Date(backup.timestamp);
+                    const formattedDate = date.toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    return `
+                        <div class="backup-item">
+                            <div class="backup-info">
+                                <div>Backup de ${formattedDate}</div>
+                            </div>
+                            <div class="backup-actions">
+                                <button onclick="restoreBackup('${key}')" title="Restaurar este backup">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button onclick="downloadBackup('${key}')" title="Baixar este backup">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button onclick="deleteBackup('${key}')" title="Excluir este backup">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Erro ao carregar backups:', error);
+                backupsList.innerHTML = '<div style="color: rgba(255,255,255,0.7); text-align: center; padding: 10px;">Erro ao carregar backups</div>';
+            }
+        }
+
+        // Restore backup function
+        window.restoreBackup = async function(backupKey) {
+            if (confirm('Tem certeza que deseja restaurar este backup? Os dados atuais serão mesclados com os dados do backup.')) {
+                try {
+                    const success = await SiteManager._restoreFromBackup(backupKey);
+                    if (success) {
+                        alert('Backup restaurado com sucesso! A página será recarregada.');
+                        window.location.reload();
+                    } else {
+                        throw new Error('Não foi possível restaurar o backup');
+                    }
+                } catch (error) {
+                    console.error('Erro ao restaurar backup:', error);
+                    alert('Erro ao restaurar backup: ' + error.message);
+                }
+            }
+        };
+
+        // Download backup function
+        window.downloadBackup = function(backupKey) {
+            try {
+                const backup = localStorage.getItem(backupKey);
+                if (!backup) {
+                    throw new Error('Backup não encontrado');
+                }
+
+                const blob = new Blob([backup], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const date = new Date(JSON.parse(backup).timestamp);
+                const formattedDate = date.toISOString().split('T')[0];
+                
+                a.href = url;
+                a.download = `nando-denon-backup-${formattedDate}.json`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Erro ao baixar backup:', error);
+                alert('Erro ao baixar backup: ' + error.message);
+            }
+        };
+
+        // Delete backup function
+        window.deleteBackup = function(backupKey) {
+            if (confirm('Tem certeza que deseja excluir este backup? Esta ação não pode ser desfeita.')) {
+                try {
+                    localStorage.removeItem(backupKey);
+                    loadBackupsList();
+                    alert('Backup excluído com sucesso!');
+                } catch (error) {
+                    console.error('Erro ao excluir backup:', error);
+                    alert('Erro ao excluir backup: ' + error.message);
+                }
+            }
+        };
     </script>
 </body>
 </html> 
