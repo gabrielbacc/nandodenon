@@ -185,26 +185,44 @@ const SiteManager = {
     },
 
     // Gerenciamento de dados
-    getData: async function() {
-        await initializeData();
-        return siteData;
+    getData: function() {
+        try {
+            return siteData;
+        } catch (error) {
+            console.error('Erro ao obter dados:', error);
+            return { events: [], gallery: [], messages: [], lastSync: null };
+        }
     },
 
-    saveData: async function() {
+    saveData: function() {
         try {
+            // Validar dados antes de salvar
+            if (!siteData.events) siteData.events = [];
+            if (!siteData.gallery) siteData.gallery = [];
+            if (!siteData.messages) siteData.messages = [];
+            
+            // Remover eventos inválidos
+            siteData.events = siteData.events.filter(event => 
+                event && 
+                event.id && 
+                event.title && 
+                event.date && 
+                event.time && 
+                event.location
+            );
+            
             localStorage.setItem('siteData', JSON.stringify(siteData));
+            this.updateLastSync();
             
             // Atualizar cache para usuários anônimos
-            const publicData = {
-                events: siteData.events,
-                eventCategories: siteData.eventCategories,
-                settings: siteData.settings,
-                lastSync: new Date().toISOString()
-            };
-            localStorage.setItem('siteDataCache', JSON.stringify(publicData));
+            const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
+            currentCache.events = this.getEvents();
+            currentCache.lastSync = new Date().toISOString();
+            localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
             
             // Disparar evento de atualização
-            document.dispatchEvent(new Event('site-data-updated'));
+            const event = new CustomEvent('site-data-updated');
+            document.dispatchEvent(event);
             
             return true;
         } catch (error) {
@@ -215,46 +233,88 @@ const SiteManager = {
 
     // Gerenciamento de eventos
     getEvents: function() {
-        return siteData.events || [];
-    },
-
-    addEvent: async function(event) {
-        await initializeData();
-        
-        if (!event.id) {
-            event.id = Date.now().toString();
+        try {
+            return siteData.events || [];
+        } catch (error) {
+            console.error('Erro ao obter eventos:', error);
+            return [];
         }
-        
-        siteData.events.push(event);
-        this.updateStats();
-        await this.saveData();
-        return event;
     },
 
-    updateEvent: async function(eventId, updatedEvent) {
-        await initializeData();
-        
-        const index = siteData.events.findIndex(event => event.id === eventId);
-        if (index !== -1) {
+    addEvent: function(event) {
+        try {
+            if (!event.id) {
+                event.id = Date.now().toString();
+            }
+            
+            // Validar evento antes de adicionar
+            if (!event.title || !event.date || !event.time || !event.location) {
+                throw new Error('Dados do evento incompletos');
+            }
+            
+            // Verificar se já existe um evento com mesmo ID
+            const existingEvent = siteData.events.find(e => e.id === event.id);
+            if (existingEvent) {
+                throw new Error('Já existe um evento com este ID');
+            }
+            
+            siteData.events.push(event);
+            this.updateStats();
+            this.saveData();
+            return event;
+        } catch (error) {
+            console.error('Erro ao adicionar evento:', error);
+            throw error;
+        }
+    },
+
+    updateEvent: function(eventId, updatedEvent) {
+        try {
+            const index = siteData.events.findIndex(event => event.id === eventId);
+            if (index === -1) {
+                throw new Error('Evento não encontrado');
+            }
+            
+            // Validar evento antes de atualizar
+            if (!updatedEvent.title || !updatedEvent.date || !updatedEvent.time || !updatedEvent.location) {
+                throw new Error('Dados do evento incompletos');
+            }
+            
             siteData.events[index] = { ...siteData.events[index], ...updatedEvent };
             this.updateStats();
-            await this.saveData();
+            this.saveData();
             return siteData.events[index];
+        } catch (error) {
+            console.error('Erro ao atualizar evento:', error);
+            throw error;
         }
-        return null;
     },
 
-    removeEvent: async function(eventId) {
-        await initializeData();
-        
-        siteData.events = siteData.events.filter(event => event.id !== eventId);
-        this.updateStats();
-        await this.saveData();
+    removeEvent: function(eventId) {
+        try {
+            const originalLength = siteData.events.length;
+            siteData.events = siteData.events.filter(event => event.id !== eventId);
+            
+            if (siteData.events.length === originalLength) {
+                throw new Error('Evento não encontrado');
+            }
+            
+            this.updateStats();
+            this.saveData();
+            return true;
+        } catch (error) {
+            console.error('Erro ao remover evento:', error);
+            throw error;
+        }
     },
 
-    getEventById: async function(eventId) {
-        await initializeData();
-        return siteData.events.find(event => event.id === eventId);
+    getEventById: function(eventId) {
+        try {
+            return siteData.events.find(event => event.id === eventId) || null;
+        } catch (error) {
+            console.error('Erro ao buscar evento por ID:', error);
+            return null;
+        }
     },
 
     // Gerenciamento de categorias de eventos
@@ -456,7 +516,11 @@ const SiteManager = {
     },
     
     updateLastSync: function() {
-        siteData.lastSync = new Date().toISOString();
+        try {
+            siteData.lastSync = new Date().toISOString();
+        } catch (error) {
+            console.error('Erro ao atualizar lastSync:', error);
+        }
     },
     
     // Métodos de Galeria

@@ -301,6 +301,43 @@
             margin-left: 10px;
             color: #ff6b00;
         }
+        
+        /* Estilo para o modal de HTML da agenda */
+        #htmlModal .modal-content {
+            max-width: 800px;
+        }
+        
+        #agendaHtmlCode {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            color: #fff;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+        
+        .copy-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: auto;
+        }
+        
+        .help-text {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -327,6 +364,14 @@
             <div class="calendar-header">
                 <h1>Gerenciar Agenda</h1>
                 <div class="header-actions">
+                    <button class="add-category-btn" id="syncFromHtml" style="background: #28a745;">
+                        <i class="fas fa-sync"></i>
+                        Sincronizar do Site
+                    </button>
+                    <button class="add-category-btn" id="openHtmlModal">
+                        <i class="fas fa-code"></i>
+                        Gerar HTML da Agenda
+                    </button>
                     <button class="add-category-btn" id="openAddCategoryModal">
                         <i class="fas fa-tags"></i>
                         Gerenciar Categorias
@@ -339,6 +384,22 @@
             </div>
 
             <div class="calendar-grid">
+                <div class="events-info" style="background: rgba(255, 103, 0, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(255, 103, 0, 0.3);">
+                    <p style="color: white; margin: 0;"><i class="fas fa-info-circle" style="color: #ff6b00; margin-right: 8px;"></i> Os eventos gerenciados aqui podem ser exibidos na página inicial do site em formato de texto simples, organizados por mês.</p>
+                    <p style="color: white; margin-top: 10px;"><i class="fas fa-code" style="color: #ff6b00; margin-right: 8px;"></i> Após adicionar, editar ou remover eventos, clique em <strong>"Gerar HTML da Agenda"</strong>, copie o código gerado e cole-o manualmente no arquivo index.html para atualizar a agenda no site.</p>
+                </div>
+                
+                <div class="events-filter" style="margin-bottom: 20px; background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px;">
+                    <h3 style="color: #ff6b00; margin-top: 0; font-size: 18px; margin-bottom: 15px;">Filtrar Eventos</h3>
+                    <div class="filter-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <button class="filter-btn active" data-filter="all" style="background: #ff6b00; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Todos</button>
+                        <button class="filter-btn" data-filter="casamento" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Casamentos</button>
+                        <button class="filter-btn" data-filter="aniversario" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Aniversários</button>
+                        <button class="filter-btn" data-filter="corporativo" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Corporativo</button>
+                        <button class="filter-btn" data-filter="outro" style="background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;">Outros</button>
+                    </div>
+                </div>
+                
                 <div class="events-list" id="eventsList">
                     <!-- Events will be loaded here -->
                 </div>
@@ -439,8 +500,37 @@
             </form>
         </div>
     </div>
+    
+    <!-- HTML Agenda Modal -->
+    <div class="modal" id="htmlModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>HTML da Agenda para o Site</h2>
+                <button class="close-modal" id="closeHtmlModal">&times;</button>
+            </div>
+            <div>
+                <p>Copie o código abaixo e substitua no arquivo <strong>index.html</strong> na seção da agenda:</p>
+                <pre id="agendaHtmlCode"></pre>
+                <button class="copy-btn" id="copyHtmlBtn">
+                    <i class="fas fa-copy"></i>
+                    Copiar HTML
+                </button>
+                <div class="help-text">
+                    <p><strong>Instruções:</strong></p>
+                    <ol>
+                        <li><strong>Importante:</strong> A agenda na página inicial <strong>NÃO</strong> é atualizada automaticamente.</li>
+                        <li>Depois de adicionar, editar ou remover eventos, gere o novo HTML clicando em "Gerar HTML da Agenda".</li>
+                        <li>Copie o código HTML gerado clicando no botão "Copiar HTML".</li>
+                        <li>Abra o arquivo <strong>index.html</strong> e substitua o conteúdo entre os comentários "INÍCIO DO CONTEÚDO DA AGENDA" e "FIM DO CONTEÚDO DA AGENDA".</li>
+                        <li>Salve o arquivo index.html para que as alterações apareçam no site.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="js/site-data.js"></script>
+    <script src="js/update-agenda.js"></script>
     <script>
         // Check if user is logged in
         if (!SiteManager.isLoggedIn()) {
@@ -452,11 +542,14 @@
         const eventModal = document.getElementById('eventModal');
         const eventForm = document.getElementById('eventForm');
         const modalTitle = document.getElementById('modalTitle');
+        const htmlModal = document.getElementById('htmlModal');
+        const agendaHtmlCode = document.getElementById('agendaHtmlCode');
 
         // Event Listeners
         document.getElementById('openAddEventModal').addEventListener('click', () => {
             modalTitle.textContent = 'Adicionar Evento';
             eventForm.reset();
+            document.getElementById('eventId').value = '';
             eventModal.style.display = 'flex';
         });
 
@@ -467,6 +560,45 @@
         document.getElementById('cancelEvent').addEventListener('click', () => {
             eventModal.style.display = 'none';
         });
+        
+        // HTML Modal
+        document.getElementById('openHtmlModal').addEventListener('click', () => {
+            // Gerar o HTML da agenda
+            const agendaHtml = generateAgendaHtml();
+            agendaHtmlCode.textContent = agendaHtml;
+            htmlModal.style.display = 'flex';
+            
+            // Atualizar o texto da ajuda para explicar que a atualização é automática
+            const helpText = htmlModal.querySelector('.help-text');
+            if (helpText) {
+                helpText.innerHTML = `
+                    <p><strong>Instruções:</strong></p>
+                    <ol>
+                        <li><strong>Importante:</strong> A agenda na página inicial <strong>NÃO</strong> é atualizada automaticamente.</li>
+                        <li>Depois de adicionar, editar ou remover eventos, gere o novo HTML clicando em "Gerar HTML da Agenda".</li>
+                        <li>Copie o código HTML gerado clicando no botão "Copiar HTML".</li>
+                        <li>Abra o arquivo <strong>index.html</strong> e substitua o conteúdo entre os comentários "INÍCIO DO CONTEÚDO DA AGENDA" e "FIM DO CONTEÚDO DA AGENDA".</li>
+                        <li>Salve o arquivo index.html para que as alterações apareçam no site.</li>
+                    </ol>
+                `;
+            }
+        });
+        
+        document.getElementById('closeHtmlModal').addEventListener('click', () => {
+            htmlModal.style.display = 'none';
+        });
+        
+        document.getElementById('copyHtmlBtn').addEventListener('click', () => {
+            const textToCopy = agendaHtmlCode.textContent;
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    alert('HTML copiado para a área de transferência!');
+                })
+                .catch(err => {
+                    console.error('Erro ao copiar: ', err);
+                    alert('Erro ao copiar. Por favor, selecione o texto e copie manualmente.');
+                });
+        });
 
         // Logout functionality
         document.getElementById('logoutBtn').addEventListener('click', function(e) {
@@ -476,90 +608,224 @@
         });
 
         // Form submission
-        eventForm.addEventListener('submit', (e) => {
+        eventForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const eventId = document.getElementById('eventId').value;
+            const eventDate = document.getElementById('eventDate').value;
+            const eventTitle = document.getElementById('eventTitle').value;
+            const eventTime = document.getElementById('eventTime').value;
+            const eventType = document.getElementById('eventType').value;
+            const eventLocation = document.getElementById('eventLocation').value;
+            
+            // Validação dos campos
+            if (!eventTitle.trim()) {
+                alert('Por favor, insira um título para o evento.');
+                return;
+            }
+            
+            if (!eventDate) {
+                alert('Por favor, selecione uma data para o evento.');
+                return;
+            }
+            
+            // Validar se a data não é no passado
+            const selectedDate = new Date(eventDate);
+            selectedDate.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                alert('Não é possível criar eventos em datas passadas.');
+                return;
+            }
+            
+            if (!eventTime) {
+                alert('Por favor, selecione um horário para o evento.');
+                return;
+            }
+            
+            if (!eventLocation.trim()) {
+                alert('Por favor, insira o local do evento.');
+                return;
+            }
+            
             const newEvent = {
                 id: eventId || Date.now().toString(),
-                title: document.getElementById('eventTitle').value,
-                date: document.getElementById('eventDate').value,
-                time: document.getElementById('eventTime').value,
-                type: document.getElementById('eventType').value,
-                location: document.getElementById('eventLocation').value,
+                title: eventTitle,
+                date: eventDate,
+                time: eventTime,
+                type: eventType,
+                location: eventLocation,
                 description: document.getElementById('eventDescription').value
             };
 
-            if (eventId) {
-                SiteManager.updateEvent(eventId, newEvent);
-            } else {
-                SiteManager.addEvent(newEvent);
-            }
-
             eventModal.style.display = 'none';
-            loadEvents();
+            
+            // Exibir mensagem de loading
+            eventsList.innerHTML = '<div class="loading">Salvando evento...</div>';
+
+            try {
+                // Verificar se já existe um evento na mesma data e horário
+                const events = await SiteManager.getData().then(data => data.events || []);
+                const conflictingEvent = events.find(event => 
+                    event.date === eventDate && 
+                    event.time === eventTime && 
+                    event.id !== eventId
+                );
+                
+                if (conflictingEvent) {
+                    if (!confirm(`Já existe um evento agendado para ${eventDate} às ${eventTime}.\nDeseja continuar mesmo assim?`)) {
+                        eventModal.style.display = 'flex';
+                        await loadEvents();
+                        return;
+                    }
+                }
+
+                if (eventId) {
+                    await SiteManager.updateEvent(eventId, newEvent);
+                    console.log('Evento atualizado com sucesso:', newEvent);
+                } else {
+                    const addedEvent = await SiteManager.addEvent(newEvent);
+                    console.log('Novo evento adicionado:', addedEvent);
+                }
+                
+                await loadEvents();
+                
+                alert('Evento salvo com sucesso! Lembre-se de clicar em "Gerar HTML da Agenda" e atualizar manualmente o arquivo index.html para que as alterações apareçam no site.');
+                
+                const updateEvent = new CustomEvent('site-data-updated');
+                document.dispatchEvent(updateEvent);
+                
+                try {
+                    const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
+                    currentCache.events = SiteManager.getEvents();
+                    currentCache.lastSync = new Date().toISOString();
+                    localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
+                    console.log('Cache atualizado para páginas anônimas');
+                } catch (err) {
+                    console.error('Erro ao atualizar cache:', err);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar evento:', error);
+                alert('Erro ao salvar o evento. Verifique o console para mais detalhes.');
+                await loadEvents();
+                eventModal.style.display = 'flex';
+            }
         });
 
         // Load and display events
-        function loadEvents() {
-            const events = SiteManager.getEvents();
-            
-            if (events.length === 0) {
-                eventsList.innerHTML = '<div class="no-events">Nenhum evento cadastrado</div>';
-                return;
-            }
+        async function loadEvents() {
+            try {
+                // Mostrar indicador de carregamento
+                eventsList.innerHTML = '<div class="no-events">Carregando eventos...</div>';
+                
+                // Buscar eventos de forma assíncrona
+                const events = await SiteManager.getData().then(data => data.events || []);
+                
+                if (!events || events.length === 0) {
+                    eventsList.innerHTML = '<div class="no-events">Nenhum evento cadastrado</div>';
+                    return;
+                }
 
-            eventsList.innerHTML = events
-                .sort((a, b) => new Date(a.date) - new Date(b.date))
-                .map(event => `
-                    <div class="event-card">
-                        <div class="event-info">
-                            <h3>${event.title}</h3>
-                            <p>
-                                <i class="far fa-calendar"></i> ${new Date(event.date).toLocaleDateString('pt-BR')} 
-                                <i class="far fa-clock"></i> ${event.time}
-                            </p>
-                            <p><i class="fas fa-map-marker-alt"></i> ${event.location}</p>
+                // Apply current filter if set
+                if (currentFilter && currentFilter !== 'all') {
+                    filterEvents(currentFilter);
+                    return;
+                }
+
+                eventsList.innerHTML = events
+                    .sort((a, b) => {
+                        // Ordenar por data sem criar objetos Date
+                        return a.date.localeCompare(b.date);
+                    })
+                    .map(event => {
+                        // Formatação da data no formato brasileiro sem criar objeto Date
+                        const dateParts = event.date ? event.date.split('-') : ['', '', ''];
+                        const formattedDate = dateParts.length === 3 ? 
+                            `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : 
+                            'Data inválida';
+
+                        return `
+                        <div class="event-card">
+                            <div class="event-info">
+                                <h3>${event.title || 'Sem título'}</h3>
+                                <p>
+                                    <i class="far fa-calendar"></i> ${formattedDate} 
+                                    <i class="far fa-clock"></i> ${event.time || 'Horário não definido'}
+                                </p>
+                                <p><i class="fas fa-map-marker-alt"></i> ${event.location || 'Local não definido'}</p>
+                            </div>
+                            <div class="event-actions">
+                                <button onclick="editEvent('${event.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteEvent('${event.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="event-actions">
-                            <button onclick="editEvent('${event.id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="deleteEvent('${event.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                    }).join('');
+            } catch (error) {
+                console.error('Erro ao carregar eventos:', error);
+                eventsList.innerHTML = '<div class="no-events">Erro ao carregar eventos. Tente novamente mais tarde.</div>';
+            }
         }
 
         // Edit event
-        function editEvent(eventId) {
-            const event = SiteManager.getEventById(eventId);
-            if (event) {
-                document.getElementById('eventId').value = event.id;
-                document.getElementById('eventTitle').value = event.title;
-                document.getElementById('eventDate').value = event.date;
-                document.getElementById('eventTime').value = event.time;
-                document.getElementById('eventType').value = event.type;
-                document.getElementById('eventLocation').value = event.location;
-                document.getElementById('eventDescription').value = event.description;
+        async function editEvent(eventId) {
+            try {
+                const event = await SiteManager.getEventById(eventId);
+                if (event) {
+                    document.getElementById('eventId').value = event.id;
+                    document.getElementById('eventTitle').value = event.title || '';
+                    document.getElementById('eventDate').value = event.date || '';
+                    document.getElementById('eventTime').value = event.time || '';
+                    document.getElementById('eventType').value = event.type || 'outro';
+                    document.getElementById('eventLocation').value = event.location || '';
+                    document.getElementById('eventDescription').value = event.description || '';
 
-                modalTitle.textContent = 'Editar Evento';
-                eventModal.style.display = 'flex';
+                    modalTitle.textContent = 'Editar Evento';
+                    eventModal.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Erro ao editar evento:', error);
+                alert('Erro ao carregar dados do evento para edição.');
             }
         }
 
         // Delete event
-        function deleteEvent(eventId) {
+        async function deleteEvent(eventId) {
             if (confirm('Tem certeza que deseja excluir este evento?')) {
-                SiteManager.removeEvent(eventId);
-                loadEvents();
+                try {
+                    await SiteManager.removeEvent(eventId);
+                    await loadEvents();
+                    
+                    // Notificar o usuário que a agenda foi atualizada automaticamente
+                    alert('Evento excluído com sucesso! Lembre-se de clicar em "Gerar HTML da Agenda" e atualizar manualmente o arquivo index.html para que as alterações apareçam no site.');
+                    
+                    // Disparar evento para atualizar outras páginas abertas
+                    const updateEvent = new CustomEvent('site-data-updated');
+                    document.dispatchEvent(updateEvent);
+                    
+                    // Tentar atualizar o localStorage diretamente para garantir que as páginas anônimas vejam a atualização
+                    try {
+                        // Atualizar cache para usuários anônimos
+                        const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
+                        currentCache.events = SiteManager.getEvents();
+                        currentCache.lastSync = new Date().toISOString();
+                        localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
+                        console.log('Cache atualizado para páginas anônimas após exclusão');
+                    } catch (err) {
+                        console.error('Erro ao atualizar cache após exclusão:', err);
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir evento:', error);
+                    alert('Erro ao excluir evento. Tente novamente.');
+                }
             }
         }
-
-        // Initial load
-        loadEvents();
 
         // Category Management
         const categoryModal = document.getElementById('categoryModal');
@@ -594,52 +860,77 @@
             categoryForm.style.display = 'none';
         });
 
-        function loadCategories() {
-            const categories = SiteManager.getEventCategories();
-            categoriesList.innerHTML = categories.map(category => `
-                <div class="category-item">
-                    <div class="category-info">
-                        <i class="fas ${category.icon}"></i>
-                        <span>${category.name}</span>
-                    </div>
-                    <div class="category-actions">
-                        <button onclick="editCategory('${category.id}')" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteCategory('${category.id}')" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
+        async function loadCategories() {
+            try {
+                categoriesList.innerHTML = '<div class="no-events">Carregando categorias...</div>';
+                
+                // Buscar categorias de forma assíncrona
+                const categories = await SiteManager.getData().then(data => data.eventCategories || []);
+                
+                if (!categories || categories.length === 0) {
+                    categoriesList.innerHTML = '<div class="no-events">Nenhuma categoria cadastrada</div>';
+                    return;
+                }
 
-        function editCategory(categoryId) {
-            const categories = SiteManager.getEventCategories();
-            const category = categories.find(cat => cat.id === categoryId);
-            
-            if (category) {
-                document.getElementById('categoryId').value = category.id;
-                document.getElementById('categoryName').value = category.name;
-                document.getElementById('categoryIcon').value = category.icon;
-                iconPreview.className = 'fas ' + category.icon + ' icon-preview';
-                categoryForm.style.display = 'block';
+                categoriesList.innerHTML = categories.map(category => `
+                    <div class="category-item">
+                        <div class="category-info">
+                            <i class="fas ${category.icon}"></i>
+                            <span>${category.name}</span>
+                        </div>
+                        <div class="category-actions">
+                            <button onclick="editCategory('${category.id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteCategory('${category.id}')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+                categoriesList.innerHTML = '<div class="no-events">Erro ao carregar categorias. Tente novamente mais tarde.</div>';
             }
         }
 
-        function deleteCategory(categoryId) {
+        async function editCategory(categoryId) {
+            try {
+                const data = await SiteManager.getData();
+                const categories = data.eventCategories || [];
+                const category = categories.find(cat => cat.id === categoryId);
+                
+                if (category) {
+                    document.getElementById('categoryId').value = category.id;
+                    document.getElementById('categoryName').value = category.name;
+                    document.getElementById('categoryIcon').value = category.icon;
+                    iconPreview.className = 'fas ' + category.icon + ' icon-preview';
+                    categoryForm.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao editar categoria:', error);
+                alert('Erro ao carregar dados da categoria para edição.');
+            }
+        }
+
+        async function deleteCategory(categoryId) {
             if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-                const success = SiteManager.removeEventCategory(categoryId);
-                if (!success) {
-                    alert('Não é possível excluir esta categoria pois existem eventos vinculados a ela.');
-                } else {
-                    loadCategories();
-                    updateEventTypeSelect();
+                try {
+                    const success = await SiteManager.removeEventCategory(categoryId);
+                    if (!success) {
+                        alert('Não é possível excluir esta categoria pois existem eventos vinculados a ela.');
+                    } else {
+                        await loadCategories();
+                        await updateEventTypeSelect();
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir categoria:', error);
+                    alert('Erro ao excluir categoria. Tente novamente.');
                 }
             }
         }
 
-        categoryForm.addEventListener('submit', (e) => {
+        categoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const categoryId = document.getElementById('categoryId').value;
@@ -648,32 +939,211 @@
                 icon: document.getElementById('categoryIcon').value
             };
 
-            if (categoryId) {
-                SiteManager.updateEventCategory(categoryId, newCategory);
-            } else {
-                SiteManager.addEventCategory(newCategory);
-            }
+            try {
+                if (categoryId) {
+                    await SiteManager.updateEventCategory(categoryId, newCategory);
+                } else {
+                    await SiteManager.addEventCategory(newCategory);
+                }
 
-            categoryForm.style.display = 'none';
-            loadCategories();
-            updateEventTypeSelect();
+                categoryForm.style.display = 'none';
+                await loadCategories();
+                await updateEventTypeSelect();
+            } catch (error) {
+                console.error('Erro ao salvar categoria:', error);
+                alert('Erro ao salvar categoria. Tente novamente.');
+            }
         });
 
-        function updateEventTypeSelect() {
-            const categories = SiteManager.getEventCategories();
-            const eventTypeSelect = document.getElementById('eventType');
-            
-            eventTypeSelect.innerHTML = categories.map(category => 
-                `<option value="${category.id}">${category.name}</option>`
-            ).join('');
+        async function updateEventTypeSelect() {
+            try {
+                const data = await SiteManager.getData();
+                const categories = data.eventCategories || [];
+                const eventTypeSelect = document.getElementById('eventType');
+                
+                eventTypeSelect.innerHTML = categories.map(category => 
+                    `<option value="${category.id}">${category.name}</option>`
+                ).join('');
+            } catch (error) {
+                console.error('Erro ao atualizar seletor de categorias:', error);
+            }
         }
 
         // Update initial event type select options
         updateEventTypeSelect();
 
         // Make functions available globally
+        window.editEvent = editEvent;
+        window.deleteEvent = deleteEvent;
         window.editCategory = editCategory;
         window.deleteCategory = deleteCategory;
+        
+        // Initial load
+        loadEvents();
+
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        let currentFilter = 'all';
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Get filter value
+                currentFilter = this.getAttribute('data-filter');
+                
+                // Apply filter
+                filterEvents(currentFilter);
+            });
+        });
+        
+        // Function to filter events
+        async function filterEvents(filterValue) {
+            try {
+                // Show loading indicator
+                eventsList.innerHTML = '<div class="no-events">Filtrando eventos...</div>';
+                
+                // Get all events
+                const events = await SiteManager.getData().then(data => data.events || []);
+                
+                if (!events || events.length === 0) {
+                    eventsList.innerHTML = '<div class="no-events">Nenhum evento cadastrado</div>';
+                    return;
+                }
+                
+                // Filter events by type if not "all"
+                const filteredEvents = filterValue === 'all' 
+                    ? events 
+                    : events.filter(event => event.type === filterValue);
+                
+                // Check if we have any events after filtering
+                if (filteredEvents.length === 0) {
+                    eventsList.innerHTML = `<div class="no-events">Nenhum evento encontrado na categoria selecionada</div>`;
+                    return;
+                }
+                
+                // Display filtered events
+                eventsList.innerHTML = filteredEvents
+                    .sort((a, b) => a.date.localeCompare(b.date))
+                    .map(event => {
+                        // Format date
+                        const dateParts = event.date ? event.date.split('-') : ['', '', ''];
+                        const formattedDate = dateParts.length === 3 ? 
+                            `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : 
+                            'Data inválida';
+
+                        return `
+                        <div class="event-card">
+                            <div class="event-info">
+                                <h3>${event.title || 'Sem título'}</h3>
+                                <p>
+                                    <i class="far fa-calendar"></i> ${formattedDate} 
+                                    <i class="far fa-clock"></i> ${event.time || 'Horário não definido'}
+                                </p>
+                                <p><i class="fas fa-map-marker-alt"></i> ${event.location || 'Local não definido'}</p>
+                            </div>
+                            <div class="event-actions">
+                                <button onclick="editEvent('${event.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteEvent('${event.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    }).join('');
+            } catch (error) {
+                console.error('Erro ao filtrar eventos:', error);
+                eventsList.innerHTML = '<div class="no-events">Erro ao filtrar eventos. Tente novamente mais tarde.</div>';
+            }
+        }
+
+        // Função para sincronizar eventos do HTML do site
+        async function syncEventsFromHtml() {
+            try {
+                // Buscar o arquivo index.html
+                const response = await fetch('/index.html');
+                const html = await response.text();
+                
+                // Criar um DOM parser temporário
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Encontrar todos os eventos na agenda
+                const eventItems = doc.querySelectorAll('.agenda-event-item');
+                const events = [];
+                
+                eventItems.forEach(item => {
+                    try {
+                        // Extrair informações do evento
+                        const dayText = item.querySelector('.agenda-day').textContent;
+                        const monthTitle = item.closest('.agenda-month').querySelector('.month-title').textContent;
+                        const location = item.querySelector('.agenda-location').textContent;
+                        const time = item.querySelector('.agenda-time').textContent;
+                        const title = item.querySelector('.agenda-title').textContent;
+                        
+                        // Processar a data
+                        const day = parseInt(dayText.replace('Dia ', ''));
+                        const [month, year] = monthTitle.split(' ');
+                        
+                        const months = {
+                            'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04',
+                            'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08',
+                            'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12'
+                        };
+                        
+                        // Formatar a data no formato YYYY-MM-DD
+                        const date = `${year}-${months[month]}-${String(day).padStart(2, '0')}`;
+                        
+                        // Criar objeto do evento
+                        const event = {
+                            id: Date.now() + Math.random().toString(36).substr(2, 9),
+                            title: title.trim(),
+                            date: date,
+                            time: time.trim(),
+                            location: location.trim(),
+                            type: 'outro', // Tipo padrão
+                            description: ''
+                        };
+                        
+                        events.push(event);
+                    } catch (err) {
+                        console.error('Erro ao processar evento:', err);
+                    }
+                });
+                
+                if (events.length === 0) {
+                    alert('Nenhum evento encontrado no HTML do site.');
+                    return;
+                }
+                
+                // Confirmar com o usuário
+                if (confirm(`Foram encontrados ${events.length} eventos no site. Deseja importá-los para a dashboard? Isso não afetará os eventos existentes.`)) {
+                    // Adicionar cada evento
+                    for (const event of events) {
+                        try {
+                            await SiteManager.addEvent(event);
+                        } catch (err) {
+                            console.error('Erro ao adicionar evento:', err);
+                        }
+                    }
+                    
+                    // Recarregar eventos na dashboard
+                    await loadEvents();
+                    
+                    alert(`${events.length} eventos foram importados com sucesso!`);
+                }
+            } catch (error) {
+                console.error('Erro ao sincronizar eventos:', error);
+                alert('Erro ao sincronizar eventos do site. Verifique o console para mais detalhes.');
+            }
+        }
+
+        // Adicionar listener para o botão de sincronização
+        document.getElementById('syncFromHtml').addEventListener('click', syncEventsFromHtml);
     </script>
 </body>
 </html> 

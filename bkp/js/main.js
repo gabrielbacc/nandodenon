@@ -37,9 +37,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         isPastEvent(date) {
-            const eventDate = new Date(date);
-            eventDate.setHours(23, 59, 59, 999); // End of the event day
-            return eventDate < this.today;
+            // Comparar apenas as datas como strings (formato YYYY-MM-DD)
+            const today = new Date();
+            const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            // Comparação simples de strings
+            return date < todayFormatted;
         }
 
         renderCalendar() {
@@ -47,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
             const startingDay = firstDay.getDay();
             const totalDays = lastDay.getDate();
-            const events = EventManager.getEvents();
+            const events = SiteManager.getEvents();
 
             this.currentMonthElement.textContent = `${this.monthNames[this.currentMonth]} ${this.currentYear}`;
             this.calendarDays.innerHTML = '';
@@ -65,19 +68,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 dayElement.className = 'calendar-day';
                 dayElement.textContent = day;
 
-                // Format the date string for comparison
+                // Format the date string for comparison (mantendo o formato YYYY-MM-DD)
                 const currentDate = `${this.currentYear}-${String(this.currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const hasEvents = events.some(event => event.date === currentDate);
+                const dayEvents = events.filter(event => event.date === currentDate);
+                const hasEvents = dayEvents.length > 0;
                 
                 if (hasEvents) {
                     const isPast = this.isPastEvent(currentDate);
                     dayElement.classList.add(isPast ? 'past-event' : 'has-event');
                     dayElement.setAttribute('data-date', currentDate);
                     
-                    // Add tooltip with event titles
-                    const dayEvents = events.filter(event => event.date === currentDate);
+                    // Add tooltip with all event titles
                     const eventTitles = dayEvents.map(event => event.title).join('\n');
-                    dayElement.title = eventTitles;
+                    dayElement.title = `${dayEvents.length} evento${dayEvents.length > 1 ? 's' : ''}:\n${eventTitles}`;
+                    
+                    // Add indicator for multiple events
+                    if (dayEvents.length > 1) {
+                        dayElement.classList.add('multiple-events');
+                    }
                 }
 
                 dayElement.addEventListener('click', () => this.selectDate(currentDate));
@@ -100,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         selectDate(date) {
-            const events = EventManager.getEvents();
+            const events = SiteManager.getEvents();
             const selectedEvents = events.filter(event => event.date === date);
             if (selectedEvents.length > 0) {
                 this.renderEvents('all', date);
@@ -111,12 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 // Add selection to clicked day
-                const dayElement = Array.from(document.querySelectorAll('.calendar-day')).find(day => {
-                    const dayNum = parseInt(day.textContent);
-                    const dayDate = `${this.currentYear}-${String(this.currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                    return dayDate === date;
-                });
-                
+                const dayElement = document.querySelector(`.calendar-day[data-date="${date}"]`);
                 if (dayElement) {
                     dayElement.classList.add('selected');
                 }
@@ -134,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         renderEvents(filter, selectedDate = null) {
-            const events = EventManager.getEvents();
+            const events = SiteManager.getEvents();
             let filteredEvents = [...events];
 
             // Filter by type if not 'all'
@@ -147,8 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 filteredEvents = filteredEvents.filter(event => event.date === selectedDate);
             }
 
-            // Sort events by date
-            filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+            // Sort events by date (usando localeCompare para evitar criação de objeto Date)
+            filteredEvents.sort((a, b) => a.date.localeCompare(b.date));
 
             this.eventsTimeline.innerHTML = '';
 
@@ -158,13 +161,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             filteredEvents.forEach((event, index) => {
-                const eventDate = new Date(event.date);
-                const formattedDate = eventDate.toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-
+                // Parse date parts diretamente da string YYYY-MM-DD
+                const dateParts = event.date.split('-');
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1; // 0-indexed para mês
+                const day = parseInt(dateParts[2]);
+                
+                // Criar os textos formatados diretamente
+                const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 
+                                    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                const monthShort = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 
+                                   'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+                
+                const formattedDate = `${day} de ${monthNames[month]} de ${year}`;
                 const isPast = this.isPastEvent(event.date);
 
                 const eventElement = document.createElement('div');
@@ -173,9 +182,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 eventElement.innerHTML = `
                     <div class="event-date">
                         <div class="date-circle">
-                            <span class="month">${eventDate.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}</span>
-                            <span class="day">${eventDate.getDate()}</span>
-                            <span class="year">${eventDate.getFullYear()}</span>
+                            <span class="month">${monthShort[month]}</span>
+                            <span class="day">${day}</span>
+                            <span class="year">${year}</span>
                         </div>
                     </div>
                     <div class="event-content">

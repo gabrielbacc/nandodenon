@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Direto - Nando Denon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            background-color: #111;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+        }
+        h1 {
+            color: #ff6b00;
+            text-align: center;
+        }
+        button {
+            background-color: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #ff8533;
+        }
+        .status-card {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #222;
+            margin-bottom: 10px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login Direto - Nando Denon</h1>
+        <div class="status-card">
+            <p>Esta página permite fazer login direto, sem passar pela API. Use-a apenas quando o sistema de login normal não estiver funcionando.</p>
+            <div id="status"></div>
+        </div>
+        
+        <div class="buttons">
+            <button id="loginBtn">Login como Admin</button>
+            <button id="homeBtn">Voltar para o Site</button>
+        </div>
+    </div>
+
+    <script>
+        // Elementos da interface
+        const loginBtn = document.getElementById('loginBtn');
+        const homeBtn = document.getElementById('homeBtn');
+        const status = document.getElementById('status');
+        
+        // Voltar para a página inicial
+        homeBtn.addEventListener('click', function() {
+            window.location.href = '../index.html';
+        });
+        
+        // Login direto
+        loginBtn.addEventListener('click', function() {
+            try {
+                // Configurar localStorage diretamente
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('username', 'admin');
+                localStorage.setItem('authToken', 'nandodenon2024');
+                localStorage.setItem('loginTime', Date.now().toString());
+                
+                status.innerHTML = '<p class="success">Login realizado com sucesso! Redirecionando...</p>';
+                
+                // Redirecionar para o dashboard depois de 1 segundo
+                setTimeout(function() {
+                    window.location.href = '../admin.html';
+                }, 1000);
+            } catch (error) {
+                status.innerHTML = `<p class="error">Erro ao fazer login: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html> 

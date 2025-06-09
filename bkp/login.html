@@ -5,130 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Nando Denon</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .login-section {
+        .login-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-            padding: 20px;
+            background: linear-gradient(45deg, #000, #1a1a1a);
         }
-
-        .login-container {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
+        
+        .login-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
             border-radius: 10px;
+            backdrop-filter: blur(10px);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             width: 100%;
             max-width: 400px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
+        
         .login-logo {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
         }
-
+        
         .login-logo img {
             max-width: 200px;
         }
-
+        
         .login-form {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 1rem;
         }
-
-        .login-form input {
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group label {
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            padding: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 5px;
-            color: white;
-            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
         }
-
-        .login-form input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff6b00;
         }
-
-        .login-form button {
-            padding: 15px;
+        
+        .login-btn {
             background: #ff6b00;
+            color: #fff;
+            padding: 1rem;
             border: none;
             border-radius: 5px;
-            color: white;
-            font-size: 16px;
             cursor: pointer;
-            transition: background 0.3s ease;
+            font-weight: bold;
+            transition: background 0.3s;
         }
-
-        .login-form button:hover {
+        
+        .login-btn:hover {
             background: #ff8533;
         }
-
+        
         .error-message {
             color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+            padding: 0.8rem;
+            border-radius: 5px;
             text-align: center;
             display: none;
+        }
+        
+        .back-to-site {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .back-to-site a {
+            color: #ff6b00;
+            text-decoration: none;
+        }
+        
+        .back-to-site a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="logo">
-            <a href="index.html">
-                <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
-            </a>
-        </div>
-        <nav>
-            <ul class="nav-links">
-                <li><a href="index.html">Voltar ao Site</a></li>
-            </ul>
-        </nav>
-        <div class="menu-toggle">
-            <i class="fas fa-bars"></i>
-        </div>
-    </header>
-
-    <!-- Login Section -->
-    <section class="login-section">
-        <div class="login-container">
+    <div class="login-container">
+        <div class="login-box">
             <div class="login-logo">
                 <img src="assets/Logos/Logo Branco.png" alt="Nando Denon">
             </div>
-            <form class="login-form" id="loginForm">
-                <input type="text" id="username" placeholder="Usuário" required>
-                <input type="password" id="password" placeholder="Senha" required>
-                <p class="error-message" id="errorMessage">Usuário ou senha incorretos</p>
-                <button type="submit">Entrar</button>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div id="errorMessage" class="error-message"></div>
+                
+                <button type="submit" class="login-btn">Entrar</button>
             </form>
+            
+            <div class="back-to-site">
+                <a href="index.html">Voltar para o site</a>
+            </div>
         </div>
-    </section>
+    </div>
 
     <script src="js/site-data.js"></script>
     <script>
-        // Check if already logged in
+        // Verificar se já está logado
         if (SiteManager.isLoggedIn()) {
             window.location.href = 'dashboard.html';
         }
 
+        // Configurar formulário de login
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
-
+            
             if (SiteManager.login(username, password)) {
-                // Redirect to dashboard
                 window.location.href = 'dashboard.html';
             } else {
-                // Show error message
+                errorMessage.textContent = 'Usuário ou senha inválidos';
                 errorMessage.style.display = 'block';
             }
         });
