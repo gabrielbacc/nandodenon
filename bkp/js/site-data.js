@@ -62,6 +62,17 @@ let isInitialized = false;
 let siteData = { ...defaultData };
 let isLoggedIn = false;
 
+// Constantes para status dos leads
+const LEAD_STATUS = {
+    EM_ATENDIMENTO: 'EM_ATENDIMENTO',
+    FECHADO: 'FECHADO',
+    RECUSADO: 'RECUSADO',
+    VENCIDO: 'VENCIDO'
+};
+
+// Configuração de vencimento dos leads (em milissegundos)
+const LEAD_EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000; // 7 dias
+
 // Funções de API
 async function fetchData() {
     try {
@@ -194,30 +205,20 @@ const SiteManager = {
         }
     },
 
-    saveData: async function() {
+    async saveData() {
         try {
+            // Salvar no localStorage
             localStorage.setItem('siteData', JSON.stringify(siteData));
-            
-            // Atualizar cache para dados públicos
-            try {
-                const currentCache = JSON.parse(localStorage.getItem('siteDataCache')) || {};
-                currentCache.events = siteData.events || [];
-                currentCache.finance = siteData.finance || {};
-                currentCache.leads = siteData.leads || [];
-                currentCache.lastSync = new Date().toISOString();
-                localStorage.setItem('siteDataCache', JSON.stringify(currentCache));
-            } catch (err) {
-                console.error('Erro ao atualizar cache:', err);
-            }
-            
+            console.log('Dados salvos com sucesso no localStorage');
+
             // Disparar evento de atualização
-            const event = new CustomEvent('site-data-updated');
+            const event = new CustomEvent('site-data-updated', { detail: siteData });
             document.dispatchEvent(event);
-            
+
             return true;
         } catch (error) {
             console.error('Erro ao salvar dados:', error);
-            throw new Error('Não foi possível salvar os dados: ' + error.message);
+            throw error;
         }
     },
 
@@ -621,35 +622,104 @@ const SiteManager = {
     },
 
     async addLead(lead) {
-        const data = await this.getData();
-        if (!data.leads) data.leads = [];
-        data.leads.push(lead);
-        await this.saveData();
-        return lead;
+        try {
+            // Adiciona data de criação e status inicial
+            const newLead = {
+                ...lead,
+                id: Date.now().toString(),
+                createdAt: new Date().toISOString(),
+                status: LEAD_STATUS.EM_ATENDIMENTO,
+                expiresAt: new Date(Date.now() + LEAD_EXPIRATION_TIME).toISOString()
+            };
+            
+            if (!siteData.leads) siteData.leads = [];
+            siteData.leads.push(newLead);
+            await this.saveData();
+            return newLead;
+        } catch (error) {
+            console.error('Erro ao adicionar lead:', error);
+            throw error;
+        }
     },
 
     async updateLead(leadId, updatedLead) {
-        const data = await this.getData();
-        if (!data.leads) data.leads = [];
-        const index = data.leads.findIndex(lead => lead.id === leadId);
-        if (index !== -1) {
-            data.leads[index] = { ...data.leads[index], ...updatedLead };
+        try {
+            const leadIndex = siteData.leads.findIndex(l => l.id === leadId);
+            if (leadIndex === -1) throw new Error('Lead não encontrado');
+
+            const currentLead = siteData.leads[leadIndex];
+            
+            // Se o status está mudando para EM_ATENDIMENTO, atualiza a data de vencimento
+            if (updatedLead.status === LEAD_STATUS.EM_ATENDIMENTO && 
+                currentLead.status !== LEAD_STATUS.EM_ATENDIMENTO) {
+                updatedLead.expiresAt = new Date(Date.now() + LEAD_EXPIRATION_TIME).toISOString();
+            }
+
+            // Mantém a data de criação original
+            siteData.leads[leadIndex] = {
+                ...currentLead,
+                ...updatedLead,
+                createdAt: currentLead.createdAt
+            };
+
             await this.saveData();
-            return data.leads[index];
+            return siteData.leads[leadIndex];
+        } catch (error) {
+            console.error('Erro ao atualizar lead:', error);
+            throw error;
         }
-        return null;
     },
 
-    async removeLead(leadId) {
-        const data = await this.getData();
-        if (!data.leads) return false;
-        const index = data.leads.findIndex(lead => lead.id === leadId);
-        if (index !== -1) {
-            data.leads.splice(index, 1);
-            await this.saveData();
-            return true;
+    checkLeadsExpiration() {
+        if (!siteData.leads) return;
+
+        const now = new Date();
+        let hasChanges = false;
+
+        siteData.leads.forEach(lead => {
+            if (lead.status === LEAD_STATUS.EM_ATENDIMENTO) {
+                const expiresAt = new Date(lead.expiresAt);
+                if (now > expiresAt) {
+                    lead.status = LEAD_STATUS.VENCIDO;
+                    hasChanges = true;
+                }
+            }
+        });
+
+        if (hasChanges) {
+            this.saveData();
         }
-        return false;
+    },
+
+    getLeadStatusInfo(status) {
+        const statusInfo = {
+            [LEAD_STATUS.EM_ATENDIMENTO]: {
+                label: 'Em Atendimento',
+                color: '#3498db',
+                bgColor: 'rgba(52, 152, 219, 0.2)'
+            },
+            [LEAD_STATUS.FECHADO]: {
+                label: 'Fechado',
+                color: '#2ecc71',
+                bgColor: 'rgba(46, 204, 113, 0.2)'
+            },
+            [LEAD_STATUS.RECUSADO]: {
+                label: 'Recusado',
+                color: '#e74c3c',
+                bgColor: 'rgba(231, 76, 60, 0.2)'
+            },
+            [LEAD_STATUS.VENCIDO]: {
+                label: 'Vencido',
+                color: '#c0392b',
+                bgColor: 'rgba(192, 57, 43, 0.2)'
+            }
+        };
+
+        return statusInfo[status] || {
+            label: status,
+            color: '#95a5a6',
+            bgColor: 'rgba(149, 165, 166, 0.2)'
+        };
     },
 
     // Event Types Management
@@ -977,6 +1047,28 @@ const SiteManager = {
         } catch (error) {
             console.error('Erro ao restaurar backup:', error);
             return false;
+        }
+    },
+
+    async removeLead(leadId) {
+        try {
+            if (!siteData.leads) {
+                siteData.leads = [];
+                return false;
+            }
+
+            const index = siteData.leads.findIndex(lead => lead.id === leadId);
+            if (index === -1) {
+                console.warn('Lead não encontrado:', leadId);
+                return false;
+            }
+
+            siteData.leads.splice(index, 1);
+            await this.saveData();
+            return true;
+        } catch (error) {
+            console.error('Erro ao remover lead:', error);
+            throw error;
         }
     },
 };

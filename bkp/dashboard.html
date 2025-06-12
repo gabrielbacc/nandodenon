@@ -548,6 +548,96 @@
                 justify-content: flex-start;
             }
         }
+
+        /* Estilos do Afinador */
+        .tuner-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .tuner-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .tuner-note {
+            font-size: 48px;
+            color: #ff6b00;
+            font-weight: bold;
+        }
+
+        .tuner-freq {
+            font-size: 24px;
+            color: white;
+        }
+
+        /* Novo indicador de afinação */
+        .tuner-indicator {
+            width: 200px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            position: relative;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .tuner-needle {
+            width: 4px;
+            height: 100%;
+            background: #ff6b00;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: left 0.1s ease;
+        }
+
+        .tuner-center-mark {
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tuner-status {
+            font-size: 16px;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .tuner-reference {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+        }
+
+        .tuner-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .tuner-btn:hover {
+            background: #ff8533;
+        }
+
+        .tuner-btn.active {
+            background: #cc5500;
+        }
     </style>
 </head>
 <body>
@@ -615,6 +705,22 @@
             </div>
 
             <div class="dashboard-grid">
+                <!-- Afinador de Violão -->
+                <div class="tuner-container">
+                    <h3><i class="fas fa-guitar"></i> Afinador de Violão</h3>
+                    <div class="tuner-display">
+                        <div id="tuner-note" class="tuner-note">--</div>
+                        <div id="tuner-freq" class="tuner-freq">-- Hz</div>
+                        <div class="tuner-indicator">
+                            <div class="tuner-center-mark"></div>
+                            <div id="tuner-needle" class="tuner-needle"></div>
+                        </div>
+                        <div id="tuner-status" class="tuner-status">Aguardando...</div>
+                        <div id="tuner-reference" class="tuner-reference"></div>
+                    </div>
+                    <button id="tuner-toggle" class="tuner-btn">Iniciar Afinador</button>
+                </div>
+                
                 <a href="manage-calendar.html" class="dashboard-card">
                     <i class="fas fa-calendar-alt"></i>
                     <h3>Gerenciar Agenda</h3>
@@ -727,6 +833,7 @@
     </div>
 
     <script src="js/site-data.js"></script>
+    <script src="js/tuner.js"></script>
     <script>
         // Loading overlay management
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -1173,6 +1280,37 @@
                 }
             }
         };
+
+        // Inicialização do afinador (movido para o final)
+        document.addEventListener('DOMContentLoaded', () => {
+            const tunerToggle = document.getElementById('tuner-toggle');
+            if (!tunerToggle) {
+                console.error('Elemento do afinador não encontrado');
+                return;
+            }
+
+            const tuner = new GuitarTuner();
+            let isActive = false;
+
+            tunerToggle.addEventListener('click', async () => {
+                if (!isActive) {
+                    try {
+                        await tuner.start();
+                        tunerToggle.textContent = 'Parar Afinador';
+                        tunerToggle.classList.add('active');
+                        isActive = true;
+                    } catch (error) {
+                        console.error('Erro ao iniciar o afinador:', error);
+                        alert('Erro ao acessar o microfone. Por favor, verifique as permissões.');
+                    }
+                } else {
+                    tuner.stop();
+                    tunerToggle.textContent = 'Iniciar Afinador';
+                    tunerToggle.classList.remove('active');
+                    isActive = false;
+                }
+            });
+        });
     </script>
 </body>
 </html> 

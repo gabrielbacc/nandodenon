@@ -6,6 +6,9 @@
     <title>Gerenciar Leads - Nando Denon</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <!-- Adicionar SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .leads-manager {
             padding: 80px 20px 20px;
@@ -126,13 +129,33 @@
             font-size: 0.85em;
             font-weight: 500;
             margin-left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .status-novo { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-        .status-contato { background: rgba(52, 152, 219, 0.2); color: #3498db; }
-        .status-negociacao { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
-        .status-fechado { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
-        .status-convertido { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+        .status-EM_ATENDIMENTO { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+        .status-FECHADO { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .status-RECUSADO { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .status-VENCIDO { background: rgba(192, 57, 43, 0.2); color: #c0392b; }
+
+        .expiration-warning {
+            font-size: 0.85em;
+            color: #e74c3c;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .time-remaining {
+            font-size: 0.85em;
+            color: #3498db;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
         .modal {
             display: none;
@@ -497,11 +520,10 @@
                     <label for="statusFilter">Status</label>
                     <select id="statusFilter">
                         <option value="todos">Todos</option>
-                        <option value="novo">Novo</option>
-                        <option value="contato">Em Contato</option>
-                        <option value="negociacao">Em Negociação</option>
-                        <option value="fechado">Fechado</option>
-                        <option value="convertido">Convertido</option>
+                        <option value="EM_ATENDIMENTO">Em Atendimento</option>
+                        <option value="FECHADO">Fechado</option>
+                        <option value="RECUSADO">Recusado</option>
+                        <option value="VENCIDO">Vencido</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -561,11 +583,10 @@
                 <div class="form-group">
                     <label for="leadStatus">Status</label>
                     <select id="leadStatus" required>
-                        <option value="novo">Novo</option>
-                        <option value="contato">Em Contato</option>
-                        <option value="negociacao">Em Negociação</option>
-                        <option value="fechado">Fechado</option>
-                        <option value="convertido">Convertido</option>
+                        <option value="EM_ATENDIMENTO">Em Atendimento</option>
+                        <option value="FECHADO">Fechado</option>
+                        <option value="RECUSADO">Recusado</option>
+                        <option value="VENCIDO">Vencido</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -700,6 +721,45 @@
         </div>
     </div>
 
+    <!-- Modal de Edição de Lead -->
+    <div id="editLeadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Lead</h2>
+                <button class="close-modal" onclick="document.getElementById('editLeadModal').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <input type="hidden" id="editLeadId">
+                <label for="editLeadName">Nome</label>
+                <input type="text" id="editLeadName" required>
+                
+                <label for="editLeadEmail">Email</label>
+                <input type="email" id="editLeadEmail" required>
+                
+                <label for="editLeadPhone">Telefone</label>
+                <input type="tel" id="editLeadPhone" required>
+                
+                <label for="editLeadStatus">Status</label>
+                <select id="editLeadStatus" required>
+                    <option value="EM_ATENDIMENTO">Em Atendimento</option>
+                    <option value="FECHADO">Fechado</option>
+                    <option value="RECUSADO">Recusado</option>
+                    <option value="VENCIDO">Vencido</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('editLeadModal').style.display='none'">
+                    Cancelar
+                </button>
+                <button class="btn btn-primary" onclick="saveLead()">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/site-data.js"></script>
     <script>
         // Check if user is logged in
@@ -708,81 +768,119 @@
         }
 
         // DOM Elements
-        const leadsList = document.getElementById('leadsList');
-        const leadModal = document.getElementById('leadModal');
-        const leadForm = document.getElementById('leadForm');
-        const modalTitle = document.getElementById('modalTitle');
+        let leadsList;
+        let leadModal;
+        let leadForm;
+        let modalTitle;
 
-        // Event Listeners
-        document.getElementById('openAddLeadModal').addEventListener('click', () => {
-            modalTitle.textContent = 'Novo Lead';
-            leadForm.reset();
-            document.getElementById('leadId').value = '';
-            leadModal.style.display = 'flex';
-        });
+        // Initialize after DOM is loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize DOM elements
+            leadsList = document.getElementById('leadsList');
+            leadModal = document.getElementById('leadModal');
+            leadForm = document.getElementById('leadForm');
+            modalTitle = document.getElementById('modalTitle');
 
-        document.getElementById('closeModal').addEventListener('click', () => {
-            leadModal.style.display = 'none';
-        });
+            if (!leadsList) {
+                console.error('Elemento leadsList não encontrado!');
+                return;
+            }
 
-        document.getElementById('cancelLead').addEventListener('click', () => {
-            leadModal.style.display = 'none';
-        });
-
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            SiteManager.logout();
-            window.location.href = 'index.html';
-        });
-
-        // Form submission
-        leadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const leadId = document.getElementById('leadId').value;
-            const newLead = {
-                id: leadId || Date.now().toString(),
-                name: document.getElementById('leadName').value,
-                contact: document.getElementById('leadContact').value,
-                type: document.getElementById('leadType').value,
-                status: document.getElementById('leadStatus').value,
-                date: document.getElementById('leadDate').value,
-                budget: document.getElementById('leadBudget').value,
-                notes: document.getElementById('leadNotes').value,
-                history: []
-            };
-
-            if (!leadId) {
-                // Novo lead
-                newLead.history.push({
-                    date: new Date().toISOString(),
-                    action: 'Criação do lead',
-                    details: 'Lead cadastrado no sistema'
+            // Event Listeners
+            const openAddLeadModalBtn = document.getElementById('openAddLeadModal');
+            if (openAddLeadModalBtn) {
+                openAddLeadModalBtn.addEventListener('click', () => {
+                    modalTitle.textContent = 'Novo Lead';
+                    leadForm.reset();
+                    document.getElementById('leadId').value = '';
+                    leadModal.style.display = 'flex';
                 });
             }
 
-            try {
-                if (leadId) {
-                    await SiteManager.updateLead(leadId, newLead);
-                    console.log('Lead atualizado:', newLead);
-                } else {
-                    await SiteManager.addLead(newLead);
-                    console.log('Novo lead adicionado:', newLead);
-                }
-                
-                leadModal.style.display = 'none';
-                await loadLeads();
-                updateStats();
-            } catch (error) {
-                console.error('Erro ao salvar lead:', error);
-                alert('Erro ao salvar o lead. Tente novamente.');
+            const closeModalBtn = document.getElementById('closeModal');
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', () => {
+                    leadModal.style.display = 'none';
+                });
             }
+
+            const cancelLeadBtn = document.getElementById('cancelLead');
+            if (cancelLeadBtn) {
+                cancelLeadBtn.addEventListener('click', () => {
+                    leadModal.style.display = 'none';
+                });
+            }
+
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    SiteManager.logout();
+                    window.location.href = 'index.html';
+                });
+            }
+
+            if (leadForm) {
+                leadForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const leadId = document.getElementById('leadId').value;
+                    const newLead = {
+                        id: leadId || Date.now().toString(),
+                        name: document.getElementById('leadName').value,
+                        contact: document.getElementById('leadContact').value,
+                        type: document.getElementById('leadType').value,
+                        status: document.getElementById('leadStatus').value,
+                        date: document.getElementById('leadDate').value,
+                        budget: document.getElementById('leadBudget').value,
+                        notes: document.getElementById('leadNotes').value,
+                        history: []
+                    };
+
+                    if (!leadId) {
+                        // Novo lead
+                        newLead.history.push({
+                            date: new Date().toISOString(),
+                            action: 'Criação do lead',
+                            details: 'Lead cadastrado no sistema'
+                        });
+                    }
+
+                    try {
+                        if (leadId) {
+                            await SiteManager.updateLead(leadId, newLead);
+                            console.log('Lead atualizado:', newLead);
+                        } else {
+                            await SiteManager.addLead(newLead);
+                            console.log('Novo lead adicionado:', newLead);
+                        }
+                        
+                        leadModal.style.display = 'none';
+                        await loadLeads();
+                        updateStats();
+                    } catch (error) {
+                        console.error('Erro ao salvar lead:', error);
+                        alert('Erro ao salvar o lead. Tente novamente.');
+                    }
+                });
+            }
+
+            // Load initial data
+            await loadLeads();
+            await updateStats();
         });
 
         // Load and display leads
         async function loadLeads() {
             try {
+                if (!leadsList) {
+                    leadsList = document.getElementById('leadsList');
+                    if (!leadsList) {
+                        console.error('Elemento leadsList não encontrado!');
+                        return;
+                    }
+                }
+
                 const leads = await SiteManager.getData().then(data => data.leads || []);
                 
                 if (!leads || leads.length === 0) {
@@ -793,41 +891,36 @@
                 leadsList.innerHTML = leads
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
                     .map(lead => {
-                        const statusClasses = {
-                            'novo': 'status-novo',
-                            'contato': 'status-contato',
-                            'negociacao': 'status-negociacao',
-                            'fechado': 'status-fechado',
-                            'convertido': 'status-convertido'
-                        };
-
-                        const statusLabels = {
-                            'novo': 'Novo',
-                            'contato': 'Em Contato',
-                            'negociacao': 'Em Negociação',
-                            'fechado': 'Fechado',
-                            'convertido': 'Convertido'
-                        };
-
-                        const typeIcons = {
-                            'casamento': 'fa-ring',
-                            'aniversario': 'fa-cake-candles',
-                            'corporativo': 'fa-building',
-                            'bar': 'fa-martini-glass',
-                            'outro': 'fa-star'
-                        };
+                        const statusInfo = SiteManager.getLeadStatusInfo(lead.status);
+                        let timeInfo = '';
+                        
+                        if (lead.status === 'EM_ATENDIMENTO') {
+                            const timeRemaining = formatTimeRemaining(lead.expiresAt);
+                            if (timeRemaining) {
+                                timeInfo = `<div class="time-remaining">
+                                    <i class="fas fa-clock"></i> ${timeRemaining}
+                                </div>`;
+                            } else {
+                                timeInfo = `<div class="expiration-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Lead prestes a vencer!
+                                </div>`;
+                            }
+                        }
 
                         return `
                             <div class="lead-card">
                                 <div class="lead-info">
                                     <h3>
-                                        <i class="fas ${typeIcons[lead.type] || 'fa-star'}"></i>
+                                        <i class="fas fa-user"></i>
                                         ${lead.name}
-                                        <span class="lead-status ${statusClasses[lead.status]}">${statusLabels[lead.status]}</span>
+                                        <span class="lead-status status-${lead.status}" style="background: ${statusInfo.bgColor}; color: ${statusInfo.color}">
+                                            <i class="fas fa-circle"></i>
+                                            ${statusInfo.label}
+                                        </span>
                                     </h3>
                                     <div class="lead-details">
                                         <div class="lead-detail">
-                                            <i class="fas fa-phone"></i>
+                                            <i class="fas fa-envelope"></i>
                                             ${lead.contact}
                                         </div>
                                         <div class="lead-detail">
@@ -841,22 +934,7 @@
                                             </div>
                                         ` : ''}
                                     </div>
-                                    ${lead.notes ? `
-                                        <div class="lead-detail" style="margin-top: 10px;">
-                                            <i class="fas fa-sticky-note"></i>
-                                            ${lead.notes}
-                                        </div>
-                                    ` : ''}
-                                    ${lead.history && lead.history.length > 0 ? `
-                                        <div class="lead-history">
-                                            ${lead.history.slice(-2).map(item => `
-                                                <div class="history-item">
-                                                    <i class="fas fa-history"></i>
-                                                    <span>${new Date(item.date).toLocaleDateString('pt-BR')}: ${item.action}</span>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : ''}
+                                    ${timeInfo}
                                 </div>
                                 <div class="lead-actions">
                                     <button onclick="editLead('${lead.id}')" title="Editar">
@@ -864,9 +942,6 @@
                                     </button>
                                     <button onclick="deleteLead('${lead.id}')" title="Excluir">
                                         <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button onclick="addHistory('${lead.id}')" title="Adicionar Histórico">
-                                        <i class="fas fa-plus-circle"></i>
                                     </button>
                                 </div>
                             </div>
@@ -883,17 +958,13 @@
             try {
                 const lead = await SiteManager.getLeadById(leadId);
                 if (lead) {
-                    document.getElementById('leadId').value = lead.id;
-                    document.getElementById('leadName').value = lead.name || '';
-                    document.getElementById('leadContact').value = lead.contact || '';
-                    document.getElementById('leadType').value = lead.type || 'outro';
-                    document.getElementById('leadStatus').value = lead.status || 'novo';
-                    document.getElementById('leadDate').value = lead.date || '';
-                    document.getElementById('leadBudget').value = lead.budget || '';
-                    document.getElementById('leadNotes').value = lead.notes || '';
+                    document.getElementById('editLeadId').value = lead.id;
+                    document.getElementById('editLeadName').value = lead.name || '';
+                    document.getElementById('editLeadEmail').value = lead.contact || '';
+                    document.getElementById('editLeadPhone').value = lead.phone || '';
+                    document.getElementById('editLeadStatus').value = lead.status || 'EM_ATENDIMENTO';
 
-                    modalTitle.textContent = 'Editar Lead';
-                    leadModal.style.display = 'flex';
+                    document.getElementById('editLeadModal').style.display = 'flex';
                 }
             } catch (error) {
                 console.error('Erro ao editar lead:', error);
@@ -903,40 +974,54 @@
 
         // Delete lead
         async function deleteLead(leadId) {
-            if (confirm('Tem certeza que deseja excluir este lead?')) {
-                try {
+            try {
+                const confirmed = await Swal.fire({
+                    title: 'Tem certeza?',
+                    text: "Você não poderá reverter isso!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, deletar!',
+                    cancelButtonText: 'Cancelar'
+                });
+
+                if (confirmed.isConfirmed) {
                     await SiteManager.removeLead(leadId);
                     await loadLeads();
-                    updateStats();
-                } catch (error) {
-                    console.error('Erro ao excluir lead:', error);
-                    alert('Erro ao excluir lead. Tente novamente.');
+                    await updateStats();
+                    Swal.fire(
+                        'Deletado!',
+                        'O lead foi removido com sucesso.',
+                        'success'
+                    );
                 }
+            } catch (error) {
+                console.error('Erro ao excluir lead:', error);
+                Swal.fire(
+                    'Erro!',
+                    'Erro ao excluir lead. Tente novamente.',
+                    'error'
+                );
             }
         }
 
-        // Add history
-        async function addHistory(leadId) {
-            const action = prompt('Digite a ação realizada:');
-            if (action) {
-                try {
-                    const lead = await SiteManager.getLeadById(leadId);
-                    if (lead) {
-                        if (!lead.history) lead.history = [];
-                        
-                        lead.history.push({
-                            date: new Date().toISOString(),
-                            action: action,
-                            details: ''
-                        });
+        // Save lead
+        async function saveLead() {
+            const leadId = document.getElementById('editLeadId').value;
+            const updatedLead = {
+                name: document.getElementById('editLeadName').value,
+                contact: document.getElementById('editLeadEmail').value,
+                phone: document.getElementById('editLeadPhone').value,
+                status: document.getElementById('editLeadStatus').value
+            };
 
-                        await SiteManager.updateLead(leadId, lead);
-                        await loadLeads();
-                    }
-                } catch (error) {
-                    console.error('Erro ao adicionar histórico:', error);
-                    alert('Erro ao adicionar histórico. Tente novamente.');
-                }
+            try {
+                await SiteManager.updateLead(leadId, updatedLead);
+                document.getElementById('editLeadModal').style.display = 'none';
+                await loadLeads();
+            } catch (error) {
+                alert('Erro ao atualizar lead: ' + error.message);
             }
         }
 
@@ -946,14 +1031,14 @@
                 const leads = await SiteManager.getData().then(data => data.leads || []);
                 
                 const totalLeads = leads.length;
-                const convertedLeads = leads.filter(lead => lead.status === 'convertido').length;
+                const convertedLeads = leads.filter(lead => lead.status === 'FECHADO').length;
                 const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : 0;
                 
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
                 const newLeads = leads.filter(lead => new Date(lead.date) >= thirtyDaysAgo).length;
                 
-                const negotiatingLeads = leads.filter(lead => lead.status === 'negociacao').length;
+                const negotiatingLeads = leads.filter(lead => lead.status === 'EM_ATENDIMENTO').length;
 
                 document.getElementById('totalLeads').textContent = totalLeads;
                 document.getElementById('conversionRate').textContent = `${conversionRate}%`;
@@ -1321,6 +1406,29 @@
             }
         });
 
+        // Função para formatar o tempo restante
+        function formatTimeRemaining(expiresAt) {
+            const now = new Date();
+            const expiration = new Date(expiresAt);
+            const diff = expiration - now;
+            
+            if (diff <= 0) return null;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            if (days > 0) {
+                return `${days}d ${hours}h restantes`;
+            } else if (hours > 0) {
+                return `${hours}h restantes`;
+            } else {
+                return 'Menos de 1 hora';
+            }
+        }
+
+        // Atualizar a exibição a cada minuto para manter o tempo restante atualizado
+        setInterval(loadLeads, 60000);
+
         // Initial load
         loadLeads();
         updateStats();
@@ -1328,7 +1436,7 @@
         // Make functions available globally
         window.editLead = editLead;
         window.deleteLead = deleteLead;
-        window.addHistory = addHistory;
+        window.saveLead = saveLead;
         window.editEventType = editEventType;
         window.deleteEventType = deleteEventType;
     </script>
